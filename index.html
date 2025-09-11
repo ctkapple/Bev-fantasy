@@ -487,8 +487,12 @@
                     // Capture team name for the season, with fallback to username
                     const managerData = managersData[user.user_id];
                     if (managerData) {
-                        const teamName = user.metadata?.team_name || user.display_name;
-                        managerData.teamNameHistory.push({ year: season, name: teamName });
+                        // Check if a name for this year has already been pushed
+                        const hasYear = managerData.teamNameHistory.some(t => t.year === season);
+                        if (!hasYear) {
+                            const teamName = user.metadata?.team_name || user.display_name;
+                            managerData.teamNameHistory.push({ year: season, name: teamName });
+                        }
                     }
                 });
                 
@@ -537,7 +541,11 @@
                 if (ranksAssignedViaApi) {
                     rosters.forEach(r => {
                         if (r.owner_id && managersData[r.owner_id] && r.settings.rank) {
-                            managersData[r.owner_id].yearlyStandings.push({ year: season, rank: r.settings.rank });
+                            const manager = managersData[r.owner_id];
+                            const hasYear = manager.yearlyStandings.some(s => s.year === season);
+                            if (!hasYear) {
+                                manager.yearlyStandings.push({ year: season, rank: r.settings.rank });
+                            }
                         }
                     });
                 } else if (rosters.some(r => r.owner_id)) {
@@ -552,7 +560,10 @@
                     seasonalStandings.forEach((roster, index) => {
                         const manager = managersData[roster.owner_id];
                         if (manager) {
-                            manager.yearlyStandings.push({ year: season, rank: index + 1 });
+                            const hasYear = manager.yearlyStandings.some(s => s.year === season);
+                            if (!hasYear) {
+                                manager.yearlyStandings.push({ year: season, rank: index + 1 });
+                            }
                         }
                     });
                 }
@@ -808,18 +819,18 @@
 
             const renderLifetimeEarnings = () => {
                  const earningsData = {
-                    'Will Dooling': { 2021: 50, 2022: 35, 2023: 740, 2024: 57.5, props: 7.5, highs: 5 },
-                    'Connor Cademartori': { 2021: 35, 2022: 35, 2023: 17.5, 2024: 30, props: 3.5, highs: 5 },
-                    'Sean Richardson': { 2021: 0, 2022: 45, 2023: 0, 2024: 175, props: 2, highs: 3 },
-                    'Malcolm Zeroka': { 2021: 0, 2022: 0, 2023: 27.5, 2024: 732.5, props: 4, highs: 5 },
-                    'Andrew Johnstone': { 2021: 10, 2022: 65, 2023: 45, 2024: 25, props: 5, highs: 5 },
-                    'Patrick Gavin': { 2021: 0, 2022: 50, 2023: 10, 2024: 15, props: 3, highs: 1 },
-                    'Matt Pitman': { 2021: 40, 2022: 110, 2023: 105, 2024: 25, props: 11, highs: 7 },
-                    'Matt Manzo': { 2021: 50, 2022: 87.5, 2023: 0, 2024: 0, props: 3.5, highs: 2 },
-                    'Kevin Flaherty': { 2021: 475, 2022: 495, 2023: 15, 2024: 0, props: 4, highs: 4 },
-                    'Johnny Jones': { 2021: 0, 2022: 10, 2023: 150, 2024: 0, props: 0, highs: 1 },
-                    'Adam Ellis': { 2021: 0, 2022: 10, 2023: 35, 2024: 0, props: 0, highs: 1 },
-                    'Brian Harty': { 2021: 247.5, 2022: 257.5, 2023: 0, 2024: 150, props: 1.5, highs: 2 }
+                    'Will Dooling':      { 2021: 50,    2022: 35,    2023: 740,   2024: 57.5,  props: 8.5, highs: 6 },
+                    'Connor Cademartori': { 2021: 35,    2022: 35,    2023: 17.5,  2024: 30,    props: 3.5, highs: 6 },
+                    'Sean Richardson':    { 2021: 0,     2022: 45,    2023: 0,     2024: 175,   props: 2,   highs: 3 },
+                    'Malcolm Zeroka':     { 2021: 0,     2022: 0,     2023: 27.5,  2024: 732.5, props: 4,   highs: 5 },
+                    'Andrew Johnstone':   { 2021: 10,    2022: 65,    2023: 45,    2024: 25,    props: 6,   highs: 5 },
+                    'Patrick Gavin':      { 2021: 0,     2022: 50,    2023: 10,    2024: 15,    props: 3,   highs: 1 },
+                    'Matt Pitman':        { 2021: 40,    2022: 110,   2023: 105,   2024: 25,    props: 11,  highs: 7 },
+                    'Matt Manzo':         { 2021: 50,    2022: 87.5,  2023: 0,     2024: 120,   props: 5.5, highs: 4 },
+                    'Kevin Flaherty':     { 2021: 475,   2022: 495,   2023: 15,    2024: 0,     props: 3,   highs: 2 },
+                    'Johnny Jones':       { 2021: 0,     2022: 10,    2023: 150,   2024: 0,     props: 0,   highs: 1 },
+                    'Adam Ellis':         { 2021: 0,     2022: 10,    2023: 35,    2024: 0,     props: 0,   highs: 1 },
+                    'Brian Harty':        { 2021: 247.5, 2022: 257.5, 2023: 0,     2024: 150,   props: 3,   highs: 2 }
                 };
 
                 const leaderboardContainer = document.getElementById('earnings-leaderboard');
@@ -829,7 +840,7 @@
 
                 leaderboardContainer.innerHTML = breakdownContainer.innerHTML = propContainer.innerHTML = highscoreContainer.innerHTML = '';
                 
-                const totals = Object.entries(earningsData).map(([name, data]) => ({ name, total: data[2021]+data[2022]+data[2023]+data[2024] })).sort((a, b) => b.total - a.total);
+                const totals = Object.entries(earningsData).map(([name, data]) => ({ name, total: (data[2021] || 0) + (data[2022] || 0) + (data[2023] || 0) + (data[2024] || 0) })).sort((a, b) => b.total - a.total);
                 const propTotals = Object.entries(earningsData).map(([name, data]) => ({ name, total: data.props })).sort((a, b) => b.total - a.total);
                 const highscoreTotals = Object.entries(earningsData).map(([name, data]) => ({ name, total: data.highs })).sort((a, b) => b.total - a.total);
 
@@ -856,10 +867,10 @@
                     breakdownContainer.innerHTML += `
                         <tr class="border-b border-purple-800/50">
                             <td class="py-3 pr-2 font-semibold text-sm">${managerName}</td>
-                            <td class="py-3 px-2 text-right text-sm">$${yearlyData[2021].toFixed(2)}</td>
-                            <td class="py-3 px-2 text-right text-sm">$${yearlyData[2022].toFixed(2)}</td>
-                            <td class="py-3 px-2 text-right text-sm">$${yearlyData[2023].toFixed(2)}</td>
-                            <td class="py-3 pl-2 text-right text-sm">$${yearlyData[2024].toFixed(2)}</td>
+                            <td class="py-3 px-2 text-right text-sm">$${(yearlyData[2021] || 0).toFixed(2)}</td>
+                            <td class="py-3 px-2 text-right text-sm">$${(yearlyData[2022] || 0).toFixed(2)}</td>
+                            <td class="py-3 px-2 text-right text-sm">$${(yearlyData[2023] || 0).toFixed(2)}</td>
+                            <td class="py-3 pl-2 text-right text-sm">$${(yearlyData[2024] || 0).toFixed(2)}</td>
                         </tr>
                     `;
                 });
@@ -895,13 +906,19 @@
                 if (!managerId) { dataContainer.classList.add('hidden'); return; }
 
                 const manager = managersData[managerId];
-                const earningsData = {
-                    'Will Dooling': { 2021: 50, 2022: 35, 2023: 740, 2024: 57.5 }, 'Connor Cademartori': { 2021: 35, 2022: 35, 2023: 17.5, 2024: 30 },
-                    'Sean Richardson': { 2021: 0, 2022: 45, 2023: 0, 2024: 175 }, 'Malcolm Zeroka': { 2021: 0, 2022: 0, 2023: 27.5, 2024: 732.5 },
-                    'Andrew Johnstone': { 2021: 10, 2022: 65, 2023: 45, 2024: 25 }, 'Patrick Gavin': { 2021: 0, 2022: 50, 2023: 10, 2024: 15 },
-                    'Matt Pitman': { 2021: 40, 2022: 110, 2023: 105, 2024: 25 }, 'Matt Manzo': { 2021: 50, 2022: 87.5, 2023: 0, 2024: 0 },
-                    'Kevin Flaherty': { 2021: 475, 2022: 495, 2023: 15, 2024: 0 }, 'Johnny Jones': { 2021: 0, 2022: 10, 2023: 150, 2024: 0 },
-                    'Adam Ellis': { 2021: 0, 2022: 10, 2023: 35, 2024: 0 }, 'Brian Harty': { 2021: 247.5, 2022: 257.5, 2023: 0, 2024: 150 }
+                 const earningsData = {
+                    'Will Dooling':      { 2021: 50,    2022: 35,    2023: 740,   2024: 57.5  },
+                    'Connor Cademartori': { 2021: 35,    2022: 35,    2023: 17.5,  2024: 30    },
+                    'Sean Richardson':    { 2021: 0,     2022: 45,    2023: 0,     2024: 175   },
+                    'Malcolm Zeroka':     { 2021: 0,     2022: 0,     2023: 27.5,  2024: 732.5 },
+                    'Andrew Johnstone':   { 2021: 10,    2022: 65,    2023: 45,    2024: 25    },
+                    'Patrick Gavin':      { 2021: 0,     2022: 50,    2023: 10,    2024: 15    },
+                    'Matt Pitman':        { 2021: 40,    2022: 110,   2023: 105,   2024: 25    },
+                    'Matt Manzo':         { 2021: 50,    2022: 87.5,  2023: 0,     2024: 120   },
+                    'Kevin Flaherty':     { 2021: 475,   2022: 495,   2023: 15,    2024: 0     },
+                    'Johnny Jones':       { 2021: 0,     2022: 10,    2023: 150,   2024: 0     },
+                    'Adam Ellis':         { 2021: 0,     2022: 10,    2023: 35,    2024: 0     },
+                    'Brian Harty':        { 2021: 247.5, 2022: 257.5, 2023: 0,     2024: 150   }
                 };
                 const managerEarnings = earningsData[manager.displayName];
                 const totalEarnings = managerEarnings ? Object.values(managerEarnings).reduce((a, b) => a + b, 0) : 0;
