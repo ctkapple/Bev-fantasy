@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sleeper Fantasy Football Dashboard</title>
+    <title>Beverly🐐 Fantasy Football</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -40,8 +40,9 @@
     </style>
 </head>
 <body class="antialiased">
-    <div id="loader" class="fixed inset-0 bg-gray-900 bg-opacity-80 flex justify-center items-center z-50">
+    <div id="loader" class="fixed inset-0 bg-gray-900 bg-opacity-80 flex flex-col justify-center items-center z-50">
         <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-32 w-32"></div>
+        <p class="text-white text-lg mt-4">Loading stats from sleeper (this may take up to a minute)</p>
     </div>
 
     <div id="app" class="container mx-auto p-4 md:p-8 max-w-7xl hidden">
@@ -278,7 +279,7 @@
             <!-- Lifetime Earnings Tab -->
             <div id="earnings-content" class="tab-pane hidden">
                 <div class="card mb-6">
-                    <h2 class="text-xl font-bold mb-4 text-[#D60270]">All-Time Money List 💰</h2>
+                    <h2 class="text-xl font-bold mb-4 text-[#D60270]">Winnings Leaderboard 💰📈</h2>
                     <div id="earnings-leaderboard" class="space-y-3">
                         <!-- Leaderboard will be injected here -->
                     </div>
