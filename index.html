@@ -71,7 +71,7 @@
         <div class="mb-8 border-b-2 border-orange-500">
             <nav class="flex justify-center space-x-6 flex-wrap" aria-label="Tabs">
                 <button class="tab-button active text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="dashboard">Rankings</button>
-                <button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="myteam">My Team</button>
+                <button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="myteam">My Teams</button>
                 <button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="records">Records</button>
                 <button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="h2h">H2H</button>
                 <button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="legacies">Legends</button>
@@ -118,7 +118,7 @@
             </div>
              <div id="myteam-content" class="tab-pane hidden">
                 <div class="card mb-6">
-                    <label for="my-team-select" class="block text-lg font-medium text-orange-500 mb-2">Please select your team</label>
+                    <label for="my-team-select" class="block text-lg font-medium text-orange-500 mb-2">Please select your name</label>
                     <select id="my-team-select" class="bg-gray-900 border border-gray-700 rounded-md p-2 w-full max-w-md text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
                         <option value="">-- Select a Manager --</option>
                     </select>
@@ -809,48 +809,51 @@
                      if (runnerUpRoster?.players) runnerUpRoster.players.forEach(pId => updatePlayerLegacy(pId, season, runnerUpRoster.owner_id, false));
                 }
 
-                try {
-                    const losersBracket = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueData.league_id}/losers_bracket`);
-                    if (losersBracket && losersBracket.length > 0) {
-                        const finalLoserRound = Math.max(...losersBracket.map(m => m.r));
-                        const toiletBowlMatch = losersBracket.find(m => m.r === finalLoserRound);
+                // Do not fetch the losers bracket for 2021, as the data is incorrect. It will be manually added later.
+                if (String(season) !== '2021') {
+                    try {
+                        const losersBracket = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueData.league_id}/losers_bracket`);
+                        if (losersBracket && losersBracket.length > 0) {
+                            const finalLoserRound = Math.max(...losersBracket.map(m => m.r));
+                            const toiletBowlMatch = losersBracket.find(m => m.r === finalLoserRound);
 
-                        if (toiletBowlMatch) {
-                            const punishedRoster = rosters.find(r => r.roster_id === toiletBowlMatch.w);
-                            const safeRoster = rosters.find(r => r.roster_id === toiletBowlMatch.l);
-                            const punishedId = punishedRoster ? punishedRoster.owner_id : null;
-                            const safeId = safeRoster ? safeRoster.owner_id : null;
+                            if (toiletBowlMatch) {
+                                const punishedRoster = rosters.find(r => r.roster_id === toiletBowlMatch.w);
+                                const safeRoster = rosters.find(r => r.roster_id === toiletBowlMatch.l);
+                                const punishedId = punishedRoster ? punishedRoster.owner_id : null;
+                                const safeId = safeRoster ? safeRoster.owner_id : null;
 
-                            const toiletBowlWeek = leagueData.settings.playoff_week_start + finalLoserRound - 1;
-                            const toiletBowlMatchups = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueData.league_id}/matchups/${toiletBowlWeek}`);
+                                const toiletBowlWeek = leagueData.settings.playoff_week_start + finalLoserRound - 1;
+                                const toiletBowlMatchups = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueData.league_id}/matchups/${toiletBowlWeek}`);
 
-                            const punishedMatchup = toiletBowlMatchups.find(m => m.roster_id === toiletBowlMatch.w);
-                            const safeMatchup = toiletBowlMatchups.find(m => m.roster_id === toiletBowlMatch.l);
+                                const punishedMatchup = toiletBowlMatchups.find(m => m.roster_id === toiletBowlMatch.w);
+                                const safeMatchup = toiletBowlMatchups.find(m => m.roster_id === toiletBowlMatch.l);
 
-                            const getRosterDetails = (starters, playerPoints) => {
-                                if (!starters) return [];
-                                return starters.map(pId => {
-                                    const player = nflPlayers[pId];
-                                    const score = playerPoints ? (playerPoints[pId] || 0) : 0;
-                                    return player ? { name: `${player.first_name} ${player.last_name}`, position: player.position, score: score } : { name: 'Unknown Player', position: 'N/A', score: 0 };
-                                });
-                            };
+                                const getRosterDetails = (starters, playerPoints) => {
+                                    if (!starters) return [];
+                                    return starters.map(pId => {
+                                        const player = nflPlayers[pId];
+                                        const score = playerPoints ? (playerPoints[pId] || 0) : 0;
+                                        return player ? { name: `${player.first_name} ${player.last_name}`, position: player.position, score: score } : { name: 'Unknown Player', position: 'N/A', score: 0 };
+                                    });
+                                };
 
-                            if (punishedId && safeId && punishedMatchup && safeMatchup) {
-                                toiletBowlData.push({
-                                    season: season,
-                                    punishedId: punishedId,
-                                    punishedRoster: getRosterDetails(punishedMatchup.starters, punishedMatchup.players_points),
-                                    punishedScore: punishedMatchup.points,
-                                    safeId: safeId,
-                                    safeRoster: getRosterDetails(safeMatchup.starters, safeMatchup.players_points),
-                                    safeScore: safeMatchup.points
-                                });
+                                if (punishedId && safeId && punishedMatchup && safeMatchup) {
+                                    toiletBowlData.push({
+                                        season: season,
+                                        punishedId: punishedId,
+                                        punishedRoster: getRosterDetails(punishedMatchup.starters, punishedMatchup.players_points),
+                                        punishedScore: punishedMatchup.points,
+                                        safeId: safeId,
+                                        safeRoster: getRosterDetails(safeMatchup.starters, safeMatchup.players_points),
+                                        safeScore: safeMatchup.points
+                                    });
+                                }
                             }
                         }
+                    } catch (e) {
+                        console.warn(`Could not fetch losers bracket for ${season}.`, e);
                     }
-                } catch (e) {
-                    console.warn(`Could not fetch losers bracket for ${season}.`, e);
                 }
             };
 
@@ -862,12 +865,13 @@
             
             const calculateAndSortRecords = () => {
                 const currentYear = new Date().getFullYear();
+
                 allTimeRecords.topWeeklyScores = [...allWeeklyScores].sort((a, b) => b.score - a.score).slice(0, 5);
                 allTimeRecords.topSeasonScores = [...allSeasonScores].sort((a, b) => b.score - a.score).slice(0, 5);
-                allTimeRecords.lowestWeeklyScores = [...allWeeklyScores].filter(s => s.score > 0).sort((a, b) => a.score - b.score).slice(0, 5);
+                allTimeRecords.lowestWeeklyScores = [...allWeeklyScores].filter(s => s.score > 0 && s.year < currentYear).sort((a, b) => a.score - b.score).slice(0, 5);
                 allTimeRecords.lowestSeasonScores = [...allSeasonScores].filter(s => s.year < currentYear).sort((a, b) => a.score - b.score).slice(0, 5);
-                allTimeRecords.topSeasonRecords = [...allSeasonRecords].sort((a, b) => b.winPct - a.winPct || b.pf - a.pf).slice(0, 5);
-                allTimeRecords.bottomSeasonRecords = [...allSeasonRecords].sort((a, b) => a.winPct - b.winPct || a.pf - b.pf).slice(0, 5);
+                allTimeRecords.topSeasonRecords = [...allSeasonRecords].filter(r => r.year < currentYear).sort((a, b) => b.winPct - a.winPct || b.pf - a.pf).slice(0, 5);
+                allTimeRecords.bottomSeasonRecords = [...allSeasonRecords].filter(r => r.year < currentYear).sort((a, b) => a.winPct - b.winPct || a.pf - b.pf).slice(0, 5);
                 const blowoutsAndCloseGames = allMatchupDetails.map(m => ({...m, margin: Math.abs(m.score1 - m.score2)}));
                 allTimeRecords.biggestBlowouts = [...blowoutsAndCloseGames].sort((a,b) => b.margin - a.margin).slice(0,5);
                 allTimeRecords.closestGames = [...blowoutsAndCloseGames].filter(m => m.totalScore > 0).sort((a,b) => a.margin - b.margin).slice(0,5);
@@ -937,11 +941,11 @@
                 }, {});
 
                 if (Object.keys(toiletKingsByName).length > 0) {
-                    toiletKingsDiv.innerHTML += '<h3 class="text-lg font-semibold text-amber-800 mb-2 border-t border-gray-700 pt-4">Toilet King 🚽💩</h3>';
+                    toiletKingsDiv.innerHTML += '<h3 class="text-lg font-semibold text-amber-800 mb-2 border-t border-gray-700 pt-4">Toilet King 🚽</h3>';
                     Object.entries(toiletKingsByName).forEach(([managerName, years]) => {
                         const manager = Object.values(managersData).find(m => m.displayName === managerName);
                         if (manager) {
-                            const yearsHtml = years.map(y => `<p class="text-sm text-gray-300">${formatYear(y)}</p>`).join('');
+                            const yearsHtml = years.map(y => `<p class="text-sm text-gray-300">💩 ${formatYear(y)}</p>`).join('');
                             toiletKingsDiv.innerHTML += `<div class="flex items-center gap-3"><img src="${manager.avatar}" class="w-10 h-10 rounded-full object-cover border-2 border-amber-700"><div><p class="font-semibold">${getDisplayNameWithCrown(manager.userId)}</p>${yearsHtml}</div></div>`;
                         }
                     });
@@ -971,13 +975,13 @@
                     if (!manager1 || !manager2) return '';
                     return `
                         <div class="py-2.5 border-b border-gray-800 last:border-b-0 hover:bg-gray-800/50 -mx-4 px-4 rounded-md">
-                            <div class="flex justify-between items-center text-sm mb-1">
-                                <div class="flex items-center gap-2 min-w-0">
+                            <div class="flex items-center text-sm mb-1">
+                                <div class="flex items-center gap-2 flex-1 min-w-0">
                                    <img src="${manager1.avatar}" class="w-6 h-6 rounded-full object-cover border-2 border-orange-500" alt="${manager1.displayName}">
                                    <span class="font-semibold truncate">${getDisplayNameWithCrown(match.manager1Id)}</span>
                                 </div>
-                                <span class="text-xs text-gray-400 mx-1">vs</span>
-                                <div class="flex items-center gap-2 min-w-0 justify-end">
+                                <span class="text-xs text-gray-400 px-2">vs</span>
+                                <div class="flex items-center gap-2 flex-1 min-w-0 justify-end">
                                    <span class="font-semibold truncate text-right">${getDisplayNameWithCrown(match.manager2Id)}</span>
                                    <img src="${manager2.avatar}" class="w-6 h-6 rounded-full object-cover border-2 border-orange-500" alt="${manager2.displayName}">
                                 </div>
@@ -997,10 +1001,7 @@
                             <div class="flex items-center justify-between">
                                  <div class="min-w-0">
                                     <p class="font-semibold text-white truncate">${p.name} <span class="text-sm font-normal text-gray-400">(${p.position}, ${p.team || 'FA'})</span></p>
-                                    <div class="flex items-center gap-2 mt-1">
-                                        <img src="${manager.avatar}" class="w-5 h-5 rounded-full object-cover border-2 border-orange-500" alt="${manager.displayName}">
-                                        <p class="text-xs text-gray-400 truncate">for ${getDisplayNameWithCrown(p.managerId)} in ${formatYear(p.year)}, Wk ${p.week}</p>
-                                    </div>
+                                     <p class="text-xs text-gray-400 truncate mt-1">for ${getDisplayNameWithCrown(p.managerId)} in ${formatYear(p.year)}, Wk ${p.week}</p>
                                  </div>
                                  <span class="font-bold text-lg text-white ml-2">${p.score.toFixed(2)}</span>
                             </div>
@@ -1375,8 +1376,50 @@
             const renderToiletBowlHistory = () => {
                 const container = document.getElementById('toilet-bowl-games');
                 if (!container) return;
+
+                // Manually define the correct 2021 Toilet Bowl data
+                const loperzId = Object.keys(managersData).find(id => managersData[id].displayName === 'Matt Pitman');
+                const ebroseId = Object.keys(managersData).find(id => managersData[id].displayName === 'Adam Ellis');
+
+                const manualToiletBowl2021 = {
+                    season: 2021,
+                    safeId: loperzId, // loperz won the matchup and was safe
+                    safeScore: 135.27,
+                    safeRoster: [
+                        { name: 'Kyler Murray', position: 'QB', score: 26.92 },
+                        { name: 'Austin Ekeler', position: 'RB', score: 18.7 },
+                        { name: 'Darrel Williams', position: 'RB', score: 24.2 },
+                        { name: 'AJ Brown', position: 'WR', score: 5.1 },
+                        { name: 'Keenan Allen', position: 'WR', score: 12.4 },
+                        { name: 'Dionte Johnson', position: 'WR', score: 13.1 },
+                        { name: 'Foster Moreau', position: 'TE', score: 1.4 },
+                        { name: 'Michael Pittman', position: 'WR', score: 7.7 },
+                        { name: 'Tyler Bass', position: 'K', score: 3 },
+                        { name: 'Chicago Bears', position: 'DEF', score: 22.75 }
+                    ],
+                    punishedId: ebroseId, // Ebrose lost and was the toilet bowl 'winner' (loser)
+                    punishedScore: 107.83,
+                    punishedRoster: [
+                        { name: 'Justin Herbert', position: 'QB', score: 21.68 },
+                        { name: 'Nick Chubb', position: 'RB', score: 5.8 },
+                        { name: 'Damien Harris', position: 'RB', score: 17.2 },
+                        { name: 'Stefon Diggs', position: 'WR', score: 7.7 },
+                        { name: 'Marquez Valdes-Scantling', position: 'WR', score: 0.8 },
+                        { name: 'Russel Gage', position: 'WR', score: 6.5 },
+                        { name: 'Gerald Everett', position: 'TE', score: 5.1 },
+                        { name: 'Devin Singletary', position: 'RB', score: 23 },
+                        { name: 'Nick Folk', position: 'K', score: 6.3 },
+                        { name: 'Los Angeles Chargers', position: 'DEF', score: 13.75 }
+                    ]
+                };
+
+                // Since we no longer fetch 2021 data, we can combine our clean API data with the manual object
+                const correctedData = [...toiletBowlData];
+                if (loperzId && ebroseId) {
+                    correctedData.push(manualToiletBowl2021);
+                }
                 
-                const sortedData = [...toiletBowlData].sort((a, b) => b.season - a.season);
+                const sortedData = correctedData.sort((a, b) => b.season - a.season);
                 const positionColors = { QB: 'bg-rose-500/10 text-rose-300 border-rose-500/30', RB: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30', WR: 'bg-sky-500/10 text-sky-300 border-sky-500/30', TE: 'bg-amber-500/10 text-amber-300 border-amber-500/30', K: 'bg-fuchsia-500/10 text-fuchsia-300 border-fuchsia-500/30', DEF: 'bg-orange-500/10 text-orange-300 border-orange-500/30' };
 
                 if (sortedData.length === 0) {
@@ -1412,7 +1455,7 @@
                             </div>
                             <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-600/50">
                                  <div class="flex items-center gap-4 mb-3">
-                                    <img src="${safe.avatar}" class="w-12 h-12 rounded-full object-cover border-4 border-orange-500">
+                                    <img src="${safe.avatar}" class="w-12 h-12 rounded-full object-cover border-4 border-gray-400">
                                     <div>
                                         <h3 class="text-lg font-bold text-gray-300">😮‍💨 ${getDisplayNameWithCrown(safe.userId)}</h3>
                                         <p class="text-sm text-gray-400">Safe Roster - ${data.safeScore.toFixed(2)} points</p>
@@ -1664,7 +1707,7 @@
                 }
                 if (rivalId) {
                     const rival = managersData[rivalId];
-                    rivalDiv.innerHTML = `<div class="flex items-center gap-4"><img src="${rival.avatar}" class="w-12 h-12 rounded-full object-cover border-2 border-orange-500"><div><p class="font-bold text-lg">${getDisplayNameWithCrown(rival.userId)}</p><p class="text-sm text-red-400">Has given you ${maxLosses} Ls</p></div></div>`;
+                    rivalDiv.innerHTML = `<div class="flex items-center gap-4"><img src="${rival.avatar}" class="w-12 h-12 rounded-full object-cover border-2 border-red-500"><div><p class="font-bold text-lg">${getDisplayNameWithCrown(rival.userId)}</p><p class="text-sm text-red-400">Has given you ${maxLosses} Ls</p></div></div>`;
                 } else {
                     rivalDiv.innerHTML = '<p class="text-sm text-gray-400">No clear rival yet.</p>';
                 }
@@ -1690,4 +1733,5 @@
     </script>
 </body>
 </html>
+
 
