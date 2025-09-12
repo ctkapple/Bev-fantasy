@@ -57,7 +57,6 @@
     </div>
 
     <div id="app" class="container mx-auto p-4 md:p-8 max-w-7xl hidden">
-        <!-- Header -->
         <header class="text-center mb-10">
             <div id="league-info" class="flex items-center justify-center gap-4">
                  <img id="league-avatar" src="https://placehold.co/64x64/1f2937/a0aec0?text=🏈" alt="League Avatar" class="w-20 h-20 rounded-full border-2 border-[#30363d] relative -top-1 shadow-lg">
@@ -68,7 +67,6 @@
             </div>
         </header>
 
-        <!-- Tabs -->
         <div class="mb-8 border-b border-[#30363d]">
             <nav class="flex justify-center -mb-px space-x-6 flex-wrap" aria-label="Tabs">
                 <button class="tab-button active text-base font-medium py-4 px-1 border-b-2" data-tab="dashboard">Rankings</button>
@@ -83,12 +81,9 @@
             </nav>
         </div>
 
-        <!-- Tab Content -->
         <main id="tab-content">
-            <!-- Dashboard Tab -->
             <div id="dashboard-content" class="tab-pane active">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Power Rankings -->
                     <div class="card lg:col-span-2">
                         <h2 class="text-xl font-bold mb-4 text-[#58a6ff]">All-Time Standings</h2>
                         <div class="overflow-x-auto">
@@ -103,28 +98,22 @@
                                     </tr>
                                 </thead>
                                 <tbody id="power-rankings-body" class="divide-y divide-[#30363d]">
-                                    <!-- Rows will be injected here -->
-                                </tbody>
+                                    </tbody>
                             </table>
                         </div>
                     </div>
-                    <!-- Trophy Case -->
                     <div class="card">
-                        <h2 class="text-xl font-bold mb-4 text-[#58a6ff]">Trophy Case 🏆</h2>
+                        <h2 class="text-xl font-bold mb-4 text-yellow-400">Trophy Case 🏆</h2>
                         <div id="trophy-case" class="space-y-4">
-                           <!-- Trophies will be injected here -->
-                        </div>
+                           </div>
                          <div id="runner-ups" class="mt-6 space-y-4">
-                           <!-- Runner ups will be injected here -->
-                        </div>
+                           </div>
                          <div id="toilet-kings" class="mt-6 space-y-4">
-                           <!-- Toilet Kings will be injected here -->
-                        </div>
+                           </div>
                     </div>
                 </div>
             </div>
-             <!-- My Team Tab -->
-            <div id="myteam-content" class="tab-pane hidden">
+             <div id="myteam-content" class="tab-pane hidden">
                 <div class="card mb-6">
                     <label for="my-team-select" class="block text-lg font-medium text-[#58a6ff] mb-2">Please select your team</label>
                     <select id="my-team-select" class="bg-[#0d1117] border border-[#30363d] rounded-md p-2 w-full max-w-md text-white focus:ring-2 focus:ring-[#58a6ff] focus:border-[#58a6ff]">
@@ -133,14 +122,12 @@
                 </div>
 
                 <div id="my-team-data" class="hidden">
-                    <!-- Manager Header -->
                     <div class="card text-center mb-6">
                         <img id="my-team-avatar" src="" alt="Manager Avatar" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-[#58a6ff] object-cover shadow-lg">
                         <h2 id="my-team-name" class="text-3xl font-bold"></h2>
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <!-- Left Column -->
                         <div class="lg:col-span-2 space-y-6">
                             <div class="card">
                                 <h3 class="text-xl font-bold mb-4 text-[#58a6ff]">Career Stats</h3>
@@ -159,7 +146,20 @@
                             </div>
 							<div class="card">
                                 <h3 class="text-xl font-bold mb-4 text-[#58a6ff]">Yearly Finishes</h3>
-                                <ul id="my-team-standings" class="space-y-2"></ul>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-sm text-left">
+                                        <thead class="text-xs text-gray-400 uppercase border-b border-[#30363d]">
+                                            <tr>
+                                                <th scope="col" class="px-2 py-3">Year</th>
+                                                <th scope="col" class="px-2 py-3 text-center">Finish</th>
+                                                <th scope="col" class="px-2 py-3 text-right">Points For</th>
+                                                <th scope="col" class="px-2 py-3 text-right">Moves</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="my-team-standings-body">
+                                            </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                         <div class="space-y-6">
@@ -186,7 +186,6 @@
                 </div>
             </div>
             
-            <!-- Records Tab -->
             <div id="records-content" class="tab-pane hidden">
                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="card"><h3 class="text-lg font-semibold text-[#58a6ff] mb-2">Highest Scoring Seasons</h3><div id="highest-season-scores" class="space-y-2"></div></div>
@@ -202,7 +201,6 @@
                  </div>
             </div>
 
-            <!-- Head-to-Head Tab -->
             <div id="h2h-content" class="tab-pane hidden">
                 <div class="card">
                     <h2 class="text-xl font-bold mb-4 text-[#58a6ff]">Head-to-Head Comparison</h2>
@@ -217,36 +215,30 @@
                 </div>
             </div>
 
-            <!-- Player Legacies Tab -->
             <div id="legacies-content" class="tab-pane hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="card">
                         <h2 class="text-xl font-bold mb-4 text-[#58a6ff]">Ring Chasers</h2>
                         <p class="text-sm text-gray-400 mb-6">Players with the most appearances in the championship.</p>
                         <div id="player-legacies-list" class="space-y-4">
-                            <!-- Player legacies will be injected here -->
-                        </div>
+                            </div>
                     </div>
                     <div class="card">
                         <h2 class="text-xl font-bold mb-4 text-[#58a6ff]">Loyalty Club</h2>
                         <p class="text-sm text-gray-400 mb-6">Players we just can't quit.</p>
                         <div id="most-kept-players-list" class="space-y-4">
-                            <!-- Most kept players will be injected here -->
-                        </div>
+                            </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Championship Rosters Tab -->
             <div id="rosters-content" class="tab-pane hidden">
                 <div class="card">
                      <div id="championship-rosters-list">
-                        <!-- Championship rosters will be injected here -->
-                    </div>
+                        </div>
                 </div>
             </div>
 
-            <!-- Rules Tab -->
             <div id="rules-content" class="tab-pane hidden">
                 <div class="card prose prose-invert max-w-none text-gray-300">
                     <h2 class="text-2xl font-bold text-white mb-6">League Constitution</h2>
@@ -300,13 +292,11 @@
                 </div>
             </div>
             
-            <!-- Lifetime Earnings Tab -->
             <div id="earnings-content" class="tab-pane hidden">
                 <div class="card mb-6 max-w-3xl mx-auto">
                     <h2 class="text-xl font-bold mb-4 text-[#58a6ff]">Lifetime Winnings 💰</h2>
                     <div id="earnings-leaderboard" class="space-y-3">
-                        <!-- Leaderboard will be injected here -->
-                    </div>
+                        </div>
                 </div>
                  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="card lg:col-span-2">
@@ -323,8 +313,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="earnings-breakdown" class="divide-y divide-[#30363d]">
-                                    <!-- Breakdown will be injected here -->
-                                </tbody>
+                                    </tbody>
                             </table>
                         </div>
                     </div>
@@ -341,7 +330,6 @@
                 </div>
             </div>
             
-            <!-- Toilet Bowl History Tab -->
             <div id="toilet-content" class="tab-pane hidden">
                 <div class="card prose prose-invert max-w-none text-gray-300">
                     <h2 class="text-2xl font-bold text-white mb-6">Toilet Bowl Punishment History</h2>
@@ -511,11 +499,12 @@
                             avatar: avatar,
                             stats: { wins: 0, losses: 0, ties: 0, pf: 0, pa: 0, championship_years: [], runner_up_years: [] },
                             h2h: {}, rosteredPlayers: {}, pointsScoredAgainst: {},
-                            teamNameHistory: [], yearlyStandings: [], totalTransactions: 0
+                            teamNameHistory: [], yearlyStandings: [], totalTransactions: 0, totalTrades: 0, yearlyStats: {}
                         };
                     }
                     const managerData = managersData[user.user_id];
                     if (managerData) {
+                        managerData.yearlyStats[season] = { pf: 0, transactions: 0, trades: 0 };
                         const hasYear = managerData.teamNameHistory.some(t => t.year === season);
                         if (!hasYear) {
                             const teamName = user.metadata?.team_name || user.display_name;
@@ -556,6 +545,7 @@
                         const pf = parseFloat(`${r.settings.fpts}.${r.settings.fpts_decimal}`);
                         const pa = parseFloat(`${r.settings.fpts_against}.${r.settings.fpts_against_decimal}`);
                         m.stats.pf += pf; m.stats.pa += pa;
+                        m.yearlyStats[season].pf = pf;
                         allSeasonScores.push({ score: pf, manager: m.displayName, year: season });
                         if (r.settings.wins + r.settings.losses >= leagueData.settings.playoff_week_start - 1) {
                              allSeasonRecords.push({ wins: r.settings.wins, losses: r.settings.losses, record: `${r.settings.wins}-${r.settings.losses}`, winPct: (r.settings.wins + r.settings.losses) > 0 ? r.settings.wins / (r.settings.wins + r.settings.losses) : 0, pf: pf, manager: m.displayName, year: season });
@@ -589,8 +579,14 @@
                         const transactions = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueData.league_id}/transactions/${week}`);
                         rosters.forEach(roster => {
                             if (roster.owner_id && managersData[roster.owner_id]) {
+                                const manager = managersData[roster.owner_id];
                                 const userTransactions = transactions.filter(t => t.roster_ids.includes(roster.roster_id));
-                                managersData[roster.owner_id].totalTransactions += userTransactions.length;
+                                manager.totalTransactions += userTransactions.length;
+                                manager.yearlyStats[season].transactions += userTransactions.length;
+                                
+                                const userTrades = transactions.filter(t => t.type === 'trade' && t.roster_ids.includes(roster.roster_id));
+                                manager.totalTrades += userTrades.length;
+                                manager.yearlyStats[season].trades += userTrades.length;
                             }
                         });
                     } catch (e) {}
@@ -768,7 +764,7 @@
                 }, {});
 
                 if (Object.keys(toiletKingsByName).length > 0) {
-                    toiletKingsDiv.innerHTML += '<h3 class="text-lg font-semibold text-brown-400 mb-2 border-t border-[#30363d] pt-4">Toilet King 🚽💩</h3>';
+                    toiletKingsDiv.innerHTML += '<h3 class="text-lg font-semibold text-amber-600 mb-2 border-t border-[#30363d] pt-4">Toilet King 🚽💩</h3>';
                     Object.entries(toiletKingsByName).forEach(([managerName, years]) => {
                         const manager = Object.values(managersData).find(m => m.displayName === managerName);
                         if (manager) {
@@ -827,26 +823,24 @@
                     <div class="mb-10">
                         <h2 class="text-3xl font-bold text-center mb-6 border-b border-[#30363d] pb-2 text-yellow-400">${formatChampYear(data.season)} Championship Game</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <!-- Winner -->
                             <div class="bg-[#1c122c]/50 p-4 rounded-lg border border-yellow-400/50">
                                 <div class="flex items-center gap-4 mb-3">
                                     <img src="${winner.avatar}" class="w-12 h-12 rounded-full object-cover">
                                     <div>
                                         <h3 class="text-lg font-bold text-yellow-400">🏆 ${winner.displayName}</h3>
-                                        <p class="text-sm text-gray-400">Starting Roster - ${winnerScore.toFixed(2)}</p>
+                                        <p class="text-sm text-gray-400">Starting Roster - ${winnerScore.toFixed(2)} points</p>
                                     </div>
                                 </div>
                                 <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                                     ${data.winnerRoster.map(p => `<li class="p-2 border ${positionColors[p.position] || 'bg-gray-700/20'} rounded truncate" title="${p.name} (${p.position})">${p.name} <span class="text-gray-400 text-xs">(${p.position})</span></li>`).join('') || '<li>Roster data not available.</li>'}
                                 </ul>
                             </div>
-                            <!-- Loser -->
-                             <div class="bg-[#1c122c]/50 p-4 rounded-lg border border-gray-600/50">
+                            <div class="bg-[#1c122c]/50 p-4 rounded-lg border border-gray-600/50">
                                  <div class="flex items-center gap-4 mb-3">
                                     <img src="${loser.avatar}" class="w-12 h-12 rounded-full object-cover">
                                     <div>
                                         <h3 class="text-lg font-bold text-gray-300">🥈 ${loser.displayName}</h3>
-                                        <p class="text-sm text-gray-400">Runner-Up Roster - ${loserScore.toFixed(2)}</p>
+                                        <p class="text-sm text-gray-400">Starting Roster - ${loserScore.toFixed(2)} points</p>
                                     </div>
                                 </div>
                                 <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
@@ -992,7 +986,6 @@
 
                 resultDiv.innerHTML = `
                     <div class="grid grid-cols-1 lg:grid-cols-3 items-center gap-6 text-center">
-                        <!-- Manager 1 -->
                         <div class="bg-gray-900/30 p-4 md:p-6 rounded-xl border border-[#30363d] shadow-lg flex flex-col items-center space-y-3 order-2 lg:order-1">
                             <img src="${m1.avatar}" class="w-24 h-24 rounded-full object-cover border-4 border-[#58a6ff]">
                             <p class="font-bold text-xl">${m1.displayName}</p>
@@ -1004,13 +997,11 @@
                             </div>
                         </div>
 
-                        <!-- Record -->
                         <div class="flex flex-col items-center order-1 lg:order-2 py-4">
                             <p class="text-6xl font-black tracking-tighter">${record.wins}-${record.losses}${record.ties > 0 ? `-${record.ties}` : ''}</p>
                             <p class="text-lg text-gray-400 font-medium">All-Time Record</p>
                         </div>
 
-                        <!-- Manager 2 -->
                         <div class="bg-gray-900/30 p-4 md:p-6 rounded-xl border border-[#30363d] shadow-lg flex flex-col items-center space-y-3 order-3">
                             <img src="${m2.avatar}" class="w-24 h-24 rounded-full object-cover border-4 border-[#58a6ff]">
                             <p class="font-bold text-xl">${m2.displayName}</p>
@@ -1057,12 +1048,28 @@
                 document.getElementById('my-team-transactions').textContent = manager.totalTransactions;
                 document.getElementById('my-team-earnings').textContent = `$${totalEarnings.toFixed(2)}`;
 
-                const standingsList = document.getElementById('my-team-standings');
+                const standingsBody = document.getElementById('my-team-standings-body');
                 const currentYear = new Date().getFullYear();
-                standingsList.innerHTML = manager.yearlyStandings
+                standingsBody.innerHTML = '';
+                const yearlyData = manager.yearlyStandings
                     .filter(s => s.year < currentYear || (seasonalData[s.year] && seasonalData[s.year].championFound))
-                    .sort((a,b) => a.year - b.year)
-                    .map(s => `<li>${formatYear(s.year)}: <span class="font-bold">${s.rank}</span> / ${seasonalData[s.year].totalTeams}</li>`).join('');
+                    .sort((a,b) => a.year - b.year);
+
+                if (yearlyData.length > 0) {
+                    standingsBody.innerHTML = yearlyData.map(s => {
+                        const yearStats = manager.yearlyStats[s.year] || { pf: 0, transactions: 0 };
+                        return `
+                            <tr class="border-b border-[#30363d] last:border-b-0 hover:bg-[#21262d]/50">
+                                <td class="px-2 py-3 font-semibold">${formatYear(s.year)}</td>
+                                <td class="px-2 py-3 text-center">${s.rank} / ${seasonalData[s.year].totalTeams}</td>
+                                <td class="px-2 py-3 text-right">${yearStats.pf.toFixed(2)}</td>
+                                <td class="px-2 py-3 text-right">${yearStats.transactions}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    standingsBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-400">No season data available.</td></tr>';
+                }
 
                 const namesList = document.getElementById('my-team-names');
                 namesList.innerHTML = manager.teamNameHistory.sort((a,b) => a.year - b.year).map(t => `<li>${formatYear(t.year)}: <span class="font-bold">${t.name || 'N/A'}</span></li>`).join('');
@@ -1099,6 +1106,7 @@
                 if(bestWeek) highlightsHTML += `<p>🔥 Best Week: ${bestWeek.score.toFixed(2)} pts (${formatYear(bestWeek.year)}, Week ${bestWeek.week})</p>`;
                  const bestSeasonScore = allSeasonScores.filter(s => s.manager === manager.displayName).sort((a,b) => b.score - a.score)[0];
                 if(bestSeasonScore) highlightsHTML += `<p>🚀 Highest Scoring Season: ${bestSeasonScore.score.toFixed(2)} pts (${formatYear(bestSeasonScore.year)})</p>`;
+                highlightsHTML += `<p>🤝 Trades Completed: ${manager.totalTrades || 0}</p>`;
                 highlightsDiv.innerHTML = highlightsHTML || '<p>No highlights recorded yet.</p>';
 
                 dataContainer.classList.remove('hidden');
@@ -1109,5 +1117,3 @@
     </script>
 </body>
 </html>
-
-
