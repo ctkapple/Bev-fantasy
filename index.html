@@ -1406,7 +1406,7 @@
 
                 // Most Expensive Acquisitions
                 const sortedBids = [...allFaabBids].sort((a,b) => b.amount - a.amount);
-                sortedBids.filter(bid => bid.amount > 0).forEach(bid => {
+                sortedBids.filter(bid => bid.amount > 20).forEach(bid => {
                     const posColorClass = positionTextColors[bid.position] || 'text-white';
                     const manager = Object.values(managersData).find(m => m.userId === bid.managerId);
                     acquisitionsBody.innerHTML += `
@@ -1816,6 +1816,7 @@
     </script>
 </body>
 </html>
+
 
 
 
