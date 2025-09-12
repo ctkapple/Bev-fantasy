@@ -7,6 +7,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Favicon Links -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/resources/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/resources/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/resources/favicon-16x16.png">
+    <link rel="manifest" href="/resources/site.webmanifest">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -45,27 +50,39 @@
         }
         .prose h3 { color: #f97316 !important; }
 
-        /* New Loader Styles */
-        .football-loader {
-            width: 80px;
-            height: 80px;
-            animation: spin-toss 1.8s ease-in-out infinite;
+        /* New Modern Loader Styles */
+        .helmet-loader {
+            width: 100px;
+            height: 100px;
         }
-        @keyframes spin-toss {
-            0% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-40px) rotate(180deg); }
-            100% { transform: translateY(0px) rotate(360deg); }
+        .helmet-loader path {
+            stroke: #f97316; /* Orange */
+            stroke-width: 5;
+            fill: transparent;
+            stroke-dasharray: 1500;
+            stroke-dashoffset: 1500;
+            animation: draw-in 2s ease-in-out forwards, pulse-glow 1.5s ease-in-out infinite 2s;
+        }
+        @keyframes draw-in {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+        @keyframes pulse-glow {
+            0%, 100% {
+                filter: drop-shadow(0 0 4px #f97316);
+            }
+            50% {
+                filter: drop-shadow(0 0 12px #f97316);
+            }
         }
     </style>
 </head>
 <body class="antialiased">
     <div id="loader" class="fixed inset-0 bg-gray-900 bg-opacity-80 flex flex-col justify-center items-center z-50">
-        <!-- Animated Football Loader -->
-        <svg class="football-loader" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-            <ellipse cx="60" cy="60" rx="55" ry="35" fill="#8B572A"/>
-            <path d="M15,50 C30,40 90,40 105,50" stroke="white" stroke-width="3" fill="none"/>
-            <path d="M15,70 C30,80 90,80 105,70" stroke="white" stroke-width="3" fill="none"/>
-            <line x1="60" y1="35" x2="60" y2="85" stroke="white" stroke-width="3" stroke-dasharray="5"/>
+        <!-- Animated Helmet Loader -->
+        <svg class="helmet-loader" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <path d="M168.7,91.3c0-40.1-30.9-72.6-68.7-72.6c-37.8,0-68.7,32.5-68.7,72.6c0,26.4,13.2,49.6,33.3,62.1v11.9h12.8v-7.1 c2.2,0.3,4.5,0.5,6.8,0.5s4.6-0.2,6.8-0.5v7.1h12.8v-11.9C155.5,140.9,168.7,117.7,168.7,91.3z M100,133.2 c-22,0-39.8-19-39.8-41.9S78,49.3,100,49.3s39.8,19,39.8,41.9S122,133.2,100,133.2z M171.2,109.8h-7.6v-37h7.6 c3.8,0,6.8-3.2,6.8-7.2s-3.1-7.2-6.8-7.2h-7.6c-3.8,0-6.8-3.2-6.8-7.2s3.1-7.2,6.8-7.2h7.6v-14.3h-7.6c-11.2,0-20.4,9.8-20.4,21.8 v37c0,11.9,9.2,21.8,20.4,21.8h7.6V109.8z"/>
         </svg>
         <p class="text-white text-lg mt-4">Loading stats from Sleeper... please wait</p>
         <p class="text-white text-sm mt-2">This may take up to ~30 seconds</p>
@@ -1788,5 +1805,6 @@
     </script>
 </body>
 </html>
-
+" in the canvas.
+Can you please make it so that the new loader animation you added will animate infinitely instead of only playing once?
 
