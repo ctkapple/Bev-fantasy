@@ -43,20 +43,30 @@
         .tab-button:hover:not(.active) {
             color: #e5e7eb;
         }
-        .loader {
-            border-top-color: #f97316; /* Orange */
-            animation: spin 1s linear infinite;
-        }
         .prose h3 { color: #f97316 !important; }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        /* New Loader Styles */
+        .football-loader {
+            width: 80px;
+            height: 80px;
+            animation: spin-toss 1.8s ease-in-out infinite;
+        }
+        @keyframes spin-toss {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-40px) rotate(180deg); }
+            100% { transform: translateY(0px) rotate(360deg); }
         }
     </style>
 </head>
 <body class="antialiased">
     <div id="loader" class="fixed inset-0 bg-gray-900 bg-opacity-80 flex flex-col justify-center items-center z-50">
-        <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-32 w-32"></div>
+        <!-- Animated Football Loader -->
+        <svg class="football-loader" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="60" cy="60" rx="55" ry="35" fill="#8B572A"/>
+            <path d="M15,50 C30,40 90,40 105,50" stroke="white" stroke-width="3" fill="none"/>
+            <path d="M15,70 C30,80 90,80 105,70" stroke="white" stroke-width="3" fill="none"/>
+            <line x1="60" y1="35" x2="60" y2="85" stroke="white" stroke-width="3" stroke-dasharray="5"/>
+        </svg>
         <p class="text-white text-lg mt-4">Loading stats from Sleeper... please wait</p>
         <p class="text-white text-sm mt-2">This may take up to ~30 seconds</p>
     </div>
@@ -64,7 +74,7 @@
     <div id="app" class="container mx-auto p-4 md:p-8 max-w-7xl hidden">
         <header class="text-center mb-10">
             <div id="league-info" class="flex flex-col items-center justify-center gap-4">
-                 <img id="league-avatar" src="https://placehold.co/64x64/1f2937/a0aec0?text=🏈" alt="League Avatar" class="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-orange-500 shadow-lg">
+                 <img id="league-avatar" src="https://placehold.co/64x64/1f2937/a0aec0?text=🏈" alt="League Avatar" class="w-24 h-24 sm:w-28 sm:h-28 rounded-full shadow-lg">
                 <div>
                     <h1 id="league-name" class="text-4xl sm:text-5xl md:text-6xl font-extrabold text-orange-500 tracking-tight" style="text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff, 3px 3px 10px rgba(0,0,0,0.7);">Fantasy Football Dashboard</h1>
                     <p id="league-season" class="text-base sm:text-lg text-gray-300 mt-2">Loading league data...</p>
@@ -130,7 +140,7 @@
 
                 <div id="my-team-data" class="hidden">
                     <div class="card text-center mb-6">
-                        <img id="my-team-avatar" src="" alt="Manager Avatar" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-orange-500 object-cover shadow-lg">
+                        <img id="my-team-avatar" src="" alt="Manager Avatar" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-orange-500 object-cover shadow-lg cursor-pointer hover:scale-110 transition-transform">
                         <h2 id="my-team-name" class="text-2xl sm:text-3xl font-bold"></h2>
                     </div>
 
@@ -415,6 +425,14 @@
             <p class="italic">*Results not guaranteed.</p>
         </footer>
     </div>
+    
+    <!-- Avatar Modal -->
+    <div id="avatar-modal" class="fixed inset-0 bg-black bg-opacity-85 flex justify-center items-center z-[100] hidden p-4 transition-opacity duration-300">
+        <div class="relative">
+            <img id="avatar-modal-img" src="" alt="Expanded Avatar" class="max-w-[80vw] max-h-[80vh] rounded-full border-4 border-orange-500 shadow-2xl">
+            <button id="avatar-modal-close" class="absolute -top-2 -right-2 bg-white text-black rounded-full h-8 w-8 flex items-center justify-center font-bold text-lg leading-none">&times;</button>
+        </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -465,6 +483,29 @@
                   allMatchupDetails = [], allPlayerScores = [];
 
             const formatYear = (year) => year;
+            
+            // --- Avatar Modal Logic ---
+            const expandAvatar = (src) => {
+                const modal = document.getElementById('avatar-modal');
+                const modalImg = document.getElementById('avatar-modal-img');
+                if (modal && modalImg) {
+                    modalImg.src = src;
+                    modal.classList.remove('hidden');
+                }
+            };
+            // Make it globally accessible for inline onclick handlers
+            window.expandAvatar = expandAvatar; 
+            
+            document.getElementById('avatar-modal-close').addEventListener('click', () => {
+                document.getElementById('avatar-modal').classList.add('hidden');
+            });
+            document.getElementById('avatar-modal').addEventListener('click', (e) => {
+                // Hide modal if user clicks on the background, but not on the image itself
+                if (e.target.id === 'avatar-modal') {
+                     document.getElementById('avatar-modal').classList.add('hidden');
+                }
+            });
+
 
              const getDisplayNameWithCrown = (managerId) => {
                 const manager = managersData[managerId];
@@ -904,7 +945,7 @@
                     const winPct = manager.stats.wins + manager.stats.losses > 0 ? ((manager.stats.wins / (manager.stats.wins + manager.stats.losses)) * 100).toFixed(1) + '%' : '0.0%';
                     const recordHtml = `<span class="text-green-400 font-semibold">${manager.stats.wins}</span>-<span class="text-red-400">${manager.stats.losses}</span>`;
                     const pointsHtml = `<span class="text-green-400 font-semibold">${manager.stats.pf.toFixed(2)}</span> / <span class="text-red-400">${manager.stats.pa.toFixed(2)}</span>`;
-                    rankingsBody.innerHTML += `<tr class="hover:bg-gray-800/50"><td class="px-4 py-3 whitespace-nowrap text-sm font-medium">${index + 1}</td><td class="px-4 py-3 whitespace-nowrap text-sm"><div class="flex items-center"><img class="h-8 w-8 rounded-full mr-3 object-cover border-2 border-orange-500" src="${manager.avatar}" alt=""><div class="font-semibold">${getDisplayNameWithCrown(manager.userId)}</div></div></td><td class="px-4 py-3 whitespace-nowrap text-sm">${recordHtml}</td><td class="px-4 py-3 whitespace-nowrap text-sm">${winPct}</td><td class="px-4 py-3 whitespace-nowrap text-sm">${pointsHtml}</td></tr>`;
+                    rankingsBody.innerHTML += `<tr class="hover:bg-gray-800/50"><td class="px-4 py-3 whitespace-nowrap text-sm font-medium">${index + 1}</td><td class="px-4 py-3 whitespace-nowrap text-sm"><div class="flex items-center"><img onclick="expandAvatar(this.src)" class="h-8 w-8 rounded-full mr-3 object-cover border-2 border-orange-500 cursor-pointer hover:scale-110 transition-transform" src="${manager.avatar}" alt=""><div class="font-semibold">${getDisplayNameWithCrown(manager.userId)}</div></div></td><td class="px-4 py-3 whitespace-nowrap text-sm">${recordHtml}</td><td class="px-4 py-3 whitespace-nowrap text-sm">${winPct}</td><td class="px-4 py-3 whitespace-nowrap text-sm">${pointsHtml}</td></tr>`;
                 });
             };
 
@@ -917,7 +958,7 @@
                 if (champions.length > 0) {
                     champions.forEach(c => {
                         const yearsHtml = c.stats.championship_years.map(y => `<p class="text-sm text-yellow-400">🏆 ${formatYear(y)}</p>`).join('');
-                        trophyCase.innerHTML += `<div class="flex items-center gap-3"><img src="${c.avatar}" class="w-10 h-10 rounded-full object-cover border-2 border-yellow-400"><div><p class="font-semibold">${getDisplayNameWithCrown(c.userId)}</p>${yearsHtml}</div></div>`;
+                        trophyCase.innerHTML += `<div class="flex items-center gap-3"><img onclick="expandAvatar(this.src)" src="${c.avatar}" class="w-10 h-10 rounded-full object-cover border-2 border-yellow-400 cursor-pointer hover:scale-110 transition-transform"><div><p class="font-semibold">${getDisplayNameWithCrown(c.userId)}</p>${yearsHtml}</div></div>`;
                     });
                 } else {
                     trophyCase.innerHTML = '<p class="text-gray-400">No champions yet!</p>';
@@ -929,7 +970,7 @@
                      runnerUps.innerHTML += '<h3 class="text-lg font-semibold text-gray-400 mb-2 border-t border-gray-700 pt-4">Runner Ups 🥈</h3>'
                      secondPlace.forEach(m => {
                         const yearsHtml = m.stats.runner_up_years.map(y => `<p class="text-sm text-gray-300">😢 ${formatYear(y)}</p>`).join('');
-                        runnerUps.innerHTML += `<div class="flex items-center gap-3"><img src="${m.avatar}" class="w-10 h-10 rounded-full object-cover border-2 border-gray-400"><div><p class="font-semibold">${getDisplayNameWithCrown(m.userId)}</p>${yearsHtml}</div></div>`;
+                        runnerUps.innerHTML += `<div class="flex items-center gap-3"><img onclick="expandAvatar(this.src)" src="${m.avatar}" class="w-10 h-10 rounded-full object-cover border-2 border-gray-400 cursor-pointer hover:scale-110 transition-transform"><div><p class="font-semibold">${getDisplayNameWithCrown(m.userId)}</p>${yearsHtml}</div></div>`;
                     });
                 }
 
@@ -950,7 +991,7 @@
                         const manager = Object.values(managersData).find(m => m.displayName === managerName);
                         if (manager) {
                             const yearsHtml = years.map(y => `<p class="text-sm text-gray-300">💩 ${formatYear(y)}</p>`).join('');
-                            toiletKingsDiv.innerHTML += `<div class="flex items-center gap-3"><img src="${manager.avatar}" class="w-10 h-10 rounded-full object-cover border-2 border-amber-700"><div><p class="font-semibold">${getDisplayNameWithCrown(manager.userId)}</p>${yearsHtml}</div></div>`;
+                            toiletKingsDiv.innerHTML += `<div class="flex items-center gap-3"><img onclick="expandAvatar(this.src)" src="${manager.avatar}" class="w-10 h-10 rounded-full object-cover border-2 border-amber-700 cursor-pointer hover:scale-110 transition-transform"><div><p class="font-semibold">${getDisplayNameWithCrown(manager.userId)}</p>${yearsHtml}</div></div>`;
                         }
                     });
                 }
@@ -963,7 +1004,7 @@
                     return `
                         <div class="flex items-center justify-between py-2.5 border-b border-gray-800 last:border-b-0 hover:bg-gray-800/50 -mx-4 px-4 rounded-md">
                             <div class="flex items-center gap-3 min-w-0">
-                                <img src="${manager.avatar}" class="w-9 h-9 rounded-full object-cover flex-shrink-0 border-2 border-orange-500" alt="${manager.displayName}">
+                                <img onclick="expandAvatar(this.src)" src="${manager.avatar}" class="w-9 h-9 rounded-full object-cover flex-shrink-0 border-2 border-orange-500 cursor-pointer hover:scale-110 transition-transform" alt="${manager.displayName}">
                                 <div class="min-w-0">
                                     <p class="text-sm font-semibold truncate">${getDisplayNameWithCrown(record.managerId)}</p>
                                     <p class="text-xs text-gray-400">${context}</p>
@@ -981,13 +1022,13 @@
                         <div class="py-2.5 border-b border-gray-800 last:border-b-0 hover:bg-gray-800/50 -mx-4 px-4 rounded-md">
                             <div class="flex items-center text-sm mb-1">
                                 <div class="flex items-center gap-2 flex-1 min-w-0">
-                                   <img src="${manager1.avatar}" class="w-6 h-6 rounded-full object-cover border-2 border-orange-500" alt="${manager1.displayName}">
+                                   <img onclick="expandAvatar(this.src)" src="${manager1.avatar}" class="w-6 h-6 rounded-full object-cover border-2 border-orange-500 cursor-pointer hover:scale-110 transition-transform" alt="${manager1.displayName}">
                                    <span class="font-semibold truncate">${getDisplayNameWithCrown(match.manager1Id)}</span>
                                 </div>
                                 <span class="text-xs text-gray-400 px-2">vs</span>
                                 <div class="flex items-center gap-2 flex-1 min-w-0 justify-end">
                                    <span class="font-semibold truncate text-right">${getDisplayNameWithCrown(match.manager2Id)}</span>
-                                   <img src="${manager2.avatar}" class="w-6 h-6 rounded-full object-cover border-2 border-orange-500" alt="${manager2.displayName}">
+                                   <img onclick="expandAvatar(this.src)" src="${manager2.avatar}" class="w-6 h-6 rounded-full object-cover border-2 border-orange-500 cursor-pointer hover:scale-110 transition-transform" alt="${manager2.displayName}">
                                 </div>
                             </div>
                             <div class="text-center">
@@ -1106,7 +1147,7 @@
                         <div id="championship-game-${data.season}" class="grid grid-cols-1 md:grid-cols-2 gap-8 game-details">
                             <div class="bg-gray-900/50 p-4 rounded-lg border border-yellow-400/50">
                                 <div class="flex items-center gap-4 mb-3">
-                                    <img src="${winner.avatar}" class="w-12 h-12 rounded-full object-cover border-4 border-yellow-400">
+                                    <img onclick="expandAvatar(this.src)" src="${winner.avatar}" class="w-12 h-12 rounded-full object-cover border-4 border-yellow-400 cursor-pointer hover:scale-110 transition-transform">
                                     <div>
                                         <h3 class="text-lg font-bold text-yellow-400">🏆 ${getDisplayNameWithCrown(winner.userId)}</h3>
                                         <p class="text-sm text-gray-400">Starting Roster - ${winnerScore.toFixed(2)} points</p>
@@ -1116,7 +1157,7 @@
                             </div>
                             <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-600/50">
                                  <div class="flex items-center gap-4 mb-3">
-                                    <img src="${loser.avatar}" class="w-12 h-12 rounded-full object-cover border-4 border-gray-400">
+                                    <img onclick="expandAvatar(this.src)" src="${loser.avatar}" class="w-12 h-12 rounded-full object-cover border-4 border-gray-400 cursor-pointer hover:scale-110 transition-transform">
                                     <div>
                                         <h3 class="text-lg font-bold text-gray-300">🥈 ${getDisplayNameWithCrown(loser.userId)}</h3>
                                         <p class="text-sm text-gray-400">Starting Roster - ${loserScore.toFixed(2)} points</p>
@@ -1178,7 +1219,7 @@
                         <div class="flex items-center p-2 rounded-md hover:bg-gray-800/50">
                             <div class="flex items-center gap-3 w-full">
                                 <span class="font-bold text-lg w-6 text-gray-400">${index + 1}.</span>
-                                <img src="${avatar}" class="w-8 h-8 rounded-full object-cover border-2 border-orange-500">
+                                <img onclick="expandAvatar(this.src)" src="${avatar}" class="w-8 h-8 rounded-full object-cover border-2 border-orange-500 cursor-pointer hover:scale-110 transition-transform">
                                 <span class="font-semibold text-sm flex-grow">${getDisplayNameWithCrown(managerId)}</span>
                                  <span class="font-bold text-right ${isMoney ? 'text-green-400' : 'text-white'}">${isMoney ? '$' : ''}${isMoney ? value.toFixed(2) : value}</span>
                             </div>
@@ -1274,7 +1315,7 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 items-start text-sm">
                                     <div>
                                         <div class="flex items-center gap-2 mb-2">
-                                            <img src="${manager1.avatar}" class="w-8 h-8 rounded-full object-cover border-2 border-orange-500">
+                                            <img onclick="expandAvatar(this.src)" src="${manager1.avatar}" class="w-8 h-8 rounded-full object-cover border-2 border-orange-500 cursor-pointer hover:scale-110 transition-transform">
                                             <p class="font-bold text-orange-400">${getDisplayNameWithCrown(manager1.userId)} received:</p>
                                         </div>
                                         <ul class="space-y-2 pl-2">
@@ -1283,7 +1324,7 @@
                                     </div>
                                     <div>
                                         <div class="flex items-center gap-2 mb-2">
-                                            <img src="${manager2.avatar}" class="w-8 h-8 rounded-full object-cover border-2 border-orange-500">
+                                            <img onclick="expandAvatar(this.src)" src="${manager2.avatar}" class="w-8 h-8 rounded-full object-cover border-2 border-orange-500 cursor-pointer hover:scale-110 transition-transform">
                                             <p class="font-bold text-orange-400">${getDisplayNameWithCrown(manager2.userId)} received:</p>
                                         </div>
                                         <ul class="space-y-2 pl-2">
@@ -1366,7 +1407,7 @@
                         <div class="flex items-center p-2 rounded-md hover:bg-gray-800/50">
                             <div class="flex items-center gap-3 w-full">
                                 <span class="font-bold text-lg w-6 text-gray-400">${rank}.</span>
-                                <img src="${avatar}" class="w-8 h-8 rounded-full object-cover border-2 border-orange-500">
+                                <img onclick="expandAvatar(this.src)" src="${avatar}" class="w-8 h-8 rounded-full object-cover border-2 border-orange-500 cursor-pointer hover:scale-110 transition-transform">
                                 <span class="font-semibold text-sm flex-grow">${getDisplayNameWithCrown(managerId)}</span>
                                  <span class="font-bold text-right text-green-400">$${total}</span>
                             </div>
@@ -1456,7 +1497,7 @@
                         <div id="toilet-game-${data.season}" class="grid grid-cols-1 md:grid-cols-2 gap-8 game-details">
                             <div class="bg-gray-900/50 p-4 rounded-lg border border-amber-600/50">
                                 <div class="flex items-center gap-4 mb-3">
-                                    <img src="${punished.avatar}" class="w-12 h-12 rounded-full object-cover border-4 border-amber-700">
+                                    <img onclick="expandAvatar(this.src)" src="${punished.avatar}" class="w-12 h-12 rounded-full object-cover border-4 border-amber-700 cursor-pointer hover:scale-110 transition-transform">
                                     <div>
                                         <h3 class="text-lg font-bold text-amber-600">🚽 ${getDisplayNameWithCrown(punished.userId)}</h3>
                                         <p class="text-sm text-gray-400">💩 Roster - ${data.punishedScore.toFixed(2)} points</p>
@@ -1466,7 +1507,7 @@
                             </div>
                             <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-600/50">
                                  <div class="flex items-center gap-4 mb-3">
-                                    <img src="${safe.avatar}" class="w-12 h-12 rounded-full object-cover border-4 border-gray-400">
+                                    <img onclick="expandAvatar(this.src)" src="${safe.avatar}" class="w-12 h-12 rounded-full object-cover border-4 border-gray-400 cursor-pointer hover:scale-110 transition-transform">
                                     <div>
                                         <h3 class="text-lg font-bold text-gray-300">😮‍💨 ${getDisplayNameWithCrown(safe.userId)}</h3>
                                         <p class="text-sm text-gray-400">Safe Roster - ${data.safeScore.toFixed(2)} points</p>
@@ -1591,7 +1632,7 @@
                 resultDiv.innerHTML = `
                     <div class="grid grid-cols-1 lg:grid-cols-5 items-start gap-6 text-center">
                         <div class="lg:col-span-2 bg-gray-900/30 p-4 rounded-xl border border-gray-700 flex flex-col items-center space-y-3">
-                            <img src="${m1.avatar}" class="w-24 h-24 rounded-full object-cover border-4 border-orange-500">
+                            <img onclick="expandAvatar(this.src)" src="${m1.avatar}" class="w-24 h-24 rounded-full object-cover border-4 border-orange-500 cursor-pointer hover:scale-110 transition-transform">
                             <p class="font-extrabold text-xl lg:text-2xl text-orange-500">${getDisplayNameWithCrown(m1.userId)}</p>
                             <div class="text-sm text-gray-400 space-y-2 text-left w-full">
                                 <p class="flex justify-between"><span>Total Points:</span> <span class="font-bold text-white">${totalPoints1.toFixed(2)}</span></p>
@@ -1619,7 +1660,7 @@
                         </div>
 
                         <div class="lg:col-span-2 bg-gray-900/30 p-4 rounded-xl border border-gray-700 flex flex-col items-center space-y-3">
-                           <img src="${m2.avatar}" class="w-24 h-24 rounded-full object-cover border-4 border-orange-500">
+                           <img onclick="expandAvatar(this.src)" src="${m2.avatar}" class="w-24 h-24 rounded-full object-cover border-4 border-orange-500 cursor-pointer hover:scale-110 transition-transform">
                             <p class="font-extrabold text-xl lg:text-2xl text-orange-500">${getDisplayNameWithCrown(m2.userId)}</p>
                             <div class="text-sm text-gray-400 space-y-2 text-left w-full">
                                 <p class="flex justify-between"><span>Total Points:</span> <span class="font-bold text-white">${totalPoints2.toFixed(2)}</span></p>
@@ -1661,7 +1702,10 @@
                 const managerEarnings = earningsData[manager.displayName];
                 const totalEarnings = managerEarnings ? Object.values(managerEarnings).reduce((a, b) => a + b, 0) : 0;
                 
-                document.getElementById('my-team-avatar').src = manager.avatar;
+                const myTeamAvatar = document.getElementById('my-team-avatar');
+                myTeamAvatar.src = manager.avatar;
+                myTeamAvatar.onclick = () => expandAvatar(manager.avatar);
+
                 document.getElementById('my-team-name').innerHTML = getDisplayNameWithCrown(manager.userId);
                 document.getElementById('my-team-record').innerHTML = `<span class="text-green-400">${manager.stats.wins}</span>-<span class="text-red-400">${manager.stats.losses}</span>`;
                 document.getElementById('my-team-winpct').textContent = manager.stats.wins + manager.stats.losses > 0 ? ((manager.stats.wins / (manager.stats.wins + manager.stats.losses)) * 100).toFixed(1) + '%' : '0.0%';
@@ -1718,7 +1762,7 @@
                 }
                 if (rivalId) {
                     const rival = managersData[rivalId];
-                    rivalDiv.innerHTML = `<div class="flex items-center gap-4"><img src="${rival.avatar}" class="w-12 h-12 rounded-full object-cover border-2 border-red-500"><div><p class="font-bold text-lg">${getDisplayNameWithCrown(rival.userId)}</p><p class="text-sm text-red-400">Has given you ${maxLosses} Ls</p></div></div>`;
+                    rivalDiv.innerHTML = `<div class="flex items-center gap-4"><img onclick="expandAvatar(this.src)" src="${rival.avatar}" class="w-12 h-12 rounded-full object-cover border-2 border-red-500 cursor-pointer hover:scale-110 transition-transform"><div><p class="font-bold text-lg">${getDisplayNameWithCrown(rival.userId)}</p><p class="text-sm text-red-400">Has given you ${maxLosses} Ls</p></div></div>`;
                 } else {
                     rivalDiv.innerHTML = '<p class="text-sm text-gray-400">No clear rival yet.</p>';
                 }
