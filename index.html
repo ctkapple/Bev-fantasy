@@ -10,40 +10,40 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0d1117; /* GitHub Dark Dimmed */
-            color: #c9d1d9; /* Light Gray */
+            background-color: #111111; /* Dark Charcoal */
+            color: #e5e7eb; /* Light Gray */
         }
         .card {
-            background-color: #161b22; /* Darker card background */
-            border: 1px solid #30363d; /* Subtle border */
+            background-color: #1f1f1f; /* Lighter Charcoal */
+            border: 1px solid #444444; /* Medium Gray Border */
             border-radius: 0.75rem;
             padding: 1.5rem;
             transition: all 0.2s ease-in-out;
         }
         .card:hover {
-            border-color: #8b949e;
+            border-color: #f97316; /* Orange */
             transform: translateY(-2px);
         }
         .tab-button {
             transition: all 0.3s ease;
-            font-weight: 500;
+            font-weight: 600;
         }
         .tab-button.active {
-            color: #58a6ff; /* Blue accent */
-            border-bottom-color: #58a6ff;
+            color: #f97316; /* Orange */
+            border-bottom-color: #f97316;
         }
         .tab-button:not(.active) {
             border-bottom-color: transparent;
-            color: #8b949e;
+            color: #9ca3af; /* Gray */
         }
         .tab-button:hover:not(.active) {
-            color: #c9d1d9;
+            color: #e5e7eb;
         }
         .loader {
-            border-top-color: #58a6ff; /* Blue accent */
+            border-top-color: #f97316; /* Orange */
             animation: spin 1s linear infinite;
         }
-        .prose h3 { color: #58a6ff !important; }
+        .prose h3 { color: #f97316 !important; }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
@@ -53,21 +53,22 @@
 <body class="antialiased">
     <div id="loader" class="fixed inset-0 bg-gray-900 bg-opacity-80 flex flex-col justify-center items-center z-50">
         <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-32 w-32"></div>
-        <p class="text-white text-lg mt-4">Loading stats from sleeper (this may take up to a minute)</p>
+        <p class="text-white text-lg mt-4">Loading stats from Sleeper... please wait</p>
+        <p class="text-white text-sm mt-2">This may take up to ~30 seconds</p>
     </div>
 
     <div id="app" class="container mx-auto p-4 md:p-8 max-w-7xl hidden">
         <header class="text-center mb-10">
-            <div id="league-info" class="flex items-center justify-center gap-4">
-                 <img id="league-avatar" src="https://placehold.co/64x64/1f2937/a0aec0?text=🏈" alt="League Avatar" class="w-20 h-20 rounded-full border-2 border-[#30363d] relative -top-1 shadow-lg">
+            <div id="league-info" class="flex flex-col items-center justify-center gap-4">
+                 <img id="league-avatar" src="https://placehold.co/64x64/1f2937/a0aec0?text=🏈" alt="League Avatar" class="w-28 h-28 rounded-full border-4 border-orange-500 shadow-lg">
                 <div>
-                    <h1 id="league-name" class="text-4xl md:text-5xl font-bold text-white tracking-tight">Fantasy Football Dashboard</h1>
-                    <p id="league-season" class="text-lg text-gray-400 mt-1">Loading league data...</p>
+                    <h1 id="league-name" class="text-5xl md:text-6xl font-extrabold text-orange-500 tracking-tight" style="text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff, 3px 3px 10px rgba(0,0,0,0.7);">Fantasy Football Dashboard</h1>
+                    <p id="league-season" class="text-lg text-gray-300 mt-2">Loading league data...</p>
                 </div>
             </div>
         </header>
 
-        <div class="mb-8 border-b border-[#30363d]">
+        <div class="mb-8 border-b-2 border-orange-500">
             <nav class="flex justify-center -mb-px space-x-6 flex-wrap" aria-label="Tabs">
                 <button class="tab-button active text-base font-medium py-4 px-1 border-b-2" data-tab="dashboard">Rankings</button>
                 <button class="tab-button text-base font-medium py-4 px-1 border-b-2" data-tab="myteam">My Team</button>
@@ -76,6 +77,8 @@
                 <button class="tab-button text-base font-medium py-4 px-1 border-b-2" data-tab="legacies">Legends</button>
                 <button class="tab-button text-base font-medium py-4 px-1 border-b-2" data-tab="rosters">Championships</button>
                 <button class="tab-button text-base font-medium py-4 px-1 border-b-2" data-tab="earnings">Earnings</button>
+                <button class="tab-button text-base font-medium py-4 px-1 border-b-2" data-tab="tradelog">Trade Log</button>
+                <button class="tab-button text-base font-medium py-4 px-1 border-b-2" data-tab="faab">FAAB History</button>
 				<button class="tab-button text-base font-medium py-4 px-1 border-b-2" data-tab="toilet">Toilet Bowl</button>
                 <button class="tab-button text-base font-medium py-4 px-1 border-b-2" data-tab="rules">Rules</button>
             </nav>
@@ -85,10 +88,10 @@
             <div id="dashboard-content" class="tab-pane active">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div class="card lg:col-span-2">
-                        <h2 class="text-xl font-bold mb-4 text-[#58a6ff]">All-Time Standings</h2>
+                        <h2 class="text-xl font-bold mb-4 text-orange-500">All-Time Standings</h2>
                         <div class="overflow-x-auto">
                             <table class="min-w-full">
-                                <thead class="border-b border-[#30363d]">
+                                <thead class="border-b border-gray-700">
                                     <tr>
                                         <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Rank</th>
                                         <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Manager</th>
@@ -97,7 +100,7 @@
                                         <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">PF / PA</th>
                                     </tr>
                                 </thead>
-                                <tbody id="power-rankings-body" class="divide-y divide-[#30363d]">
+                                <tbody id="power-rankings-body" class="divide-y divide-gray-800">
                                     </tbody>
                             </table>
                         </div>
@@ -115,22 +118,22 @@
             </div>
              <div id="myteam-content" class="tab-pane hidden">
                 <div class="card mb-6">
-                    <label for="my-team-select" class="block text-lg font-medium text-[#58a6ff] mb-2">Please select your team</label>
-                    <select id="my-team-select" class="bg-[#0d1117] border border-[#30363d] rounded-md p-2 w-full max-w-md text-white focus:ring-2 focus:ring-[#58a6ff] focus:border-[#58a6ff]">
+                    <label for="my-team-select" class="block text-lg font-medium text-orange-500 mb-2">Please select your team</label>
+                    <select id="my-team-select" class="bg-gray-900 border border-gray-700 rounded-md p-2 w-full max-w-md text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
                         <option value="">-- Select a Manager --</option>
                     </select>
                 </div>
 
                 <div id="my-team-data" class="hidden">
                     <div class="card text-center mb-6">
-                        <img id="my-team-avatar" src="" alt="Manager Avatar" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-[#58a6ff] object-cover shadow-lg">
+                        <img id="my-team-avatar" src="" alt="Manager Avatar" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-orange-500 object-cover shadow-lg">
                         <h2 id="my-team-name" class="text-3xl font-bold"></h2>
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="lg:col-span-2 space-y-6">
                             <div class="card">
-                                <h3 class="text-xl font-bold mb-4 text-[#58a6ff]">Career Stats</h3>
+                                <h3 class="text-xl font-bold mb-4 text-orange-500">Career Stats</h3>
                                 <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
                                     <div><p class="text-gray-400 text-sm">Overall Record</p><p id="my-team-record" class="text-2xl font-semibold"></p></div>
                                     <div><p class="text-gray-400 text-sm">Win %</p><p id="my-team-winpct" class="text-2xl font-semibold"></p></div>
@@ -141,14 +144,14 @@
                                 </div>
                             </div>
                              <div class="card">
-                                <h3 class="text-xl font-bold mb-4 text-[#58a6ff]">Franchise Highlights</h3>
+                                <h3 class="text-xl font-bold mb-4 text-orange-500">Franchise Highlights</h3>
                                 <div id="my-team-highlights" class="space-y-3 text-sm"></div>
                             </div>
 							<div class="card">
-                                <h3 class="text-xl font-bold mb-4 text-[#58a6ff]">Yearly Finishes</h3>
+                                <h3 class="text-xl font-bold mb-4 text-orange-500">Yearly Finishes</h3>
                                 <div class="overflow-x-auto">
                                     <table class="w-full text-sm text-left">
-                                        <thead class="text-xs text-gray-400 uppercase border-b border-[#30363d]">
+                                        <thead class="text-xs text-gray-400 uppercase border-b border-gray-700">
                                             <tr>
                                                 <th scope="col" class="px-2 py-3">Year</th>
                                                 <th scope="col" class="px-2 py-3 text-center">Finish</th>
@@ -164,21 +167,21 @@
                         </div>
                         <div class="space-y-6">
                              <div class="card">
-                                <h3 class="text-xl font-bold mb-4 text-[#58a6ff]">Franchise Rival</h3>
+                                <h3 class="text-xl font-bold mb-4 text-orange-500">Franchise Rival</h3>
                                 <div id="my-team-rival"></div>
                             </div>
                              <div class="card">
-                                <h3 class="text-xl font-bold mb-4 text-[#58a6ff]">Franchise Legends</h3>
+                                <h3 class="text-xl font-bold mb-4 text-orange-500">Franchise Legends</h3>
                                  <p class="text-xs text-gray-500 -mt-4 mb-4">Your longest tenured players</p>
                                 <ul id="my-team-favorites" class="space-y-3"></ul>
                             </div>
                              <div class="card">
-                                <h3 class="text-xl font-bold mb-4 text-[#58a6ff]">Arch-Nemeses</h3>
+                                <h3 class="text-xl font-bold mb-4 text-orange-500">Arch-Nemeses</h3>
                                  <p class="text-xs text-gray-500 -mt-4 mb-4">Players who have dropped the most points on you</p>
                                 <ul id="my-team-nemeses" class="space-y-3"></ul>
                             </div>
                              <div class="card">
-                                <h3 class="text-xl font-bold mb-4 text-[#58a6ff]">Team Name History</h3>
+                                <h3 class="text-xl font-bold mb-4 text-orange-500">Team Name History</h3>
                                 <ul id="my-team-names" class="space-y-2"></ul>
                             </div>
                         </div>
@@ -188,29 +191,29 @@
             
             <div id="records-content" class="tab-pane hidden">
                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="card"><h3 class="text-lg font-semibold text-[#58a6ff] mb-2">Highest Scoring Seasons</h3><div id="highest-season-scores" class="space-y-2"></div></div>
-                    <div class="card"><h3 class="text-lg font-semibold text-[#58a6ff] mb-2">Lowest Scoring Seasons</h3><div id="lowest-season-scores" class="space-y-2"></div></div>
-                    <div class="card"><h3 class="text-lg font-semibold text-[#58a6ff] mb-2">Highest Scoring Weeks</h3><div id="highest-weekly-scores" class="space-y-2"></div></div>
-                    <div class="card"><h3 class="text-lg font-semibold text-[#58a6ff] mb-2">Lowest Scoring Weeks</h3><div id="lowest-weekly-scores" class="space-y-2"></div></div>
-                    <div class="card"><h3 class="text-lg font-semibold text-[#58a6ff] mb-2">Best Seasons</h3><div id="best-seasons" class="space-y-2"></div></div>
-                    <div class="card"><h3 class="text-lg font-semibold text-[#58a6ff] mb-2">Worst Seasons</h3><div id="worst-seasons" class="space-y-2"></div></div>
-                    <div class="card"><h3 class="text-lg font-semibold text-[#58a6ff] mb-2">Biggest Blowouts</h3><div id="biggest-blowouts" class="space-y-2"></div></div>
-                    <div class="card"><h3 class="text-lg font-semibold text-[#58a6ff] mb-2">Closest Games</h3><div id="closest-games" class="space-y-2"></div></div>
-                    <div class="card"><h3 class="text-lg font-semibold text-[#58a6ff] mb-2">Biggest Shootouts</h3><div id="biggest-shootouts" class="space-y-2"></div></div>
-                    <div class="card"><h3 class="text-lg font-semibold text-[#58a6ff] mb-2">Highest Scoring Players</h3><div id="highest-scoring-players" class="space-y-2"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-2">Highest Scoring Seasons</h3><div id="highest-season-scores" class="space-y-2"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-2">Lowest Scoring Seasons</h3><div id="lowest-season-scores" class="space-y-2"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-2">Highest Scoring Weeks</h3><div id="highest-weekly-scores" class="space-y-2"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-2">Lowest Scoring Weeks</h3><div id="lowest-weekly-scores" class="space-y-2"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-2">Best Seasons</h3><div id="best-seasons" class="space-y-2"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-2">Worst Seasons</h3><div id="worst-seasons" class="space-y-2"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-2">Biggest Blowouts</h3><div id="biggest-blowouts" class="space-y-2"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-2">Closest Games</h3><div id="closest-games" class="space-y-2"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-2">Biggest Shootouts</h3><div id="biggest-shootouts" class="space-y-2"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-2">Highest Scoring Players</h3><div id="highest-scoring-players" class="space-y-2"></div></div>
                  </div>
             </div>
 
             <div id="h2h-content" class="tab-pane hidden">
                 <div class="card">
-                    <h2 class="text-xl font-bold mb-4 text-[#58a6ff]">Head-to-Head Comparison</h2>
+                    <h2 class="text-xl font-bold mb-4 text-orange-500">Head-to-Head Comparison</h2>
                     <div class="flex flex-col sm:flex-row gap-4 items-center mb-6">
-                        <select id="manager1-select" class="bg-[#0d1117] border border-[#30363d] rounded-md p-2 w-full sm:w-1/2 focus:ring-2 focus:ring-[#58a6ff] focus:border-[#58a6ff]"></select>
+                        <select id="manager1-select" class="bg-gray-900 border border-gray-700 rounded-md p-2 w-full sm:w-1/2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"></select>
                         <span class="font-bold text-lg">VS</span>
-                        <select id="manager2-select" class="bg-[#0d1117] border border-[#30363d] rounded-md p-2 w-full sm:w-1/2 focus:ring-2 focus:ring-[#58a6ff] focus:border-[#58a6ff]"></select>
+                        <select id="manager2-select" class="bg-gray-900 border border-gray-700 rounded-md p-2 w-full sm:w-1/2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"></select>
                     </div>
                     <div id="h2h-result" class="text-center p-4">
-                        <p class="text-gray-400">Select two managers to see their head-to-head record.</p>
+                        <p class="text-gray-400">Please select two members to compare head-to-head</p>
                     </div>
                 </div>
             </div>
@@ -218,13 +221,13 @@
             <div id="legacies-content" class="tab-pane hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="card">
-                        <h2 class="text-xl font-bold mb-4 text-[#58a6ff]">Ring Chasers</h2>
+                        <h2 class="text-xl font-bold mb-4 text-orange-500">Ring Chasers</h2>
                         <p class="text-sm text-gray-400 mb-6">Players with the most appearances in the championship.</p>
                         <div id="player-legacies-list" class="space-y-4">
                             </div>
                     </div>
                     <div class="card">
-                        <h2 class="text-xl font-bold mb-4 text-[#58a6ff]">Loyalty Club</h2>
+                        <h2 class="text-xl font-bold mb-4 text-orange-500">Loyalty Club</h2>
                         <p class="text-sm text-gray-400 mb-6">Players we just can't quit.</p>
                         <div id="most-kept-players-list" class="space-y-4">
                             </div>
@@ -294,16 +297,16 @@
             
             <div id="earnings-content" class="tab-pane hidden">
                 <div class="card mb-6 max-w-3xl mx-auto">
-                    <h2 class="text-xl font-bold mb-4 text-[#58a6ff]">Lifetime Winnings 💰</h2>
+                    <h2 class="text-xl font-bold mb-4 text-orange-500">Lifetime Winnings 💰</h2>
                     <div id="earnings-leaderboard" class="space-y-3">
                         </div>
                 </div>
                  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="card lg:col-span-2">
-                         <h2 class="text-xl font-bold mb-4 text-[#58a6ff]">Yearly Payouts</h2>
+                         <h2 class="text-xl font-bold mb-4 text-orange-500">Yearly Payouts</h2>
                          <div class="overflow-x-auto">
                             <table class="min-w-full">
-                                <thead class="border-b border-[#30363d]">
+                                <thead class="border-b border-gray-700">
                                     <tr>
                                         <th class="text-left py-2 text-xs font-medium text-gray-400 uppercase">Manager</th>
                                         <th class="text-right py-2 text-xs font-medium text-gray-400 uppercase">2021</th>
@@ -312,42 +315,96 @@
                                         <th class="text-right py-2 text-xs font-medium text-gray-400 uppercase">2024</th>
                                     </tr>
                                 </thead>
-                                <tbody id="earnings-breakdown" class="divide-y divide-[#30363d]">
+                                <tbody id="earnings-breakdown" class="divide-y divide-gray-800">
                                     </tbody>
                             </table>
                         </div>
                     </div>
                      <div class="space-y-6">
                         <div class="card">
-                             <h2 class="text-xl font-bold mb-4 text-[#58a6ff]">Prop Wins</h2>
+                             <h2 class="text-xl font-bold mb-4 text-orange-500">Prop Wins</h2>
                             <div id="prop-leaderboard" class="space-y-2"></div>
                         </div>
                         <div class="card">
-                             <h2 class="text-xl font-bold mb-4 text-[#58a6ff]">Highest Scorer Wins</h2>
+                             <h2 class="text-xl font-bold mb-4 text-orange-500">Highest Scorer Wins</h2>
                             <div id="highscore-leaderboard" class="space-y-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trade Log Tab -->
+            <div id="tradelog-content" class="tab-pane hidden">
+                <div class="card">
+                    <div id="trade-log-list">
+                        <!-- Trade logs will be injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAAB History Tab -->
+            <div id="faab-content" class="tab-pane hidden">
+                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="card lg:col-span-2">
+                        <h2 class="text-xl font-bold mb-4 text-orange-500">Most Expensive Acquisitions (>$20)</h2>
+                         <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-800">
+                                <thead class="bg-gray-900/50">
+                                    <tr>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Pos</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Player</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Manager</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Amount</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Season</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="faab-acquisitions-body" class="divide-y divide-gray-800">
+                                    <!-- Rows will be injected here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="card">
+                            <h2 class="text-xl font-bold mb-4 text-orange-500">Biggest Ballers 🤑</h2>
+                            <div id="faab-ballers-list" class="space-y-3">
+                                <!-- Ballers will be injected here -->
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h2 class="text-xl font-bold mb-4 text-orange-500">Frugal Heroes 📉</h2>
+                            <div id="faab-frugal-list" class="space-y-3">
+                                <!-- Frugal heroes will be injected here -->
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
             
             <div id="toilet-content" class="tab-pane hidden">
-                <div class="card prose prose-invert max-w-none text-gray-300">
-                    <h2 class="text-2xl font-bold text-white mb-6">Toilet Bowl Punishment History</h2>
-                    <p class="mb-4">These poor, toilet bowl losing souls, spent the first week of the NFL season sat at the Anchor from dusk til' dawn. 15 minutes taken off their sentance for every drink they consumed.</p>
-                    
-                    <h3 class="text-xl font-semibold mb-3">⚓ Departure Ledger ⚓</h3>
-                    <ul class="list-disc list-inside space-y-2">
-                        <li><strong>2023:</strong> Andrew Johnstone - 17 Drinks (left at 8:45 PM)</li>
-                        <li><strong>2022:</strong> Adam Ellis - 14 Drinks (left at 9:30 PM)</li>
-                        <li><strong>2021:</strong> Adam Ellis - 12 Drinks (left at 10:00 PM)</li>
-                        <li><strong>2024:</strong> Johnny Jones - TBD</li>
-                    </ul>
+                <div class="card">
+                    <div class="max-w-none text-gray-300">
+                        <h2 class="text-2xl font-bold text-white mb-6">Toilet Bowl Punishment History</h2>
+                        <p class="mb-4 text-gray-300">These poor, toilet bowl losing souls, spent the first week of the NFL season sat at the Anchor from dusk til' dawn. 15 minutes taken off their sentance for every drink they consumed.</p>
+                        
+                        <h3 class="text-xl font-semibold mb-3 text-orange-500">⚓ Departure Ledger ⚓</h3>
+                        <ul class="list-disc list-inside space-y-2 text-gray-300">
+                            <li><strong>2023:</strong> Andrew Johnstone - 17 Drinks (left at 8:45 PM)</li>
+                            <li><strong>2022:</strong> Adam Ellis - 14 Drinks (left at 9:30 PM)</li>
+                            <li><strong>2021:</strong> Adam Ellis - 12 Drinks (left at 10:00 PM)</li>
+                            <li><strong>2024:</strong> Johnny Jones - TBD</li>
+                        </ul>
+                        <hr class="border-gray-700 my-8">
+                        <div id="toilet-bowl-games">
+                            <!-- Toilet Bowl game details will be injected here -->
+                        </div>
+                    </div>
                 </div>
             </div>
 
         </main>
         
-        <footer class="text-center mt-12 py-6 border-t border-purple-800 text-xs text-gray-500 space-y-2">
+        <footer class="text-center mt-12 py-6 border-t-2 border-orange-500 text-xs text-gray-500 space-y-2">
             <p>Beverly Fantasy Official Website • Engineered and Maintained by Commissioner Dooling • Established in 2025 • All Statistics Certified Accurate*</p>
             <p><sup class="text-xs -top-1 relative">*</sup>10-player season (2021).</p>
             <p class="italic">*Results not guaranteed.</p>
@@ -385,6 +442,13 @@
             let championshipRostersData = [];
             let seasonalData = {};
             let h2hMatchups = {};
+            let allTrades = {};
+            let allRosters = {};
+            let allFaabBids = [];
+            let reigningChampId = null;
+            let toiletBowlData = [];
+
+            const positionTextColors = { QB: 'text-rose-300', RB: 'text-emerald-300', WR: 'text-sky-300', TE: 'text-amber-300', K: 'text-fuchsia-300', DEF: 'text-orange-300' };
 
             const allTimeRecords = {
                 topWeeklyScores: [], topSeasonScores: [], lowestWeeklyScores: [], lowestSeasonScores: [], 
@@ -396,6 +460,16 @@
                   allMatchupDetails = [], allPlayerScores = [];
 
             const formatYear = (year) => (year == 2021) ? `${year}<sup class="text-xs -top-1 relative">*</sup>` : year;
+
+             const getDisplayNameWithCrown = (managerId) => {
+                const manager = managersData[managerId];
+                if (!manager) return 'Unknown Manager';
+                let name = manager.displayName;
+                if (manager.userId === reigningChampId) {
+                    name += ' <span title="Reigning Champ">👑</span>';
+                }
+                return name;
+            };
 
             const fetchWithRetry = async (url, retries = 3, delay = 1000) => {
                 for (let i = 0; i < retries; i++) {
@@ -446,6 +520,12 @@
                         await processSeason(seasonData);
                     }
 
+                    const lastCompletedSeason = new Date().getFullYear() - 1;
+                    const reigningChamp = Object.values(managersData).find(m => m.stats.championship_years.includes(lastCompletedSeason));
+                    if(reigningChamp) {
+                        reigningChampId = reigningChamp.userId;
+                    }
+
                     calculateAndSortRecords();
                     renderDashboard();
                     setupTabs();
@@ -462,7 +542,7 @@
                 }
             };
 
-            const updatePlayerLegacy = (playerId, season, managerName, isWinner) => {
+            const updatePlayerLegacy = (playerId, season, managerId, isWinner) => {
                 const playerInfo = nflPlayers[playerId];
                 if (!playerInfo) return;
 
@@ -473,15 +553,15 @@
                     };
                 }
                 playerLegacyData[playerId].appearances++;
-                playerLegacyData[playerId].history.push({ season, managerName, isWinner });
+                playerLegacyData[playerId].history.push({ season, managerId, isWinner });
             };
 
             const processSeason = async (leagueData) => {
                 const season = leagueData.season;
                 const users = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueData.league_id}/users`);
                 const rosters = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueData.league_id}/rosters`);
-
-                seasonalData[season] = { totalTeams: users.length };
+                allRosters[season] = rosters;
+                seasonalData[season] = { totalTeams: users.length, league_id: leagueData.league_id };
 
                 const rosterIdToOwnerId = {};
                 rosters.forEach(r => { if (r.owner_id) rosterIdToOwnerId[r.roster_id] = r.owner_id; });
@@ -530,7 +610,7 @@
                                     };
                                 }
                                 mostKeptPlayers[playerId].count++;
-                                mostKeptPlayers[playerId].history.push({ season, managerName: manager.displayName });
+                                mostKeptPlayers[playerId].history.push({ season, managerId: manager.userId });
                             });
                         }
                     });
@@ -546,9 +626,9 @@
                         const pa = parseFloat(`${r.settings.fpts_against}.${r.settings.fpts_against_decimal}`);
                         m.stats.pf += pf; m.stats.pa += pa;
                         m.yearlyStats[season].pf = pf;
-                        allSeasonScores.push({ score: pf, manager: m.displayName, year: season });
+                        allSeasonScores.push({ score: pf, managerId: m.userId, year: season });
                         if (r.settings.wins + r.settings.losses >= leagueData.settings.playoff_week_start - 1) {
-                             allSeasonRecords.push({ wins: r.settings.wins, losses: r.settings.losses, record: `${r.settings.wins}-${r.settings.losses}`, winPct: (r.settings.wins + r.settings.losses) > 0 ? r.settings.wins / (r.settings.wins + r.settings.losses) : 0, pf: pf, manager: m.displayName, year: season });
+                             allSeasonRecords.push({ wins: r.settings.wins, losses: r.settings.losses, record: `${r.settings.wins}-${r.settings.losses}`, winPct: (r.settings.wins + r.settings.losses) > 0 ? r.settings.wins / (r.settings.wins + r.settings.losses) : 0, pf: pf, managerId: m.userId, year: season });
                         }
                     }
                 }
@@ -574,22 +654,49 @@
                     });
                 }
 
+                allTrades[season] = [];
                 for (let week = 1; week <= 18; week++) {
                     try {
                         const transactions = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueData.league_id}/transactions/${week}`);
-                        rosters.forEach(roster => {
-                            if (roster.owner_id && managersData[roster.owner_id]) {
-                                const manager = managersData[roster.owner_id];
-                                const userTransactions = transactions.filter(t => t.roster_ids.includes(roster.roster_id));
-                                manager.totalTransactions += userTransactions.length;
-                                manager.yearlyStats[season].transactions += userTransactions.length;
-                                
-                                const userTrades = transactions.filter(t => t.type === 'trade' && t.roster_ids.includes(roster.roster_id));
-                                manager.totalTrades += userTrades.length;
-                                manager.yearlyStats[season].trades += userTrades.length;
+                        transactions.forEach(t => {
+                            if(t.type === 'trade' && t.status === 'complete') {
+                                allTrades[season].push(t);
+                                t.roster_ids.forEach(roster_id => {
+                                    const owner_id = rosterIdToOwnerId[roster_id];
+                                    if(owner_id && managersData[owner_id]) {
+                                        managersData[owner_id].totalTrades++;
+                                    }
+                                });
+                            }
+                            if(t.type === 'waiver' && t.status === 'complete' && t.settings.waiver_bid) {
+                                const rosterId = t.roster_ids[0];
+                                const ownerId = rosterIdToOwnerId[rosterId];
+                                if(ownerId) {
+                                    const manager = managersData[ownerId];
+                                    const playerId = Object.keys(t.adds)[0];
+                                    const player = nflPlayers[playerId];
+                                    if (manager && player) {
+                                        allFaabBids.push({
+                                            managerId: manager.userId,
+                                            player: `${player.first_name} ${player.last_name}`,
+                                            position: player.position,
+                                            amount: t.settings.waiver_bid,
+                                            season: season
+                                        });
+                                    }
+                                }
+                            }
+                            const rosterId = t.roster_ids[0];
+                            const ownerId = rosterIdToOwnerId[rosterId];
+                            if(ownerId && managersData[ownerId]) {
+                                managersData[ownerId].totalTransactions++;
+                                managersData[ownerId].yearlyStats[season].transactions++;
                             }
                         });
                     } catch (e) {}
+                }
+                if (allTrades[season].length > 0) {
+                    allTrades[season].sort((a, b) => b.status_updated - a.status_updated);
                 }
                 
                 for (let week = 1; week <= 18; week++) {
@@ -609,8 +716,8 @@
                             matchups.forEach(matchup => {
                                 const ownerId = rosterIdToOwnerId[matchup.roster_id];
                                 if(!ownerId || !managersData[ownerId]) return;
-                                if (matchup.players_points) for (const pId in matchup.players_points) if(nflPlayers[pId]) allPlayerScores.push({ score: matchup.players_points[pId], name: `${nflPlayers[pId].first_name} ${nflPlayers[pId].last_name}`, position: nflPlayers[pId].position, team: nflPlayers[pId].team, manager: managersData[ownerId].displayName, year: season, week });
-                                allWeeklyScores.push({ score: matchup.points, manager: managersData[ownerId].displayName, year: season, week });
+                                if (matchup.players_points) for (const pId in matchup.players_points) if(nflPlayers[pId]) allPlayerScores.push({ score: matchup.players_points[pId], name: `${nflPlayers[pId].first_name} ${nflPlayers[pId].last_name}`, position: nflPlayers[pId].position, team: nflPlayers[pId].team, managerId: ownerId, year: season, week });
+                                allWeeklyScores.push({ score: matchup.points, managerId: ownerId, year: season, week });
                                 const opponent = matchups.find(m => m.matchup_id === matchup.matchup_id && m.roster_id !== matchup.roster_id);
                                 if (opponent && !processedMatchupIds.has(matchup.matchup_id)) {
                                      processedMatchupIds.add(matchup.matchup_id);
@@ -629,17 +736,24 @@
                                          }
                                      }
 
-                                     if(!m1.h2h[oppId]) m1.h2h[oppId] = { wins: 0, losses: 0, ties: 0 };
-                                     if(!m2.h2h[ownerId]) m2.h2h[ownerId] = { wins: 0, losses: 0, ties: 0 };
+                                    if(!m1.h2h[oppId]) m1.h2h[oppId] = { wins: 0, losses: 0, ties: 0 };
+                                    if(!m2.h2h[ownerId]) m2.h2h[ownerId] = { wins: 0, losses: 0, ties: 0 };
 
-                                     if (matchup.points > opponent.points) { m1.h2h[oppId].wins++; m2.h2h[ownerId].losses++; } 
-                                     else if (matchup.points < opponent.points) { m1.h2h[oppId].losses++; m2.h2h[ownerId].wins++; } 
-                                     else if (matchup.points > 0) { m1.h2h[oppId].ties++; m2.h2h[ownerId].ties++; }
-
-                                     allMatchupDetails.push({ season, week, manager1: m1.displayName, manager2: m2.displayName, score1: matchup.points, score2: opponent.points, margin: Math.abs(matchup.points - opponent.points), totalScore: matchup.points + opponent.points });
+                                    if (matchup.points > opponent.points) {
+                                        m1.h2h[oppId].wins++;
+                                        m2.h2h[ownerId].losses++;
+                                    } else if (matchup.points < opponent.points) {
+                                        m1.h2h[oppId].losses++;
+                                        m2.h2h[ownerId].wins++;
+                                    } else if (matchup.points > 0) {
+                                        m1.h2h[oppId].ties++;
+                                        m2.h2h[ownerId].ties++;
+                                    }
+                                     
+                                     allMatchupDetails.push({ season, week, manager1Id: ownerId, manager2Id: oppId, score1: matchup.points, score2: opponent.points, margin: Math.abs(matchup.points - opponent.points), totalScore: matchup.points + opponent.points});
                                      const key = [ownerId, oppId].sort().join('-');
                                      if(!h2hMatchups[key]) h2hMatchups[key] = [];
-                                     h2hMatchups[key].push({ season, week, m1: ownerId, m2: oppId, score1: matchup.points, score2: opponent.points});
+                                     h2hMatchups[key].push({ season, week, m1: ownerId, m2: oppId, score1: matchup.points, score2: opponent.points, player_points1: matchup.players_points, player_points2: opponent.players_points});
                                 }
                             });
                         }
@@ -656,8 +770,8 @@
                         const wId = rosterIdToOwnerId[championshipMatch.w], lId = rosterIdToOwnerId[championshipMatch.l];
                         if (wId && managersData[wId]) managersData[wId].stats.championship_years.push(season);
                         if (lId && managersData[lId]) managersData[lId].stats.runner_up_years.push(season);
-                        if (wRoster?.players) wRoster.players.forEach(pId => updatePlayerLegacy(pId, season, managersData[wId].displayName, true));
-                        if (lRoster?.players) lRoster.players.forEach(pId => updatePlayerLegacy(pId, season, managersData[lId].displayName, false));
+                        if (wRoster?.players) wRoster.players.forEach(pId => updatePlayerLegacy(pId, season, wId, true));
+                        if (lRoster?.players) lRoster.players.forEach(pId => updatePlayerLegacy(pId, season, lId, false));
 
                         const championshipWeek = leagueData.settings.playoff_week_start + finalRound - 1;
                         const championshipMatchups = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueData.league_id}/matchups/${championshipWeek}`);
@@ -682,8 +796,51 @@
                      const champRoster = rosters.find(r => r.settings.rank === 1), runnerUpRoster = rosters.find(r => r.settings.rank === 2);
                      if (champRoster?.owner_id) managersData[champRoster.owner_id].stats.championship_years.push(season);
                      if (runnerUpRoster?.owner_id) managersData[runnerUpRoster.owner_id].stats.runner_up_years.push(season);
-                     if (champRoster?.players) champRoster.players.forEach(pId => updatePlayerLegacy(pId, season, managersData[champRoster.owner_id].displayName, true));
-                     if (runnerUpRoster?.players) runnerUpRoster.players.forEach(pId => updatePlayerLegacy(pId, season, managersData[runnerUpRoster.owner_id].displayName, false));
+                     if (champRoster?.players) champRoster.players.forEach(pId => updatePlayerLegacy(pId, season, champRoster.owner_id, true));
+                     if (runnerUpRoster?.players) runnerUpRoster.players.forEach(pId => updatePlayerLegacy(pId, season, runnerUpRoster.owner_id, false));
+                }
+
+                try {
+                    const losersBracket = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueData.league_id}/losers_bracket`);
+                    if (losersBracket && losersBracket.length > 0) {
+                        const finalLoserRound = Math.max(...losersBracket.map(m => m.r));
+                        const toiletBowlMatch = losersBracket.find(m => m.r === finalLoserRound);
+
+                        if (toiletBowlMatch) {
+                            const punishedRoster = rosters.find(r => r.roster_id === toiletBowlMatch.w);
+                            const safeRoster = rosters.find(r => r.roster_id === toiletBowlMatch.l);
+                            const punishedId = punishedRoster ? punishedRoster.owner_id : null;
+                            const safeId = safeRoster ? safeRoster.owner_id : null;
+
+                            const toiletBowlWeek = leagueData.settings.playoff_week_start + finalLoserRound - 1;
+                            const toiletBowlMatchups = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueData.league_id}/matchups/${toiletBowlWeek}`);
+
+                            const punishedMatchup = toiletBowlMatchups.find(m => m.roster_id === toiletBowlMatch.w);
+                            const safeMatchup = toiletBowlMatchups.find(m => m.roster_id === toiletBowlMatch.l);
+
+                            const getRosterDetails = (starters) => {
+                                if (!starters) return [];
+                                return starters.map(pId => {
+                                    const player = nflPlayers[pId];
+                                    return player ? { name: `${player.first_name} ${player.last_name}`, position: player.position } : { name: 'Unknown Player', position: 'N/A' };
+                                });
+                            };
+
+                            if (punishedId && safeId && punishedMatchup && safeMatchup) {
+                                toiletBowlData.push({
+                                    season: season,
+                                    punishedId: punishedId,
+                                    punishedRoster: getRosterDetails(punishedMatchup.starters),
+                                    punishedScore: punishedMatchup.points,
+                                    safeId: safeId,
+                                    safeRoster: getRosterDetails(safeMatchup.starters),
+                                    safeScore: safeMatchup.points
+                                });
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.warn(`Could not fetch losers bracket for ${season}.`, e);
                 }
             };
 
@@ -701,8 +858,9 @@
                 allTimeRecords.lowestSeasonScores = [...allSeasonScores].filter(s => s.year < currentYear).sort((a, b) => a.score - b.score).slice(0, 5);
                 allTimeRecords.topSeasonRecords = [...allSeasonRecords].sort((a, b) => b.winPct - a.winPct || b.pf - a.pf).slice(0, 5);
                 allTimeRecords.bottomSeasonRecords = [...allSeasonRecords].sort((a, b) => a.winPct - b.winPct || a.pf - b.pf).slice(0, 5);
-                allTimeRecords.biggestBlowouts = [...allMatchupDetails].sort((a,b) => b.margin - a.margin).slice(0,5);
-                allTimeRecords.closestGames = [...allMatchupDetails].filter(m => m.totalScore > 0).sort((a,b) => a.margin - b.margin).slice(0,5);
+                const blowoutsAndCloseGames = allMatchupDetails.map(m => ({...m, margin: Math.abs(m.score1 - m.score2)}));
+                allTimeRecords.biggestBlowouts = [...blowoutsAndCloseGames].sort((a,b) => b.margin - a.margin).slice(0,5);
+                allTimeRecords.closestGames = [...blowoutsAndCloseGames].filter(m => m.totalScore > 0).sort((a,b) => a.margin - b.margin).slice(0,5);
                 allTimeRecords.biggestShootouts = [...allMatchupDetails].sort((a,b) => b.totalScore - a.totalScore).slice(0,5);
                 allTimeRecords.topPlayerScores = [...allPlayerScores].sort((a,b) => b.score - a.score).slice(0,5);
             }
@@ -715,6 +873,9 @@
                 renderMostKeptPlayers();
                 renderChampionshipRosters();
                 renderLifetimeEarnings();
+                renderTradeLog();
+                renderFaabHistory();
+                renderToiletBowlHistory();
             };
 
             const renderPowerRankings = () => {
@@ -723,7 +884,7 @@
                 const sortedManagers = Object.values(managersData).sort((a, b) => (b.stats.wins / (b.stats.wins + b.stats.losses) || 0) - (a.stats.wins / (a.stats.wins + a.stats.losses) || 0) || b.stats.pf - a.stats.pf);
                 sortedManagers.forEach((manager, index) => {
                     const winPct = manager.stats.wins + manager.stats.losses > 0 ? ((manager.stats.wins / (manager.stats.wins + manager.stats.losses)) * 100).toFixed(1) + '%' : '0.0%';
-                    rankingsBody.innerHTML += `<tr class="hover:bg-[#21262d]"><td class="px-4 py-3 whitespace-nowrap text-sm font-medium">${index + 1}</td><td class="px-4 py-3 whitespace-nowrap text-sm"><div class="flex items-center"><img class="h-8 w-8 rounded-full mr-3 object-cover" src="${manager.avatar}" alt=""><div class="font-semibold">${manager.displayName}</div></div></td><td class="px-4 py-3 whitespace-nowrap text-sm">${manager.stats.wins}-${manager.stats.losses}</td><td class="px-4 py-3 whitespace-nowrap text-sm">${winPct}</td><td class="px-4 py-3 whitespace-nowrap text-sm">${manager.stats.pf.toFixed(2)} / ${manager.stats.pa.toFixed(2)}</td></tr>`;
+                    rankingsBody.innerHTML += `<tr class="hover:bg-gray-800/50"><td class="px-4 py-3 whitespace-nowrap text-sm font-medium">${index + 1}</td><td class="px-4 py-3 whitespace-nowrap text-sm"><div class="flex items-center"><img class="h-8 w-8 rounded-full mr-3 object-cover" src="${manager.avatar}" alt=""><div class="font-semibold">${getDisplayNameWithCrown(manager.userId)}</div></div></td><td class="px-4 py-3 whitespace-nowrap text-sm">${manager.stats.wins}-${manager.stats.losses}</td><td class="px-4 py-3 whitespace-nowrap text-sm">${winPct}</td><td class="px-4 py-3 whitespace-nowrap text-sm">${manager.stats.pf.toFixed(2)} / ${manager.stats.pa.toFixed(2)}</td></tr>`;
                 });
             };
 
@@ -736,7 +897,7 @@
                 if (champions.length > 0) {
                     champions.forEach(c => {
                         const yearsHtml = c.stats.championship_years.map(y => `<p class="text-sm text-yellow-400">🏆 ${formatYear(y)}</p>`).join('');
-                        trophyCase.innerHTML += `<div class="flex items-center gap-3"><img src="${c.avatar}" class="w-10 h-10 rounded-full object-cover"><div><p class="font-semibold">${c.displayName}</p>${yearsHtml}</div></div>`;
+                        trophyCase.innerHTML += `<div class="flex items-center gap-3"><img src="${c.avatar}" class="w-10 h-10 rounded-full object-cover"><div><p class="font-semibold">${getDisplayNameWithCrown(c.userId)}</p>${yearsHtml}</div></div>`;
                     });
                 } else {
                     trophyCase.innerHTML = '<p class="text-gray-400">No champions yet!</p>';
@@ -745,10 +906,10 @@
                 // Runner Ups
                 const secondPlace = Object.values(managersData).filter(m => m.stats.runner_up_years.length > 0).sort((a, b) => b.stats.runner_up_years.length - a.stats.runner_up_years.length);
                 if (secondPlace.length > 0) {
-                     runnerUps.innerHTML += '<h3 class="text-lg font-semibold text-gray-400 mb-2 border-t border-[#30363d] pt-4">Runner Ups 🥈</h3>'
+                     runnerUps.innerHTML += '<h3 class="text-lg font-semibold text-gray-400 mb-2 border-t border-gray-700 pt-4">Runner Ups 🥈</h3>'
                      secondPlace.forEach(m => {
                         const yearsHtml = m.stats.runner_up_years.map(y => `<p class="text-sm text-gray-300">😢 ${formatYear(y)}</p>`).join('');
-                        runnerUps.innerHTML += `<div class="flex items-center gap-3"><img src="${m.avatar}" class="w-10 h-10 rounded-full object-cover"><div><p class="font-semibold">${m.displayName}</p>${yearsHtml}</div></div>`;
+                        runnerUps.innerHTML += `<div class="flex items-center gap-3"><img src="${m.avatar}" class="w-10 h-10 rounded-full object-cover"><div><p class="font-semibold">${getDisplayNameWithCrown(m.userId)}</p>${yearsHtml}</div></div>`;
                     });
                 }
 
@@ -764,42 +925,42 @@
                 }, {});
 
                 if (Object.keys(toiletKingsByName).length > 0) {
-                    toiletKingsDiv.innerHTML += '<h3 class="text-lg font-semibold text-amber-600 mb-2 border-t border-[#30363d] pt-4">Toilet King 🚽💩</h3>';
+                    toiletKingsDiv.innerHTML += '<h3 class="text-lg font-semibold text-amber-800 mb-2 border-t border-gray-700 pt-4">Toilet King 🚽💩</h3>';
                     Object.entries(toiletKingsByName).forEach(([managerName, years]) => {
                         const manager = Object.values(managersData).find(m => m.displayName === managerName);
                         if (manager) {
-                            const yearsHtml = years.map(y => `<p class="text-sm text-gray-300">🤢 ${formatYear(y)}</p>`).join('');
-                            toiletKingsDiv.innerHTML += `<div class="flex items-center gap-3"><img src="${manager.avatar}" class="w-10 h-10 rounded-full object-cover"><div><p class="font-semibold">${manager.displayName}</p>${yearsHtml}</div></div>`;
+                            const yearsHtml = years.map(y => `<p class="text-sm text-gray-300">${formatYear(y)}</p>`).join('');
+                            toiletKingsDiv.innerHTML += `<div class="flex items-center gap-3"><img src="${manager.avatar}" class="w-10 h-10 rounded-full object-cover"><div><p class="font-semibold">${getDisplayNameWithCrown(manager.userId)}</p>${yearsHtml}</div></div>`;
                         }
                     });
                 }
             };
             
             const renderAllTimeRecords = () => {
-                document.getElementById('highest-season-scores').innerHTML = allTimeRecords.topSeasonScores.map(r => `<p>${r.manager} (${formatYear(r.year)}): <span class="font-bold text-white">${r.score.toFixed(2)}</span></p>`).join('') || '<p>N/A</p>';
-                document.getElementById('lowest-season-scores').innerHTML = allTimeRecords.lowestSeasonScores.map(r => `<p>${r.manager} (${formatYear(r.year)}): <span class="font-bold text-white">${r.score.toFixed(2)}</span></p>`).join('') || '<p>N/A</p>';
-                document.getElementById('highest-weekly-scores').innerHTML = allTimeRecords.topWeeklyScores.map(r => `<p>${r.manager} (${formatYear(r.year)}, Week ${r.week}): <span class="font-bold text-white">${r.score.toFixed(2)}</span></p>`).join('') || '<p>N/A</p>';
-                document.getElementById('lowest-weekly-scores').innerHTML = allTimeRecords.lowestWeeklyScores.map(r => `<p>${r.manager} (${formatYear(r.year)}, Week ${r.week}): <span class="font-bold text-white">${r.score.toFixed(2)}</span></p>`).join('') || '<p>N/A</p>';
-                document.getElementById('best-seasons').innerHTML = allTimeRecords.topSeasonRecords.map(r => `<p>${r.manager} (${formatYear(r.year)}): <span class="font-bold text-white">${r.record}</span></p>`).join('') || '<p>N/A</p>';
-                document.getElementById('worst-seasons').innerHTML = allTimeRecords.bottomSeasonRecords.map(r => `<p>${r.manager} (${formatYear(r.year)}): <span class="font-bold text-white">${r.record}</span></p>`).join('') || '<p>N/A</p>';
-                document.getElementById('biggest-blowouts').innerHTML = allTimeRecords.biggestBlowouts.map(m => `<div class="py-1"><p class="text-sm">${formatYear(m.season)} Week ${m.week}: <span class="font-bold text-white">${m.manager1}</span> def. <span class="font-bold">${m.manager2}</span></p><p class="text-xs text-gray-400 ml-2">${m.score1.toFixed(2)} to ${m.score2.toFixed(2)} (Margin: ${m.margin.toFixed(2)})</p></div>`).join('') || '<p>N/A</p>';
-                document.getElementById('closest-games').innerHTML = allTimeRecords.closestGames.map(m => `<div class="py-1"><p class="text-sm">${formatYear(m.season)} Week ${m.week}: <span class="font-bold text-white">${m.manager1}</span> vs <span class="font-bold">${m.manager2}</span></p><p class="text-xs text-gray-400 ml-2">${m.score1.toFixed(2)} to ${m.score2.toFixed(2)} (Margin: ${m.margin.toFixed(2)})</p></div>`).join('') || '<p>N/A</p>';
-                document.getElementById('biggest-shootouts').innerHTML = allTimeRecords.biggestShootouts.map(m => `<div class="py-1"><p class="text-sm">${formatYear(m.season)} Week ${m.week}: <span class="font-bold text-white">${m.manager1}</span> vs <span class="font-bold">${m.manager2}</span></p><p class="text-xs text-gray-400 ml-2">${m.score1.toFixed(2)} - ${m.score2.toFixed(2)} (Total: ${m.totalScore.toFixed(2)})</p></div>`).join('') || '<p>N/A</p>';
-                document.getElementById('highest-scoring-players').innerHTML = allTimeRecords.topPlayerScores.map(p => `<div class="py-1"><p class="text-sm"><span class="font-bold text-white">${p.name} (${p.position}, ${p.team || 'FA'})</span>: ${p.score.toFixed(2)} pts</p><p class="text-xs text-gray-400 ml-2">For ${p.manager} in ${formatYear(p.year)}, Week ${p.week}</p></div>`).join('') || '<p>N/A</p>';
+                document.getElementById('highest-season-scores').innerHTML = allTimeRecords.topSeasonScores.map(r => `<p>${getDisplayNameWithCrown(r.managerId)} (${formatYear(r.year)}): <span class="font-bold text-white">${r.score.toFixed(2)}</span></p>`).join('') || '<p>N/A</p>';
+                document.getElementById('lowest-season-scores').innerHTML = allTimeRecords.lowestSeasonScores.map(r => `<p>${getDisplayNameWithCrown(r.managerId)} (${formatYear(r.year)}): <span class="font-bold text-white">${r.score.toFixed(2)}</span></p>`).join('') || '<p>N/A</p>';
+                document.getElementById('highest-weekly-scores').innerHTML = allTimeRecords.topWeeklyScores.map(r => `<p>${getDisplayNameWithCrown(r.managerId)} (${formatYear(r.year)}, Wk ${r.week}): <span class="font-bold text-white">${r.score.toFixed(2)}</span></p>`).join('') || '<p>N/A</p>';
+                document.getElementById('lowest-weekly-scores').innerHTML = allTimeRecords.lowestWeeklyScores.map(r => `<p>${getDisplayNameWithCrown(r.managerId)} (${formatYear(r.year)}, Wk ${r.week}): <span class="font-bold text-white">${r.score.toFixed(2)}</span></p>`).join('') || '<p>N/A</p>';
+                document.getElementById('best-seasons').innerHTML = allTimeRecords.topSeasonRecords.map(r => `<p>${getDisplayNameWithCrown(r.managerId)} (${formatYear(r.year)}): <span class="font-bold text-white">${r.record}</span></p>`).join('') || '<p>N/A</p>';
+                document.getElementById('worst-seasons').innerHTML = allTimeRecords.bottomSeasonRecords.map(r => `<p>${getDisplayNameWithCrown(r.managerId)} (${formatYear(r.year)}): <span class="font-bold text-white">${r.record}</span></p>`).join('') || '<p>N/A</p>';
+                document.getElementById('biggest-blowouts').innerHTML = allTimeRecords.biggestBlowouts.map(m => `<div class="py-1"><p class="text-sm">${formatYear(m.season)} Wk ${m.week}: <span class="font-bold text-white">${getDisplayNameWithCrown(m.manager1Id)}</span> def. <span class="font-bold">${getDisplayNameWithCrown(m.manager2Id)}</span></p><p class="text-xs text-gray-400 ml-2">${m.score1.toFixed(2)} to ${m.score2.toFixed(2)} (Margin: ${m.margin.toFixed(2)})</p></div>`).join('') || '<p>N/A</p>';
+                document.getElementById('closest-games').innerHTML = allTimeRecords.closestGames.map(m => `<div class="py-1"><p class="text-sm">${formatYear(m.season)} Wk ${m.week}: <span class="font-bold text-white">${getDisplayNameWithCrown(m.manager1Id)}</span> vs <span class="font-bold">${getDisplayNameWithCrown(m.manager2Id)}</span></p><p class="text-xs text-gray-400 ml-2">${m.score1.toFixed(2)} to ${m.score2.toFixed(2)} (Margin: ${m.margin.toFixed(2)})</p></div>`).join('') || '<p>N/A</p>';
+                document.getElementById('biggest-shootouts').innerHTML = allTimeRecords.biggestShootouts.map(m => `<div class="py-1"><p class="text-sm">${formatYear(m.season)} Wk ${m.week}: <span class="font-bold text-white">${getDisplayNameWithCrown(m.manager1Id)}</span> vs <span class="font-bold">${getDisplayNameWithCrown(m.manager2Id)}</span></p><p class="text-xs text-gray-400 ml-2">${m.score1.toFixed(2)} - ${m.score2.toFixed(2)} (Total: ${m.totalScore.toFixed(2)})</p></div>`).join('') || '<p>N/A</p>';
+                document.getElementById('highest-scoring-players').innerHTML = allTimeRecords.topPlayerScores.map(p => `<div class="py-1"><p class="text-sm"><span class="font-bold text-white">${p.name} (${p.position}, ${p.team || 'FA'})</span>: ${p.score.toFixed(2)} pts</p><p class="text-xs text-gray-400 ml-2">For ${getDisplayNameWithCrown(p.managerId)} in ${formatYear(p.year)}, Wk ${p.week}</p></div>`).join('') || '<p>N/A</p>';
             };
 
             const renderPlayerLegacies = () => {
                 const listDiv = document.getElementById('player-legacies-list');
                 const sortedPlayers = Object.values(playerLegacyData).filter(p => p.appearances > 1).sort((a, b) => b.appearances - a.appearances);
                 if (sortedPlayers.length === 0) { listDiv.innerHTML = '<p class="text-gray-400">Not enough data yet.</p>'; return; }
-                listDiv.innerHTML = sortedPlayers.slice(0, 10).map((player, index) => `<div class="p-3 rounded-md hover:bg-[#21262d]"><div class="flex items-center gap-4"><span class="text-lg font-bold text-[#58a6ff]">${index + 1}.</span><div><h4 class="font-bold text-white">${player.name} <span class="text-sm font-normal text-gray-400">(${player.position})</span></h4><ul class="list-disc list-inside mt-1">${player.history.map(h => `<li class="text-xs text-gray-400">${formatYear(h.season)} on ${h.managerName}'s team (${h.isWinner ? '🏆 Won' : '🥈 Lost'})</li>`).join('')}</ul></div></div></div>`).join('');
+                listDiv.innerHTML = sortedPlayers.slice(0, 10).map((player, index) => `<div class="p-3 rounded-md hover:bg-gray-800/50"><div class="flex items-center gap-4"><span class="text-lg font-bold text-orange-500">${index + 1}.</span><div><h4 class="font-bold text-white">${player.name} <span class="text-sm font-normal text-gray-400">(${player.position})</span></h4><ul class="list-disc list-inside mt-1">${player.history.map(h => `<li class="text-xs text-gray-400">${formatYear(h.season)} on ${getDisplayNameWithCrown(h.managerId)}'s team (${h.isWinner ? '🏆 Won' : '🥈 Lost'})</li>`).join('')}</ul></div></div></div>`).join('');
             };
             
             const renderMostKeptPlayers = () => {
                 const listDiv = document.getElementById('most-kept-players-list');
                 const sortedPlayers = Object.values(mostKeptPlayers).sort((a, b) => b.count - a.count);
                 if (sortedPlayers.length === 0) { listDiv.innerHTML = '<p class="text-gray-400">Not enough multi-season data yet.</p>'; return; }
-                listDiv.innerHTML = sortedPlayers.slice(0, 10).map((player, index) => `<div class="p-3 rounded-md hover:bg-[#21262d]"><div class="flex items-center gap-4"><span class="text-lg font-bold text-[#58a6ff]">${index + 1}.</span><div><h4 class="font-bold text-white">${player.name} <span class="text-sm font-normal text-gray-400">(${player.position})</span></h4><ul class="list-disc list-inside mt-1">${player.history.map(h => `<li class="text-xs text-gray-400">Kept by ${h.managerName} for ${formatYear(h.season)}</li>`).join('')}</ul></div></div></div>`).join('');
+                listDiv.innerHTML = sortedPlayers.slice(0, 10).map((player, index) => `<div class="p-3 rounded-md hover:bg-gray-800/50"><div class="flex items-center gap-4"><span class="text-lg font-bold text-orange-500">${index + 1}.</span><div><h4 class="font-bold text-white">${player.name} <span class="text-sm font-normal text-gray-400">(${player.position})</span></h4><ul class="list-disc list-inside mt-1">${player.history.map(h => `<li class="text-xs text-gray-400">Kept by ${getDisplayNameWithCrown(h.managerId)} for ${formatYear(h.season)}</li>`).join('')}</ul></div></div></div>`).join('');
             };
 
             const renderChampionshipRosters = () => {
@@ -821,13 +982,13 @@
 
                     container.innerHTML += `
                     <div class="mb-10">
-                        <h2 class="text-3xl font-bold text-center mb-6 border-b border-[#30363d] pb-2 text-yellow-400">${formatChampYear(data.season)} Championship Game</h2>
+                        <h2 class="text-3xl font-bold text-center mb-6 border-b border-gray-700 pb-2 text-yellow-400">${formatChampYear(data.season)} Championship Game</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div class="bg-[#1c122c]/50 p-4 rounded-lg border border-yellow-400/50">
+                            <div class="bg-gray-900/50 p-4 rounded-lg border border-yellow-400/50">
                                 <div class="flex items-center gap-4 mb-3">
                                     <img src="${winner.avatar}" class="w-12 h-12 rounded-full object-cover">
                                     <div>
-                                        <h3 class="text-lg font-bold text-yellow-400">🏆 ${winner.displayName}</h3>
+                                        <h3 class="text-lg font-bold text-yellow-400">🏆 ${getDisplayNameWithCrown(winner.userId)}</h3>
                                         <p class="text-sm text-gray-400">Starting Roster - ${winnerScore.toFixed(2)} points</p>
                                     </div>
                                 </div>
@@ -835,11 +996,11 @@
                                     ${data.winnerRoster.map(p => `<li class="p-2 border ${positionColors[p.position] || 'bg-gray-700/20'} rounded truncate" title="${p.name} (${p.position})">${p.name} <span class="text-gray-400 text-xs">(${p.position})</span></li>`).join('') || '<li>Roster data not available.</li>'}
                                 </ul>
                             </div>
-                            <div class="bg-[#1c122c]/50 p-4 rounded-lg border border-gray-600/50">
+                            <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-600/50">
                                  <div class="flex items-center gap-4 mb-3">
                                     <img src="${loser.avatar}" class="w-12 h-12 rounded-full object-cover">
                                     <div>
-                                        <h3 class="text-lg font-bold text-gray-300">🥈 ${loser.displayName}</h3>
+                                        <h3 class="text-lg font-bold text-gray-300">🥈 ${getDisplayNameWithCrown(loser.userId)}</h3>
                                         <p class="text-sm text-gray-400">Starting Roster - ${loserScore.toFixed(2)} points</p>
                                     </div>
                                 </div>
@@ -880,29 +1041,33 @@
                 const propTotals = Object.entries(earningsData).map(([name, data]) => ({ name, total: data.props })).sort((a, b) => b.total - a.total);
                 const highscoreTotals = Object.entries(earningsData).map(([name, data]) => ({ name, total: data.highs })).sort((a, b) => b.total - a.total);
 
-                const createLeaderboardHTML = (managerName, value, index, isMoney=false) => {
-                    const managerDetails = Object.values(managersData).find(m => m.displayName === managerName);
+                const createLeaderboardHTML = (managerId, value, index, isMoney=false) => {
+                    const managerDetails = Object.values(managersData).find(m => m.userId === managerId);
                     const avatar = managerDetails ? managerDetails.avatar : 'https://placehold.co/48x48/1f2937/a0aec0?text=🏈';
                     return `
-                        <div class="flex items-center p-2 rounded-md hover:bg-[#21262d]">
+                        <div class="flex items-center p-2 rounded-md hover:bg-gray-800/50">
                             <div class="flex items-center gap-3 w-full">
                                 <span class="font-bold text-lg w-6 text-gray-400">${index + 1}.</span>
                                 <img src="${avatar}" class="w-8 h-8 rounded-full object-cover">
-                                <span class="font-semibold text-sm flex-grow">${managerName}</span>
+                                <span class="font-semibold text-sm flex-grow">${getDisplayNameWithCrown(managerId)}</span>
                                  <span class="font-bold text-right ${isMoney ? 'text-green-400' : 'text-white'}">${isMoney ? '$' : ''}${isMoney ? value.toFixed(2) : value}</span>
                             </div>
                         </div>`;
                 };
+                
+                const managerNameIdMap = {};
+                Object.values(managersData).forEach(m => { managerNameIdMap[m.displayName] = m.userId; });
 
-                totals.forEach((manager, index) => leaderboardContainer.innerHTML += createLeaderboardHTML(manager.name, manager.total, index, true));
-                propTotals.forEach((manager, index) => propContainer.innerHTML += createLeaderboardHTML(manager.name, manager.total, index));
-                highscoreTotals.forEach((manager, index) => highscoreContainer.innerHTML += createLeaderboardHTML(manager.name, manager.total, index));
+                totals.forEach((manager, index) => leaderboardContainer.innerHTML += createLeaderboardHTML(managerNameIdMap[manager.name], manager.total, index, true));
+                propTotals.forEach((manager, index) => propContainer.innerHTML += createLeaderboardHTML(managerNameIdMap[manager.name], manager.total, index));
+                highscoreTotals.forEach((manager, index) => highscoreContainer.innerHTML += createLeaderboardHTML(managerNameIdMap[manager.name], manager.total, index));
 
                 Object.keys(earningsData).sort().forEach(managerName => {
                     const yearlyData = earningsData[managerName];
+                    const managerId = managerNameIdMap[managerName];
                     breakdownContainer.innerHTML += `
-                        <tr class="hover:bg-[#21262d]">
-                            <td class="py-3 pr-2 font-semibold text-sm">${managerName}</td>
+                        <tr class="hover:bg-gray-800/50">
+                            <td class="py-3 pr-2 font-semibold text-sm">${getDisplayNameWithCrown(managerId)}</td>
                             <td class="py-3 px-2 text-right text-sm">$${(yearlyData[2021] || 0).toFixed(2)}</td>
                             <td class="py-3 px-2 text-right text-sm">$${(yearlyData[2022] || 0).toFixed(2)}</td>
                             <td class="py-3 px-2 text-right text-sm">$${(yearlyData[2023] || 0).toFixed(2)}</td>
@@ -912,104 +1077,367 @@
                 });
             };
 
+            const renderTradeLog = () => {
+                const listContainer = document.getElementById('trade-log-list');
+                if (!listContainer) return;
+
+                const getTradePieces = (trade, receiver_r_id) => {
+                    let pieces = [];
+                    const giver_r_id = trade.roster_ids.find(id => id !== receiver_r_id);
+
+                    if (trade.adds) {
+                        for (const [pId, rId] of Object.entries(trade.adds)) {
+                            if (rId === receiver_r_id) {
+                                const player = nflPlayers[pId];
+                                pieces.push(player ? `${player.first_name} ${player.last_name}` : 'Unknown Player');
+                            }
+                        }
+                    }
+                    if (trade.draft_picks) {
+                        for (const pick of trade.draft_picks) {
+                            if (pick.owner_id === receiver_r_id && pick.previous_owner_id === giver_r_id) {
+                                pieces.push(`${pick.season} Round ${pick.round} Pick`);
+                            }
+                        }
+                    }
+                    if (trade.waiver_budget) {
+                        for (const budget of trade.waiver_budget) {
+                            if (budget.receiver === receiver_r_id && budget.sender === giver_r_id) {
+                                pieces.push(`$${budget.amount} FAAB`);
+                            }
+                        }
+                    }
+                    return pieces.length > 0 ? pieces.join(', ') : 'nothing';
+                };
+
+                const sortedSeasons = Object.keys(allTrades).sort((a, b) => b - a);
+                let content = '';
+
+                for (const season of sortedSeasons) {
+                    if (allTrades[season].length === 0) continue;
+
+                    let tradesHtml = '';
+                    for (const trade of allTrades[season]) {
+                        const [r_id1, r_id2] = trade.roster_ids;
+                        const rostersForSeason = allRosters[season] || [];
+                        const owner1_id = rostersForSeason.find(r => r.roster_id === r_id1)?.owner_id;
+                        const owner2_id = rostersForSeason.find(r => r.roster_id === r_id2)?.owner_id;
+                        const manager1 = owner1_id ? managersData[owner1_id] : null;
+                        const manager2 = owner2_id ? managersData[owner2_id] : null;
+
+                        if (!manager1 || !manager2) continue;
+
+                        const date = new Date(trade.status_updated).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+                        const piecesForManager2 = getTradePieces(trade, r_id2);
+                        const piecesForManager1 = getTradePieces(trade, r_id1);
+
+                        tradesHtml += `
+                            <div class="p-4 rounded-md bg-gray-900/50">
+                                <p class="text-sm text-gray-400 mb-3">On <span class="font-semibold text-gray-300">${date}</span></p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start text-sm">
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <img src="${manager1.avatar}" class="w-8 h-8 rounded-full object-cover">
+                                            <p class="font-bold text-orange-400">${getDisplayNameWithCrown(manager1.userId)} received:</p>
+                                        </div>
+                                        <ul class="list-disc list-inside text-gray-300 pl-2 space-y-1">
+                                            ${piecesForManager1.split(', ').map(p => `<li>${p}</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <img src="${manager2.avatar}" class="w-8 h-8 rounded-full object-cover">
+                                            <p class="font-bold text-orange-400">${getDisplayNameWithCrown(manager2.userId)} received:</p>
+                                        </div>
+                                        <ul class="list-disc list-inside text-gray-300 pl-2 space-y-1">
+                                            ${piecesForManager2.split(', ').map(p => `<li>${p}</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>`;
+                    }
+                    
+                    content += `
+                        <div class="mb-6">
+                            <h3 class="text-xl font-bold text-orange-500 mb-3 cursor-pointer flex justify-between items-center" data-year="${season}">
+                                <span>${season} Trades (${allTrades[season].length})</span>
+                                <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </h3>
+                            <div class="space-y-4 pl-4 border-l-2 border-gray-700 trade-list hidden" id="trades-${season}">${tradesHtml}</div>
+                        </div>`;
+                }
+
+                if (!content) {
+                    listContainer.innerHTML = '<p class="text-gray-400">No trades have been made in league history.</p>';
+                } else {
+                    listContainer.innerHTML = content;
+                    const firstTradeList = listContainer.querySelector('.trade-list');
+                    if (firstTradeList) {
+                        firstTradeList.classList.remove('hidden');
+                        const firstHeader = firstTradeList.previousElementSibling;
+                        if(firstHeader && firstHeader.querySelector('svg')) firstHeader.querySelector('svg').classList.add('rotate-180');
+                    }
+                    listContainer.querySelectorAll('h3[data-year]').forEach(header => {
+                        header.addEventListener('click', () => {
+                            const year = header.dataset.year;
+                            const tradeList = document.getElementById(`trades-${year}`);
+                            const icon = header.querySelector('svg');
+                            tradeList.classList.toggle('hidden');
+                            icon.classList.toggle('rotate-180');
+                        });
+                    });
+                }
+            };
+
+            const renderFaabHistory = () => {
+                const acquisitionsBody = document.getElementById('faab-acquisitions-body');
+                const ballersList = document.getElementById('faab-ballers-list');
+                const frugalList = document.getElementById('faab-frugal-list');
+                
+                acquisitionsBody.innerHTML = '';
+                ballersList.innerHTML = '';
+                frugalList.innerHTML = '';
+
+                // Most Expensive Acquisitions
+                const sortedBids = [...allFaabBids].sort((a,b) => b.amount - a.amount);
+                sortedBids.filter(bid => bid.amount > 20).forEach(bid => {
+                    const posColorClass = positionTextColors[bid.position] || 'text-white';
+                    const manager = Object.values(managersData).find(m => m.userId === bid.managerId);
+                    acquisitionsBody.innerHTML += `
+                        <tr class="hover:bg-gray-800/50">
+                            <td class="px-4 py-3 whitespace-nowrap text-sm font-bold ${posColorClass}">${bid.position}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm font-semibold">${bid.player}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm">${getDisplayNameWithCrown(bid.managerId)}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm font-bold text-green-400">$${bid.amount}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm">${bid.season}</td>
+                        </tr>
+                    `;
+                });
+
+                // FAAB Spending Totals
+                const faabTotals = {};
+                allFaabBids.forEach(bid => {
+                    faabTotals[bid.managerId] = (faabTotals[bid.managerId] || 0) + bid.amount;
+                });
+                
+                const sortedManagersByFaab = Object.entries(faabTotals).sort((a,b) => b[1] - a[1]);
+                
+                const createManagerFaabHTML = (managerId, total, rank) => {
+                    const managerDetails = managersData[managerId];
+                     const avatar = managerDetails ? managerDetails.avatar : 'https://placehold.co/48x48/1f2937/a0aec0?text=🏈';
+                    return `
+                        <div class="flex items-center p-2 rounded-md hover:bg-gray-800/50">
+                            <div class="flex items-center gap-3 w-full">
+                                <span class="font-bold text-lg w-6 text-gray-400">${rank}.</span>
+                                <img src="${avatar}" class="w-8 h-8 rounded-full object-cover">
+                                <span class="font-semibold text-sm flex-grow">${getDisplayNameWithCrown(managerId)}</span>
+                                 <span class="font-bold text-right text-green-400">$${total}</span>
+                            </div>
+                        </div>`;
+                };
+
+                // Biggest Ballers
+                sortedManagersByFaab.slice(0, 6).forEach(([managerId, total], index) => {
+                    ballersList.innerHTML += createManagerFaabHTML(managerId, total, index + 1);
+                });
+
+                // Frugal Heroes
+                sortedManagersByFaab.slice(-6).reverse().forEach(([managerId, total], index) => {
+                    frugalList.innerHTML += createManagerFaabHTML(managerId, total, sortedManagersByFaab.length - index);
+                });
+            };
+
+            const renderToiletBowlHistory = () => {
+                const container = document.getElementById('toilet-bowl-games');
+                if (!container) return;
+                container.innerHTML = '';
+                const sortedData = [...toiletBowlData].sort((a, b) => b.season - a.season);
+                const positionColors = { QB: 'bg-rose-500/10 text-rose-300 border-rose-500/30', RB: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30', WR: 'bg-sky-500/10 text-sky-300 border-sky-500/30', TE: 'bg-amber-500/10 text-amber-300 border-amber-500/30', K: 'bg-fuchsia-500/10 text-fuchsia-300 border-fuchsia-500/30', DEF: 'bg-orange-500/10 text-orange-300 border-orange-500/30' };
+
+                if (sortedData.length === 0) {
+                    container.innerHTML = '<p class="text-gray-400 text-center mt-6">No Toilet Bowl game data available yet.</p>';
+                    return;
+                }
+
+                sortedData.forEach(data => {
+                    const punished = managersData[data.punishedId];
+                    const safe = managersData[data.safeId];
+                    if (!punished || !safe) return;
+
+                    container.innerHTML += `
+                    <div class="mb-10">
+                        <h2 class="text-3xl font-bold text-center mb-6 border-b border-gray-700 pb-2 text-amber-600">${data.season} Toilet Bowl</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="bg-gray-900/50 p-4 rounded-lg border border-amber-600/50">
+                                <div class="flex items-center gap-4 mb-3">
+                                    <img src="${punished.avatar}" class="w-12 h-12 rounded-full object-cover">
+                                    <div>
+                                        <h3 class="text-lg font-bold text-amber-600">🚽 ${getDisplayNameWithCrown(punished.userId)}</h3>
+                                        <p class="text-sm text-gray-400">Punishment Roster - ${data.punishedScore.toFixed(2)} points</p>
+                                    </div>
+                                </div>
+                                <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                                    ${data.punishedRoster.map(p => `<li class="p-2 border ${positionColors[p.position] || 'bg-gray-700/20'} rounded truncate" title="${p.name} (${p.position})">${p.name} <span class="text-gray-400 text-xs">(${p.position})</span></li>`).join('') || '<li>Roster data not available.</li>'}
+                                </ul>
+                            </div>
+                            <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-600/50">
+                                 <div class="flex items-center gap-4 mb-3">
+                                    <img src="${safe.avatar}" class="w-12 h-12 rounded-full object-cover">
+                                    <div>
+                                        <h3 class="text-lg font-bold text-gray-300">😮‍💨 ${getDisplayNameWithCrown(safe.userId)}</h3>
+                                        <p class="text-sm text-gray-400">Safe Roster - ${data.safeScore.toFixed(2)} points</p>
+                                    </div>
+                                </div>
+                                <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                                    ${data.safeRoster.map(p => `<li class="p-2 border ${positionColors[p.position] || 'bg-gray-700/20'} rounded truncate" title="${p.name} (${p.position})">${p.name} <span class="text-gray-400 text-xs">(${p.position})</span></li>`).join('') || '<li>Roster data not available.</li>'}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                });
+            };
+
             const setupTabs = () => tabs.forEach(tab => tab.addEventListener('click', () => { tabs.forEach(t => t.classList.remove('active')); tab.classList.add('active'); tabPanes.forEach(p => p.classList.toggle('hidden', p.id !== `${tab.dataset.tab}-content`)); }));
 
             const setupH2HSelector = () => {
                 const m1Select = document.getElementById('manager1-select'), m2Select = document.getElementById('manager2-select');
-                m1Select.innerHTML = m2Select.innerHTML = '';
+                m1Select.innerHTML = m2Select.innerHTML = '<option value="" selected>-- Select a Manager --</option>';
                 const sortedManagers = Object.values(managersData).sort((a, b) => a.displayName.localeCompare(b.displayName));
-                sortedManagers.forEach(m => { m1Select.add(new Option(m.displayName, m.userId)); m2Select.add(new Option(m.displayName, m.userId)); });
-                if (m1Select.options.length > 1) { m1Select.selectedIndex = 0; m2Select.selectedIndex = 1; }
-                m1Select.addEventListener('change', updateH2H); m2Select.addEventListener('change', updateH2H);
-                if (sortedManagers.length > 1) updateH2H();
+                sortedManagers.forEach(m => {
+                    m1Select.add(new Option(m.displayName, m.userId));
+                    m2Select.add(new Option(m.displayName, m.userId));
+                });
+                m1Select.addEventListener('change', updateH2H);
+                m2Select.addEventListener('change', updateH2H);
+                updateH2H();
             };
 
              const updateH2H = () => {
                 const m1Id = document.getElementById('manager1-select').value;
                 const m2Id = document.getElementById('manager2-select').value;
                 const resultDiv = document.getElementById('h2h-result');
-                
-                resultDiv.classList.remove('flex', 'items-center', 'justify-center');
-                resultDiv.style.minHeight = 'auto';
 
                 if (!m1Id || !m2Id || m1Id === m2Id) {
-                    resultDiv.innerHTML = '<p class="text-gray-400">Please select two different managers.</p>';
-                    resultDiv.classList.add('flex', 'items-center', 'justify-center');
-                    resultDiv.style.minHeight = '400px';
+                    resultDiv.innerHTML = '<p class="text-gray-400">Please select two members to compare head-to-head</p>';
                     return;
                 }
 
-                const m1 = managersData[m1Id], m2 = managersData[m2Id];
+                const m1 = managersData[m1Id];
+                const m2 = managersData[m2Id];
                 const key = [m1Id, m2Id].sort().join('-');
-                const history = (h2hMatchups[key] || []).sort((a, b) => a.season - b.season || a.week - b.week);
+                const history = (h2hMatchups[key] || []).sort((a,b) => a.season - b.season || a.week - b.week);
                 
                 if (history.length === 0) {
-                    resultDiv.innerHTML = '<p class="text-gray-400">These managers have not played each other.</p>';
-                    resultDiv.classList.add('flex', 'items-center', 'justify-center');
-                    resultDiv.style.minHeight = '400px';
+                    resultDiv.innerHTML = '<p class="text-gray-400">These managers have not played each other in the regular season.</p>';
                     return;
                 }
-
-                let totalPoints1 = 0, totalPoints2 = 0, longestStreak1 = 0, longestStreak2 = 0;
-                let tempStreak1 = 0, tempStreak2 = 0;
+                
+                let wins1 = 0, losses1 = 0, ties = 0, totalPoints1 = 0, totalPoints2 = 0;
+                let longestStreak1 = 0, currentStreak1 = 0, longestStreak2 = 0, currentStreak2 = 0;
+                
+                let closestGame = { margin: Infinity, score1: 0, score2: 0, season: 0, week: 0 };
+                let blowout1 = { margin: 0, score1: 0, score2: 0, season: 0, week: 0 };
+                let blowout2 = { margin: 0, score1: 0, score2: 0, season: 0, week: 0 };
+                let playerPointsForM1 = {}, playerPointsForM2 = {};
 
                 history.forEach(match => {
-                    const score1 = match.m1 === m1Id ? match.score1 : match.score2;
-                    const score2 = match.m1 === m1Id ? match.score2 : match.score1;
+                    const isM1Owner1 = match.m1 === m1Id;
+                    const score1 = isM1Owner1 ? match.score1 : match.score2;
+                    const score2 = isM1Owner1 ? match.score2 : match.score1;
+                    const p_pts1 = isM1Owner1 ? match.player_points1 : match.player_points2;
+                    const p_pts2 = isM1Owner1 ? match.player_points2 : match.player_points1;
+
                     totalPoints1 += score1;
                     totalPoints2 += score2;
 
-                    if (score1 > score2) { tempStreak1++; tempStreak2 = 0; } 
-                    else if (score2 > score1) { tempStreak2++; tempStreak1 = 0; }
-                    longestStreak1 = Math.max(longestStreak1, tempStreak1);
-                    longestStreak2 = Math.max(longestStreak2, tempStreak2);
+                    if (score1 > score2) {
+                        wins1++;
+                        currentStreak1++;
+                        currentStreak2 = 0;
+                    } else if (score2 > score1) {
+                        losses1++;
+                        currentStreak2++;
+                        currentStreak1 = 0;
+                    } else if (score1 > 0) {
+                        ties++;
+                        currentStreak1 = 0;
+                        currentStreak2 = 0;
+                    }
+                    longestStreak1 = Math.max(longestStreak1, currentStreak1);
+                    longestStreak2 = Math.max(longestStreak2, currentStreak2);
+                    
+                    const margin = Math.abs(score1 - score2);
+                    if (margin > 0 && margin < closestGame.margin) {
+                        closestGame = { margin, score1, score2, season: match.season, week: match.week };
+                    }
+                    if (score1 > score2 && margin > blowout1.margin) {
+                        blowout1 = { margin, score1, score2, season: match.season, week: match.week };
+                    }
+                    if (score2 > score1 && margin > blowout2.margin) {
+                        blowout2 = { margin, score1, score2, season: match.season, week: match.week };
+                    }
+                    
+                    if (p_pts1) for (const [pId, pts] of Object.entries(p_pts1)) playerPointsForM1[pId] = (playerPointsForM1[pId] || 0) + pts;
+                    if (p_pts2) for (const [pId, pts] of Object.entries(p_pts2)) playerPointsForM2[pId] = (playerPointsForM2[pId] || 0) + pts;
                 });
 
-                let currentWinStreak1 = 0, currentWinStreak2 = 0, currentLossStreak1 = 0, currentLossStreak2 = 0;
-                if(history.length > 0) {
-                    const lastMatch = history[history.length - 1];
-                    const lastWinnerId = (lastMatch.m1 === m1Id ? lastMatch.score1 : lastMatch.score2) > (lastMatch.m1 === m1Id ? lastMatch.score2 : lastMatch.score1) ? m1Id : m2Id;
-                    
-                    let currentStreakCount = 0;
-                    for (let i = history.length - 1; i >= 0; i--) {
-                        const match = history[i];
-                        const winnerId = (match.m1 === m1Id ? match.score1 : match.score2) > (match.m1 === m1Id ? match.score2 : match.score1) ? m1Id : m2Id;
-                        if (winnerId === lastWinnerId) { currentStreakCount++; } 
-                        else { break; }
-                    }
-
-                    if (lastWinnerId === m1Id) { currentWinStreak1 = currentStreakCount; currentLossStreak2 = currentStreakCount; } 
-                    else { currentWinStreak2 = currentStreakCount; currentLossStreak1 = currentStreakCount; }
-                }
+                const findTopPlayer = (pointsObject) => {
+                    if (!pointsObject || Object.keys(pointsObject).length === 0) return { name: 'N/A', points: 0 };
+                    const topId = Object.keys(pointsObject).reduce((a, b) => pointsObject[a] > pointsObject[b] ? a : b);
+                    const player = nflPlayers[topId];
+                    return { name: player ? `${player.first_name} ${player.last_name}` : 'Unknown Player', points: pointsObject[topId].toFixed(2) };
+                };
+                
+                const m1Nemesis = findTopPlayer(playerPointsForM1);
+                const m2Nemesis = findTopPlayer(playerPointsForM2);
 
                 const record = m1.h2h[m2Id] || { wins: 0, losses: 0, ties: 0 };
 
                 resultDiv.innerHTML = `
-                    <div class="grid grid-cols-1 lg:grid-cols-3 items-center gap-6 text-center">
-                        <div class="bg-gray-900/30 p-4 md:p-6 rounded-xl border border-[#30363d] shadow-lg flex flex-col items-center space-y-3 order-2 lg:order-1">
-                            <img src="${m1.avatar}" class="w-24 h-24 rounded-full object-cover border-4 border-[#58a6ff]">
-                            <p class="font-bold text-xl">${m1.displayName}</p>
+                    <div class="grid grid-cols-1 lg:grid-cols-5 items-start gap-6 text-center">
+                        <div class="lg:col-span-2 bg-gray-900/30 p-4 rounded-xl border border-gray-700 flex flex-col items-center space-y-3">
+                            <img src="${m1.avatar}" class="w-24 h-24 rounded-full object-cover border-4 border-orange-500">
+                            <p class="font-extrabold text-2xl text-orange-500">${getDisplayNameWithCrown(m1.userId)}</p>
                             <div class="text-sm text-gray-400 space-y-2 text-left w-full">
                                 <p class="flex justify-between"><span>Total Points:</span> <span class="font-bold text-white">${totalPoints1.toFixed(2)}</span></p>
                                 <p class="flex justify-between"><span>Avg Points:</span> <span class="font-bold text-white">${(totalPoints1 / history.length).toFixed(2)}</span></p>
                                 <p class="flex justify-between"><span>Longest Win Streak:</span> <span class="font-bold text-white">${longestStreak1}</span></p>
-                                <p class="flex justify-between"><span>Current Streak:</span> <span class="font-bold ${currentWinStreak1 > 0 ? 'text-green-400' : 'text-red-400'}">${currentWinStreak1 > 0 ? `W${currentWinStreak1}` : `L${currentLossStreak1}`}</span></p>
+                            </div>
+                            <hr class="w-full border-t border-gray-700 my-2">
+                            <div class="text-sm text-gray-400 space-y-2 text-left w-full">
+                                <p class="font-bold text-white">💥 Biggest Blowout:</p>
+                                ${wins1 > 0 ? `<p class="text-xs ml-2">${blowout1.score1.toFixed(2)} to ${blowout1.score2.toFixed(2)} (Margin: ${blowout1.margin.toFixed(2)})</p><p class="text-xs ml-2 text-gray-500">${formatYear(blowout1.season)}, Week ${blowout1.week}</p>` : '<p class="text-xs ml-2">Still searching for that first W</p>'}
+                                <p class="font-bold text-white mt-2">💀 Top Player vs ${m2.displayName}:</p>
+                                <p class="text-xs ml-2">${m1Nemesis.name} - ${m1Nemesis.points} total points</p>
                             </div>
                         </div>
 
-                        <div class="flex flex-col items-center order-1 lg:order-2 py-4">
+                        <div class="flex flex-col items-center py-4 lg:col-span-1">
                             <p class="text-6xl font-black tracking-tighter">${record.wins}-${record.losses}${record.ties > 0 ? `-${record.ties}` : ''}</p>
-                            <p class="text-lg text-gray-400 font-medium">All-Time Record</p>
+                            <p class="text-lg text-gray-400 font-medium -mt-2">All-Time Record</p>
+                            <hr class="w-2/3 border-t border-gray-700 my-4">
+                             <div class="text-sm text-gray-400 space-y-1 w-full">
+                                <p class="font-bold text-white">🤝 Closest Game:</p>
+                                <p class="text-xs">${closestGame.score1.toFixed(2)} vs ${closestGame.score2.toFixed(2)} (Margin: ${closestGame.margin.toFixed(2)})</p>
+                                <p class="text-xs text-gray-500">${formatYear(closestGame.season)}, Week ${closestGame.week}</p>
+                            </div>
                         </div>
 
-                        <div class="bg-gray-900/30 p-4 md:p-6 rounded-xl border border-[#30363d] shadow-lg flex flex-col items-center space-y-3 order-3">
-                            <img src="${m2.avatar}" class="w-24 h-24 rounded-full object-cover border-4 border-[#58a6ff]">
-                            <p class="font-bold text-xl">${m2.displayName}</p>
+                        <div class="lg:col-span-2 bg-gray-900/30 p-4 rounded-xl border border-gray-700 flex flex-col items-center space-y-3">
+                           <img src="${m2.avatar}" class="w-24 h-24 rounded-full object-cover border-4 border-orange-500">
+                            <p class="font-extrabold text-2xl text-orange-500">${getDisplayNameWithCrown(m2.userId)}</p>
                             <div class="text-sm text-gray-400 space-y-2 text-left w-full">
                                 <p class="flex justify-between"><span>Total Points:</span> <span class="font-bold text-white">${totalPoints2.toFixed(2)}</span></p>
                                 <p class="flex justify-between"><span>Avg Points:</span> <span class="font-bold text-white">${(totalPoints2 / history.length).toFixed(2)}</span></p>
                                 <p class="flex justify-between"><span>Longest Win Streak:</span> <span class="font-bold text-white">${longestStreak2}</span></p>
-                                <p class="flex justify-between"><span>Current Streak:</span> <span class="font-bold ${currentWinStreak2 > 0 ? 'text-green-400' : 'text-red-400'}">${currentWinStreak2 > 0 ? `W${currentWinStreak2}` : `L${currentLossStreak2}`}</span></p>
+                            </div>
+                            <hr class="w-full border-t border-gray-700 my-2">
+                            <div class="text-sm text-gray-400 space-y-2 text-left w-full">
+                                <p class="font-bold text-white">💥 Biggest Blowout:</p>
+                                ${record.losses > 0 ? `<p class="text-xs ml-2">${blowout2.score2.toFixed(2)} to ${blowout2.score1.toFixed(2)} (Margin: ${blowout2.margin.toFixed(2)})</p><p class="text-xs ml-2 text-gray-500">${formatYear(blowout2.season)}, Week ${blowout2.week}</p>` : '<p class="text-xs ml-2">Still searching for that first W</p>'}
+                                <p class="font-bold text-white mt-2">💀 Top Player vs ${m1.displayName}:</p>
+                                <p class="text-xs ml-2">${m2Nemesis.name} - ${m2Nemesis.points} total points</p>
                             </div>
                         </div>
                     </div>
@@ -1040,7 +1468,7 @@
                 const totalEarnings = managerEarnings ? Object.values(managerEarnings).reduce((a, b) => a + b, 0) : 0;
                 
                 document.getElementById('my-team-avatar').src = manager.avatar;
-                document.getElementById('my-team-name').textContent = manager.displayName;
+                document.getElementById('my-team-name').innerHTML = getDisplayNameWithCrown(manager.userId);
                 document.getElementById('my-team-record').textContent = `${manager.stats.wins}-${manager.stats.losses}`;
                 document.getElementById('my-team-winpct').textContent = manager.stats.wins + manager.stats.losses > 0 ? ((manager.stats.wins / (manager.stats.wins + manager.stats.losses)) * 100).toFixed(1) + '%' : '0.0%';
                 document.getElementById('my-team-pf').textContent = manager.stats.pf.toFixed(2);
@@ -1059,7 +1487,7 @@
                     standingsBody.innerHTML = yearlyData.map(s => {
                         const yearStats = manager.yearlyStats[s.year] || { pf: 0, transactions: 0 };
                         return `
-                            <tr class="border-b border-[#30363d] last:border-b-0 hover:bg-[#21262d]/50">
+                            <tr class="border-b border-gray-700 last:border-b-0 hover:bg-gray-800/50">
                                 <td class="px-2 py-3 font-semibold">${formatYear(s.year)}</td>
                                 <td class="px-2 py-3 text-center">${s.rank} / ${seasonalData[s.year].totalTeams}</td>
                                 <td class="px-2 py-3 text-right">${yearStats.pf.toFixed(2)}</td>
@@ -1091,7 +1519,7 @@
                 }
                 if (rivalId) {
                     const rival = managersData[rivalId];
-                    rivalDiv.innerHTML = `<div class="flex items-center gap-4"><img src="${rival.avatar}" class="w-12 h-12 rounded-full object-cover"><div><p class="font-bold text-lg">${rival.displayName}</p><p class="text-sm text-red-400">Has given you ${maxLosses} Ls</p></div></div>`;
+                    rivalDiv.innerHTML = `<div class="flex items-center gap-4"><img src="${rival.avatar}" class="w-12 h-12 rounded-full object-cover"><div><p class="font-bold text-lg">${getDisplayNameWithCrown(rival.userId)}</p><p class="text-sm text-red-400">Has given you ${maxLosses} Ls</p></div></div>`;
                 } else {
                     rivalDiv.innerHTML = '<p class="text-sm text-gray-400">No clear rival yet.</p>';
                 }
@@ -1100,11 +1528,11 @@
                 let highlightsHTML = '';
                 if(manager.stats.championship_years.length > 0) highlightsHTML += `<p>🏆 Champion (${manager.stats.championship_years.map(y => formatYear(y)).join(', ')})</p>`;
                 if(manager.stats.runner_up_years.length > 0) highlightsHTML += `<p>🥈 Runner Up (${manager.stats.runner_up_years.map(y => formatYear(y)).join(', ')})</p>`;
-                const bestSeason = allSeasonRecords.filter(r => r.manager === manager.displayName).sort((a,b) => b.winPct - a.winPct || b.pf - a.pf)[0];
+                const bestSeason = allSeasonRecords.filter(r => r.managerId === manager.userId).sort((a,b) => b.winPct - a.winPct || b.pf - a.pf)[0];
                 if(bestSeason) highlightsHTML += `<p>⭐ Best Season: ${bestSeason.record} (${formatYear(bestSeason.year)})</p>`;
-                const bestWeek = allWeeklyScores.filter(s => s.manager === manager.displayName).sort((a,b) => b.score - a.score)[0];
+                const bestWeek = allWeeklyScores.filter(s => s.managerId === manager.userId).sort((a,b) => b.score - a.score)[0];
                 if(bestWeek) highlightsHTML += `<p>🔥 Best Week: ${bestWeek.score.toFixed(2)} pts (${formatYear(bestWeek.year)}, Week ${bestWeek.week})</p>`;
-                 const bestSeasonScore = allSeasonScores.filter(s => s.manager === manager.displayName).sort((a,b) => b.score - a.score)[0];
+                 const bestSeasonScore = allSeasonScores.filter(s => s.managerId === manager.userId).sort((a,b) => b.score - a.score)[0];
                 if(bestSeasonScore) highlightsHTML += `<p>🚀 Highest Scoring Season: ${bestSeasonScore.score.toFixed(2)} pts (${formatYear(bestSeasonScore.year)})</p>`;
                 highlightsHTML += `<p>🤝 Trades Completed: ${manager.totalTrades || 0}</p>`;
                 highlightsDiv.innerHTML = highlightsHTML || '<p>No highlights recorded yet.</p>';
@@ -1117,3 +1545,4 @@
     </script>
 </body>
 </html>
+
