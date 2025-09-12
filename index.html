@@ -69,18 +69,18 @@
         </header>
 
         <div class="mb-8 border-b-2 border-orange-500">
-            <nav class="flex justify-center -mb-px space-x-6 flex-wrap" aria-label="Tabs">
-                <button class="tab-button active text-base font-medium py-4 px-1 border-b-2" data-tab="dashboard">Rankings</button>
-                <button class="tab-button text-base font-medium py-4 px-1 border-b-2" data-tab="myteam">My Team</button>
-                <button class="tab-button text-base font-medium py-4 px-1 border-b-2" data-tab="records">Records</button>
-                <button class="tab-button text-base font-medium py-4 px-1 border-b-2" data-tab="h2h">H2H</button>
-                <button class="tab-button text-base font-medium py-4 px-1 border-b-2" data-tab="legacies">Legends</button>
-                <button class="tab-button text-base font-medium py-4 px-1 border-b-2" data-tab="rosters">Championships</button>
-                <button class="tab-button text-base font-medium py-4 px-1 border-b-2" data-tab="earnings">Earnings</button>
-                <button class="tab-button text-base font-medium py-4 px-1 border-b-2" data-tab="tradelog">Trade Log</button>
-                <button class="tab-button text-base font-medium py-4 px-1 border-b-2" data-tab="faab">FAAB History</button>
-				<button class="tab-button text-base font-medium py-4 px-1 border-b-2" data-tab="toilet">Toilet Bowl</button>
-                <button class="tab-button text-base font-medium py-4 px-1 border-b-2" data-tab="rules">Rules</button>
+            <nav class="flex justify-center space-x-6 flex-wrap" aria-label="Tabs">
+                <button class="tab-button active text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="dashboard">Rankings</button>
+                <button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="myteam">My Team</button>
+                <button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="records">Records</button>
+                <button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="h2h">H2H</button>
+                <button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="legacies">Legends</button>
+                <button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="rosters">Championships</button>
+                <button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="earnings">Earnings</button>
+                <button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="tradelog">Trade Log</button>
+                <button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="faab">FAAB History</button>
+				<button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="toilet">Toilet Bowl</button>
+                <button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="rules">Rules</button>
             </nav>
         </div>
 
@@ -95,9 +95,9 @@
                                     <tr>
                                         <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Rank</th>
                                         <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Manager</th>
-                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Record (W-L)</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Record (<span class="text-green-400">W</span>-<span class="text-red-400">L</span>)</th>
                                         <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Win %</th>
-                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">PF / PA</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"><span class="text-green-400">PF</span> / <span class="text-red-400">PA</span></th>
                                     </tr>
                                 </thead>
                                 <tbody id="power-rankings-body" class="divide-y divide-gray-800">
@@ -155,7 +155,9 @@
                                             <tr>
                                                 <th scope="col" class="px-2 py-3">Year</th>
                                                 <th scope="col" class="px-2 py-3 text-center">Finish</th>
-                                                <th scope="col" class="px-2 py-3 text-right">Points For</th>
+                                                <th scope="col" class="px-2 py-3 text-center">Record</th>
+                                                <th scope="col" class="px-2 py-3 text-right text-green-400">Points For</th>
+                                                <th scope="col" class="px-2 py-3 text-right text-red-400">Points Against</th>
                                                 <th scope="col" class="px-2 py-3 text-right">Moves</th>
                                             </tr>
                                         </thead>
@@ -191,16 +193,16 @@
             
             <div id="records-content" class="tab-pane hidden">
                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-2">Highest Scoring Seasons</h3><div id="highest-season-scores" class="space-y-2"></div></div>
-                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-2">Lowest Scoring Seasons</h3><div id="lowest-season-scores" class="space-y-2"></div></div>
-                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-2">Highest Scoring Weeks</h3><div id="highest-weekly-scores" class="space-y-2"></div></div>
-                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-2">Lowest Scoring Weeks</h3><div id="lowest-weekly-scores" class="space-y-2"></div></div>
-                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-2">Best Seasons</h3><div id="best-seasons" class="space-y-2"></div></div>
-                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-2">Worst Seasons</h3><div id="worst-seasons" class="space-y-2"></div></div>
-                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-2">Biggest Blowouts</h3><div id="biggest-blowouts" class="space-y-2"></div></div>
-                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-2">Closest Games</h3><div id="closest-games" class="space-y-2"></div></div>
-                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-2">Biggest Shootouts</h3><div id="biggest-shootouts" class="space-y-2"></div></div>
-                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-2">Highest Scoring Players</h3><div id="highest-scoring-players" class="space-y-2"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-3 flex items-center gap-2">🚀 Highest Scoring Seasons</h3><div id="highest-season-scores" class="space-y-1"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-3 flex items-center gap-2">🥶 Lowest Scoring Seasons</h3><div id="lowest-season-scores" class="space-y-1"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-3 flex items-center gap-2">🔥 Highest Scoring Weeks</h3><div id="highest-weekly-scores" class="space-y-1"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-3 flex items-center gap-2">🧊 Lowest Scoring Weeks</h3><div id="lowest-weekly-scores" class="space-y-1"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-3 flex items-center gap-2">🏆 Best Seasons</h3><div id="best-seasons" class="space-y-1"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-3 flex items-center gap-2">🚽 Worst Seasons</h3><div id="worst-seasons" class="space-y-1"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-3 flex items-center gap-2">💥 Biggest Blowouts</h3><div id="biggest-blowouts" class="space-y-1"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-3 flex items-center gap-2">🤏 Closest Games</h3><div id="closest-games" class="space-y-1"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-3 flex items-center gap-2">🔫 Biggest Shootouts</h3><div id="biggest-shootouts" class="space-y-1"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-3 flex items-center gap-2">⭐ Highest Scoring Players</h3><div id="highest-scoring-players" class="space-y-1"></div></div>
                  </div>
             </div>
 
@@ -228,7 +230,7 @@
                     </div>
                     <div class="card">
                         <h2 class="text-xl font-bold mb-4 text-orange-500">Loyalty Club</h2>
-                        <p class="text-sm text-gray-400 mb-6">Players we just can't quit.</p>
+                        <p class="text-sm text-gray-400 mb-6">Players we just can't quit. (Kept or Drafted twice in a row)</p>
                         <div id="most-kept-players-list" class="space-y-4">
                             </div>
                     </div>
@@ -346,7 +348,7 @@
             <div id="faab-content" class="tab-pane hidden">
                  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="card lg:col-span-2">
-                        <h2 class="text-xl font-bold mb-4 text-orange-500">Most Expensive Acquisitions (>$20)</h2>
+                        <h2 class="text-xl font-bold mb-4 text-orange-500">Most Expensive Acquisitions</h2>
                          <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-800">
                                 <thead class="bg-gray-900/50">
@@ -406,7 +408,6 @@
         
         <footer class="text-center mt-12 py-6 border-t-2 border-orange-500 text-xs text-gray-500 space-y-2">
             <p>Beverly Fantasy Official Website • Engineered and Maintained by Commissioner Dooling • Established in 2025 • All Statistics Certified Accurate*</p>
-            <p><sup class="text-xs -top-1 relative">*</sup>10-player season (2021).</p>
             <p class="italic">*Results not guaranteed.</p>
         </footer>
     </div>
@@ -420,18 +421,18 @@
             const tabPanes = document.querySelectorAll('.tab-pane');
 
             const managerInfoMap = {
-                'seanrich3': { name: 'Sean Richardson', avatar: 'https://static.wixstatic.com/media/c7490a_7d37085e652446a88a9b60f3aa98dee6~mv2.jpg/v1/fill/w_315,h_499,fp_0.51_0.21,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/c7490a_7d37085e652446a88a9b60f3aa98dee6~mv2.jpg' },
-                'mzeroka': { name: 'Malcolm Zeroka', avatar: 'https://static.wixstatic.com/media/c7490a_de099681483f4dfd94c2afc594fc7f27~mv2.jpg/v1/fill/w_315,h_499,fp_0.42_0.55,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/c7490a_de099681483f4dfd94c2afc594fc7f27~mv2.jpg' },
-                'loperz': { name: 'Matt Pitman', avatar: 'https://static.wixstatic.com/media/c7490a_83395e49360d404fbb6789b5343cd0ff~mv2.png/v1/fill/w_315,h_599,fp_0.61_0.30,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/c7490a_83395e49360d404fbb6789b5343cd0ff~mv2.png' },
-                'kpflats': { name: 'Kevin Flaherty', avatar: 'https://static.wixstatic.com/media/c7490a_3673ad78feff4334bd03521db9bd2d58~mv2.jpg/v1/fill/w_315,h_599,fp_0.51_0.72,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/c7490a_3673ad78feff4334bd03521db9bd2d58~mv2.jpg' },
-                'brianharty': { name: 'Brian Harty', avatar: 'https://static.wixstatic.com/media/c7490a_ef056c587ccf4c24b7fa52a6007eb98b~mv2.jpg/v1/fill/w_315,h_449,fp_0.53_0.47,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/c7490a_ef056c587ccf4c24b7fa52a6007eb98b~mv2.jpg' },
-                'manzom': { name: 'Matt Manzo', avatar: 'https://static.wixstatic.com/media/c7490a_3eadfbfd533e49619b2bf9ca48374161~mv2.png/v1/fill/w_315,h_599,fp_0.47_0.51,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/c7490a_3eadfbfd533e49619b2bf9ca48374161~mv2.png' },
-                'wgd': { name: 'Will Dooling', avatar: 'https://static.wixstatic.com/media/c7490a_6f724c1119cd4ecf926401db729c135e~mv2.jpg/v1/fill/w_315,h_599,fp_0.49_0.47,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/c7490a_6f724c1119cd4ecf926401db729c135e~mv2.jpg' },
-                'ajohnstone34': { name: 'Andrew Johnstone', avatar: 'https://static.wixstatic.com/media/c7490a_e99d58efdb40487a941874f6d9bdc6e0~mv2.png/v1/fill/w_315,h_499,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/c7490a_e99d58efdb40487a941874f6d9bdc6e0~mv2.png' },
-                'archmaesterebrose': { name: 'Adam Ellis', avatar: 'https://static.wixstatic.com/media/c7490a_dc47bc864edf4d6e9bb8ad0709c854ed~mv2.jpg/v1/fill/w_315,h_449,fp_0.49_0.50,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/c7490a_dc47bc864edf4d6e9bb8ad0709c854ed~mv2.jpg' },
-                'cademarc': { name: 'Connor Cademartori', avatar: 'https://static.wixstatic.com/media/c7490a_2cb5653de9a14d8a9ec4d40fa046267e~mv2.jpg/v1/fill/w_315,h_499,fp_0.57_0.25,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/c7490a_2cb5653de9a14d8a9ec4d40fa046267e~mv2.jpg' },
-                'patgavin': { name: 'Patrick Gavin', avatar: 'https://static.wixstatic.com/media/c7490a_e99d58efdb40487a941874f6d9bdc6e0~mv2.png/v1/fill/w_315,h_499,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/c7490a_e99d58efdb40487a941874f6d9bdc6e0~mv2.png' },
-                'jonesj83': { name: 'Johnny Jones', avatar: 'https://static.wixstatic.com/media/c7490a_abf017b4200b47a4b116a2bb2fee0be9~mv2.jpg/v1/fill/w_315,h_499,fp_0.50_0.50,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/c7490a_abf017b4200b47a4b116a2bb2fee0be9~mv2.jpg' }
+                'seanrich3': { name: 'Sean Richardson', avatar: '/assets/sean.jpg' },
+                'mzeroka': { name: 'Malcolm Zeroka', avatar: '/assets/Malcolm.jpg' },
+                'loperz': { name: 'Matt Pitman', avatar: '/assets/pitman.png' },
+                'kpflats': { name: 'Kevin Flaherty', avatar: '/assets/kevin.jpg' },
+                'brianharty': { name: 'Brian Harty', avatar: '/assets/brian.png' },
+                'manzom': { name: 'Matt Manzo', avatar: '/assets/Manzo.png' },
+                'wgd': { name: 'Will Dooling', avatar: '/assets/will.png' },
+                'ajohnstone34': { name: 'Andrew Johnstone', avatar: '/assets/andy.jpg' },
+                'archmaesterebrose': { name: 'Adam Ellis', avatar: '/assets/adam.png' },
+                'cademarc': { name: 'Connor Cademartori', avatar: '/assets/connor.jpg' },
+                'patgavin': { name: 'Patrick Gavin', avatar: '/assets/pat.png' },
+                'jonesj83': { name: 'Johnny Jones', avatar: '/assets/johhny.png' }
             };
 
             const managersData = {};
@@ -459,7 +460,7 @@
             const allWeeklyScores = [], allSeasonScores = [], allSeasonRecords = [],
                   allMatchupDetails = [], allPlayerScores = [];
 
-            const formatYear = (year) => (year == 2021) ? `${year}<sup class="text-xs -top-1 relative">*</sup>` : year;
+            const formatYear = (year) => year;
 
              const getDisplayNameWithCrown = (managerId) => {
                 const manager = managersData[managerId];
@@ -584,7 +585,7 @@
                     }
                     const managerData = managersData[user.user_id];
                     if (managerData) {
-                        managerData.yearlyStats[season] = { pf: 0, transactions: 0, trades: 0 };
+                        managerData.yearlyStats[season] = { pf: 0, pa: 0, transactions: 0, trades: 0 };
                         const hasYear = managerData.teamNameHistory.some(t => t.year === season);
                         if (!hasYear) {
                             const teamName = user.metadata?.team_name || user.display_name;
@@ -626,8 +627,9 @@
                         const pa = parseFloat(`${r.settings.fpts_against}.${r.settings.fpts_against_decimal}`);
                         m.stats.pf += pf; m.stats.pa += pa;
                         m.yearlyStats[season].pf = pf;
+                        m.yearlyStats[season].pa = pa;
                         allSeasonScores.push({ score: pf, managerId: m.userId, year: season });
-                        if (r.settings.wins + r.settings.losses >= leagueData.settings.playoff_week_start - 1) {
+                        if (r.settings.wins + r.settings.losses > 0) {
                              allSeasonRecords.push({ wins: r.settings.wins, losses: r.settings.losses, record: `${r.settings.wins}-${r.settings.losses}`, winPct: (r.settings.wins + r.settings.losses) > 0 ? r.settings.wins / (r.settings.wins + r.settings.losses) : 0, pf: pf, managerId: m.userId, year: season });
                         }
                     }
@@ -777,17 +779,24 @@
                         const championshipMatchups = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueData.league_id}/matchups/${championshipWeek}`);
                         const winnerMatchup = championshipMatchups.find(m => m.roster_id === championshipMatch.w);
                         const loserMatchup = championshipMatchups.find(m => m.roster_id === championshipMatch.l);
-                        const getRosterDetails = (starters) => {
+                        
+                        const getRosterDetails = (starters, playerPoints) => {
                             if (!starters) return [];
                             return starters.map(pId => {
                                 const player = nflPlayers[pId];
-                                return player ? { name: `${player.first_name} ${player.last_name}`, position: player.position } : { name: 'Unknown Player', position: 'N/A' };
+                                const score = playerPoints ? (playerPoints[pId] || 0) : 0;
+                                return player ? { name: `${player.first_name} ${player.last_name}`, position: player.position, score: score } : { name: 'Unknown Player', position: 'N/A', score: 0 };
                             });
                         };
+
                         if (winnerMatchup && loserMatchup) {
                             championshipRostersData.push({
-                                season: season, winnerId: wId, winnerRoster: getRosterDetails(winnerMatchup.starters), winnerScore: winnerMatchup.points,
-                                loserId: lId, loserRoster: getRosterDetails(loserMatchup.starters), loserScore: loserMatchup.points
+                                season: season, winnerId: wId, 
+                                winnerRoster: getRosterDetails(winnerMatchup.starters, winnerMatchup.players_points), 
+                                winnerScore: winnerMatchup.points,
+                                loserId: lId, 
+                                loserRoster: getRosterDetails(loserMatchup.starters, loserMatchup.players_points), 
+                                loserScore: loserMatchup.points
                             });
                         }
                     }
@@ -818,11 +827,12 @@
                             const punishedMatchup = toiletBowlMatchups.find(m => m.roster_id === toiletBowlMatch.w);
                             const safeMatchup = toiletBowlMatchups.find(m => m.roster_id === toiletBowlMatch.l);
 
-                            const getRosterDetails = (starters) => {
+                            const getRosterDetails = (starters, playerPoints) => {
                                 if (!starters) return [];
                                 return starters.map(pId => {
                                     const player = nflPlayers[pId];
-                                    return player ? { name: `${player.first_name} ${player.last_name}`, position: player.position } : { name: 'Unknown Player', position: 'N/A' };
+                                    const score = playerPoints ? (playerPoints[pId] || 0) : 0;
+                                    return player ? { name: `${player.first_name} ${player.last_name}`, position: player.position, score: score } : { name: 'Unknown Player', position: 'N/A', score: 0 };
                                 });
                             };
 
@@ -830,10 +840,10 @@
                                 toiletBowlData.push({
                                     season: season,
                                     punishedId: punishedId,
-                                    punishedRoster: getRosterDetails(punishedMatchup.starters),
+                                    punishedRoster: getRosterDetails(punishedMatchup.starters, punishedMatchup.players_points),
                                     punishedScore: punishedMatchup.points,
                                     safeId: safeId,
-                                    safeRoster: getRosterDetails(safeMatchup.starters),
+                                    safeRoster: getRosterDetails(safeMatchup.starters, safeMatchup.players_points),
                                     safeScore: safeMatchup.points
                                 });
                             }
@@ -863,7 +873,7 @@
                 allTimeRecords.closestGames = [...blowoutsAndCloseGames].filter(m => m.totalScore > 0).sort((a,b) => a.margin - b.margin).slice(0,5);
                 allTimeRecords.biggestShootouts = [...allMatchupDetails].sort((a,b) => b.totalScore - a.totalScore).slice(0,5);
                 allTimeRecords.topPlayerScores = [...allPlayerScores].sort((a,b) => b.score - a.score).slice(0,5);
-            }
+            };
 
             const renderDashboard = () => {
                 renderPowerRankings();
@@ -884,7 +894,9 @@
                 const sortedManagers = Object.values(managersData).sort((a, b) => (b.stats.wins / (b.stats.wins + b.stats.losses) || 0) - (a.stats.wins / (a.stats.wins + a.stats.losses) || 0) || b.stats.pf - a.stats.pf);
                 sortedManagers.forEach((manager, index) => {
                     const winPct = manager.stats.wins + manager.stats.losses > 0 ? ((manager.stats.wins / (manager.stats.wins + manager.stats.losses)) * 100).toFixed(1) + '%' : '0.0%';
-                    rankingsBody.innerHTML += `<tr class="hover:bg-gray-800/50"><td class="px-4 py-3 whitespace-nowrap text-sm font-medium">${index + 1}</td><td class="px-4 py-3 whitespace-nowrap text-sm"><div class="flex items-center"><img class="h-8 w-8 rounded-full mr-3 object-cover" src="${manager.avatar}" alt=""><div class="font-semibold">${getDisplayNameWithCrown(manager.userId)}</div></div></td><td class="px-4 py-3 whitespace-nowrap text-sm">${manager.stats.wins}-${manager.stats.losses}</td><td class="px-4 py-3 whitespace-nowrap text-sm">${winPct}</td><td class="px-4 py-3 whitespace-nowrap text-sm">${manager.stats.pf.toFixed(2)} / ${manager.stats.pa.toFixed(2)}</td></tr>`;
+                    const recordHtml = `<span class="text-green-400 font-semibold">${manager.stats.wins}</span>-<span class="text-red-400">${manager.stats.losses}</span>`;
+                    const pointsHtml = `<span class="text-green-400 font-semibold">${manager.stats.pf.toFixed(2)}</span> / <span class="text-red-400">${manager.stats.pa.toFixed(2)}</span>`;
+                    rankingsBody.innerHTML += `<tr class="hover:bg-gray-800/50"><td class="px-4 py-3 whitespace-nowrap text-sm font-medium">${index + 1}</td><td class="px-4 py-3 whitespace-nowrap text-sm"><div class="flex items-center"><img class="h-8 w-8 rounded-full mr-3 object-cover" src="${manager.avatar}" alt=""><div class="font-semibold">${getDisplayNameWithCrown(manager.userId)}</div></div></td><td class="px-4 py-3 whitespace-nowrap text-sm">${recordHtml}</td><td class="px-4 py-3 whitespace-nowrap text-sm">${winPct}</td><td class="px-4 py-3 whitespace-nowrap text-sm">${pointsHtml}</td></tr>`;
                 });
             };
 
@@ -937,30 +949,119 @@
             };
             
             const renderAllTimeRecords = () => {
-                document.getElementById('highest-season-scores').innerHTML = allTimeRecords.topSeasonScores.map(r => `<p>${getDisplayNameWithCrown(r.managerId)} (${formatYear(r.year)}): <span class="font-bold text-white">${r.score.toFixed(2)}</span></p>`).join('') || '<p>N/A</p>';
-                document.getElementById('lowest-season-scores').innerHTML = allTimeRecords.lowestSeasonScores.map(r => `<p>${getDisplayNameWithCrown(r.managerId)} (${formatYear(r.year)}): <span class="font-bold text-white">${r.score.toFixed(2)}</span></p>`).join('') || '<p>N/A</p>';
-                document.getElementById('highest-weekly-scores').innerHTML = allTimeRecords.topWeeklyScores.map(r => `<p>${getDisplayNameWithCrown(r.managerId)} (${formatYear(r.year)}, Wk ${r.week}): <span class="font-bold text-white">${r.score.toFixed(2)}</span></p>`).join('') || '<p>N/A</p>';
-                document.getElementById('lowest-weekly-scores').innerHTML = allTimeRecords.lowestWeeklyScores.map(r => `<p>${getDisplayNameWithCrown(r.managerId)} (${formatYear(r.year)}, Wk ${r.week}): <span class="font-bold text-white">${r.score.toFixed(2)}</span></p>`).join('') || '<p>N/A</p>';
-                document.getElementById('best-seasons').innerHTML = allTimeRecords.topSeasonRecords.map(r => `<p>${getDisplayNameWithCrown(r.managerId)} (${formatYear(r.year)}): <span class="font-bold text-white">${r.record}</span></p>`).join('') || '<p>N/A</p>';
-                document.getElementById('worst-seasons').innerHTML = allTimeRecords.bottomSeasonRecords.map(r => `<p>${getDisplayNameWithCrown(r.managerId)} (${formatYear(r.year)}): <span class="font-bold text-white">${r.record}</span></p>`).join('') || '<p>N/A</p>';
-                document.getElementById('biggest-blowouts').innerHTML = allTimeRecords.biggestBlowouts.map(m => `<div class="py-1"><p class="text-sm">${formatYear(m.season)} Wk ${m.week}: <span class="font-bold text-white">${getDisplayNameWithCrown(m.manager1Id)}</span> def. <span class="font-bold">${getDisplayNameWithCrown(m.manager2Id)}</span></p><p class="text-xs text-gray-400 ml-2">${m.score1.toFixed(2)} to ${m.score2.toFixed(2)} (Margin: ${m.margin.toFixed(2)})</p></div>`).join('') || '<p>N/A</p>';
-                document.getElementById('closest-games').innerHTML = allTimeRecords.closestGames.map(m => `<div class="py-1"><p class="text-sm">${formatYear(m.season)} Wk ${m.week}: <span class="font-bold text-white">${getDisplayNameWithCrown(m.manager1Id)}</span> vs <span class="font-bold">${getDisplayNameWithCrown(m.manager2Id)}</span></p><p class="text-xs text-gray-400 ml-2">${m.score1.toFixed(2)} to ${m.score2.toFixed(2)} (Margin: ${m.margin.toFixed(2)})</p></div>`).join('') || '<p>N/A</p>';
-                document.getElementById('biggest-shootouts').innerHTML = allTimeRecords.biggestShootouts.map(m => `<div class="py-1"><p class="text-sm">${formatYear(m.season)} Wk ${m.week}: <span class="font-bold text-white">${getDisplayNameWithCrown(m.manager1Id)}</span> vs <span class="font-bold">${getDisplayNameWithCrown(m.manager2Id)}</span></p><p class="text-xs text-gray-400 ml-2">${m.score1.toFixed(2)} - ${m.score2.toFixed(2)} (Total: ${m.totalScore.toFixed(2)})</p></div>`).join('') || '<p>N/A</p>';
-                document.getElementById('highest-scoring-players').innerHTML = allTimeRecords.topPlayerScores.map(p => `<div class="py-1"><p class="text-sm"><span class="font-bold text-white">${p.name} (${p.position}, ${p.team || 'FA'})</span>: ${p.score.toFixed(2)} pts</p><p class="text-xs text-gray-400 ml-2">For ${getDisplayNameWithCrown(p.managerId)} in ${formatYear(p.year)}, Wk ${p.week}</p></div>`).join('') || '<p>N/A</p>';
+                const createRecordHTML = (record, value, context) => {
+                    const manager = managersData[record.managerId];
+                    if (!manager) return '';
+                    return `
+                        <div class="flex items-center justify-between py-2.5 border-b border-gray-800 last:border-b-0 hover:bg-gray-800/50 -mx-4 px-4 rounded-md">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <img src="${manager.avatar}" class="w-9 h-9 rounded-full object-cover flex-shrink-0" alt="${manager.displayName}">
+                                <div class="min-w-0">
+                                    <p class="text-sm font-semibold truncate">${getDisplayNameWithCrown(record.managerId)}</p>
+                                    <p class="text-xs text-gray-400">${context}</p>
+                                </div>
+                            </div>
+                            <span class="font-bold text-lg text-white ml-2">${value}</span>
+                        </div>`;
+                };
+
+                const createMatchupHTML = (match, label, value) => {
+                    const manager1 = managersData[match.manager1Id];
+                    const manager2 = managersData[match.manager2Id];
+                    if (!manager1 || !manager2) return '';
+                    return `
+                        <div class="py-2.5 border-b border-gray-800 last:border-b-0 hover:bg-gray-800/50 -mx-4 px-4 rounded-md">
+                            <div class="flex justify-between items-center text-sm mb-1">
+                                <div class="flex items-center gap-2 min-w-0">
+                                   <img src="${manager1.avatar}" class="w-6 h-6 rounded-full object-cover" alt="${manager1.displayName}">
+                                   <span class="font-semibold truncate">${getDisplayNameWithCrown(match.manager1Id)}</span>
+                                </div>
+                                <span class="text-xs text-gray-400 mx-1">vs</span>
+                                <div class="flex items-center gap-2 min-w-0 justify-end">
+                                   <span class="font-semibold truncate text-right">${getDisplayNameWithCrown(match.manager2Id)}</span>
+                                   <img src="${manager2.avatar}" class="w-6 h-6 rounded-full object-cover" alt="${manager2.displayName}">
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <p class="font-bold text-lg">${match.score1.toFixed(2)} – ${match.score2.toFixed(2)}</p>
+                                <p class="text-xs text-gray-400">${formatYear(match.season)}, Wk ${match.week} (${label}: <span class="font-semibold text-gray-300">${value.toFixed(2)}</span>)</p>
+                            </div>
+                         </div>`;
+                };
+
+                const createPlayerRecordHTML = (p) => {
+                    const manager = managersData[p.managerId];
+                    if (!manager) return '';
+                    return `
+                        <div class="py-2.5 border-b border-gray-800 last:border-b-0 hover:bg-gray-800/50 -mx-4 px-4 rounded-md">
+                            <div class="flex items-center justify-between">
+                                 <div class="min-w-0">
+                                    <p class="font-semibold text-white truncate">${p.name} <span class="text-sm font-normal text-gray-400">(${p.position}, ${p.team || 'FA'})</span></p>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <img src="${manager.avatar}" class="w-5 h-5 rounded-full object-cover" alt="${manager.displayName}">
+                                        <p class="text-xs text-gray-400 truncate">for ${getDisplayNameWithCrown(p.managerId)} in ${formatYear(p.year)}, Wk ${p.week}</p>
+                                    </div>
+                                 </div>
+                                 <span class="font-bold text-lg text-white ml-2">${p.score.toFixed(2)}</span>
+                            </div>
+                        </div>`;
+                };
+
+                const populate = (elementId, data, htmlGenerator) => {
+                    const container = document.getElementById(elementId);
+                    container.innerHTML = data.length > 0 ? data.map(htmlGenerator).join('') : '<p class="text-sm text-gray-500 text-center py-4">Not enough data yet.</p>';
+                };
+
+                populate('highest-season-scores', allTimeRecords.topSeasonScores, r => createRecordHTML(r, r.score.toFixed(2), formatYear(r.year)));
+                populate('lowest-season-scores', allTimeRecords.lowestSeasonScores, r => createRecordHTML(r, r.score.toFixed(2), formatYear(r.year)));
+                populate('highest-weekly-scores', allTimeRecords.topWeeklyScores, r => createRecordHTML(r, r.score.toFixed(2), `${formatYear(r.year)}, Wk ${r.week}`));
+                populate('lowest-weekly-scores', allTimeRecords.lowestWeeklyScores, r => createRecordHTML(r, r.score.toFixed(2), `${formatYear(r.year)}, Wk ${r.week}`));
+                populate('best-seasons', allTimeRecords.topSeasonRecords, r => createRecordHTML(r, r.record, formatYear(r.year)));
+                populate('worst-seasons', allTimeRecords.bottomSeasonRecords, r => createRecordHTML(r, r.record, formatYear(r.year)));
+                populate('biggest-blowouts', allTimeRecords.biggestBlowouts, m => createMatchupHTML(m, 'Margin', m.margin));
+                populate('closest-games', allTimeRecords.closestGames, m => createMatchupHTML(m, 'Margin', m.margin));
+                populate('biggest-shootouts', allTimeRecords.biggestShootouts, m => createMatchupHTML(m, 'Total', m.totalScore));
+                populate('highest-scoring-players', allTimeRecords.topPlayerScores, p => createPlayerRecordHTML(p));
             };
 
             const renderPlayerLegacies = () => {
                 const listDiv = document.getElementById('player-legacies-list');
                 const sortedPlayers = Object.values(playerLegacyData).filter(p => p.appearances > 1).sort((a, b) => b.appearances - a.appearances);
                 if (sortedPlayers.length === 0) { listDiv.innerHTML = '<p class="text-gray-400">Not enough data yet.</p>'; return; }
-                listDiv.innerHTML = sortedPlayers.slice(0, 10).map((player, index) => `<div class="p-3 rounded-md hover:bg-gray-800/50"><div class="flex items-center gap-4"><span class="text-lg font-bold text-orange-500">${index + 1}.</span><div><h4 class="font-bold text-white">${player.name} <span class="text-sm font-normal text-gray-400">(${player.position})</span></h4><ul class="list-disc list-inside mt-1">${player.history.map(h => `<li class="text-xs text-gray-400">${formatYear(h.season)} on ${getDisplayNameWithCrown(h.managerId)}'s team (${h.isWinner ? '🏆 Won' : '🥈 Lost'})</li>`).join('')}</ul></div></div></div>`).join('');
+                listDiv.innerHTML = sortedPlayers.slice(0, 10).map((player) => `
+                    <div class="flex items-center bg-gray-900/50 p-4 rounded-lg border border-gray-700 mb-3">
+                        <div class="flex flex-col items-center justify-center w-20">
+                            <span class="text-5xl font-extrabold text-orange-500">${player.appearances}</span>
+                            <span class="text-xs text-gray-400 -mt-1">APPEARANCES</span>
+                        </div>
+                        <div class="border-l border-gray-600 pl-4 ml-4 flex-grow">
+                            <h4 class="font-bold text-white text-lg">${player.name} <span class="text-base font-normal text-gray-400">(${player.position})</span></h4>
+                            <ul class="list-disc list-inside mt-1 space-y-1">
+                                ${player.history.map(h => `<li class="text-xs text-gray-400">${formatYear(h.season)} on ${getDisplayNameWithCrown(h.managerId)}'s team (${h.isWinner ? '🏆 Won' : '🥈 Lost'})</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `).join('');
             };
             
             const renderMostKeptPlayers = () => {
                 const listDiv = document.getElementById('most-kept-players-list');
                 const sortedPlayers = Object.values(mostKeptPlayers).sort((a, b) => b.count - a.count);
                 if (sortedPlayers.length === 0) { listDiv.innerHTML = '<p class="text-gray-400">Not enough multi-season data yet.</p>'; return; }
-                listDiv.innerHTML = sortedPlayers.slice(0, 10).map((player, index) => `<div class="p-3 rounded-md hover:bg-gray-800/50"><div class="flex items-center gap-4"><span class="text-lg font-bold text-orange-500">${index + 1}.</span><div><h4 class="font-bold text-white">${player.name} <span class="text-sm font-normal text-gray-400">(${player.position})</span></h4><ul class="list-disc list-inside mt-1">${player.history.map(h => `<li class="text-xs text-gray-400">Kept by ${getDisplayNameWithCrown(h.managerId)} for ${formatYear(h.season)}</li>`).join('')}</ul></div></div></div>`).join('');
+                listDiv.innerHTML = sortedPlayers.slice(0, 10).map((player) => `
+                     <div class="flex items-center bg-gray-900/50 p-4 rounded-lg border border-gray-700 mb-3">
+                        <div class="flex flex-col items-center justify-center w-20">
+                            <span class="text-5xl font-extrabold text-orange-500">${player.count}</span>
+                            <span class="text-xs text-gray-400 -mt-1">TIMES KEPT</span>
+                        </div>
+                        <div class="border-l border-gray-600 pl-4 ml-4 flex-grow">
+                            <h4 class="font-bold text-white text-lg">${player.name} <span class="text-base font-normal text-gray-400">(${player.position})</span></h4>
+                            <ul class="list-disc list-inside mt-1 space-y-1">
+                                ${player.history.map(h => `<li class="text-xs text-gray-400">Kept by ${getDisplayNameWithCrown(h.managerId)} for ${formatYear(h.season)}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `).join('');
             };
 
             const renderChampionshipRosters = () => {
@@ -969,21 +1070,35 @@
                 const sortedData = [...championshipRostersData].sort((a,b) => b.season - a.season);
                 const positionColors = { QB: 'bg-rose-500/10 text-rose-300 border-rose-500/30', RB: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30', WR: 'bg-sky-500/10 text-sky-300 border-sky-500/30', TE: 'bg-amber-500/10 text-amber-300 border-amber-500/30', K: 'bg-fuchsia-500/10 text-fuchsia-300 border-fuchsia-500/30', DEF: 'bg-orange-500/10 text-orange-300 border-orange-500/30' };
                 const manualScores = { 2021: { winner: 282.55, loser: 218.84 }, 2022: { winner: 171.76, loser: 168.00 } };
-                const formatChampYear = (year) => (year == 2021 || year == 2022) ? `${year}<sup class="text-xs -top-1 relative">*</sup>` : year;
+                const formatChampYear = (year) => year;
 
                 if (sortedData.length === 0) { container.innerHTML = '<p class="text-gray-400 text-center">No championship roster data available yet.</p>'; return; }
 
+                let content = '';
                 sortedData.forEach(data => {
                     const winner = managersData[data.winnerId], loser = managersData[data.loserId];
                     if (!winner || !loser) return;
 
                     const winnerScore = manualScores[data.season] ? manualScores[data.season].winner : data.winnerScore;
                     const loserScore = manualScores[data.season] ? manualScores[data.season].loser : data.loserScore;
+                    
+                    const winnerRosterHtml = data.winnerRoster.map(p => `<li class="p-2 border ${positionColors[p.position] || 'bg-gray-700/20'} rounded flex justify-between items-center" title="${p.name} (${p.position})"><div>${p.name} <span class="text-gray-400 text-xs">(${p.position})</span></div> <span class="font-normal text-gray-400">${p.score.toFixed(2)}</span></li>`).join('') || '<li>Roster data not available.</li>';
+                    const loserRosterHtml = data.loserRoster.map(p => `<li class="p-2 border ${positionColors[p.position] || 'bg-gray-700/20'} rounded flex justify-between items-center" title="${p.name} (${p.position})"><div>${p.name} <span class="text-gray-400 text-xs">(${p.position})</span></div> <span class="font-normal text-gray-400">${p.score.toFixed(2)}</span></li>`).join('') || '<li>Roster data not available.</li>';
 
-                    container.innerHTML += `
+                    let explainerHtml = '';
+                    if (data.season === 2021) {
+                        explainerHtml = '<p class="text-xs text-gray-500 mt-4 text-center col-span-1 md:col-span-2">*2-Week Championship scores.</p>';
+                    } else if (data.season === 2022) {
+                        explainerHtml = '<p class="text-xs text-gray-500 mt-4 text-center col-span-1 md:col-span-2">*Hamlin bowl, Brian and Kevin agreed to split the pot and extend their championship into Week 18</p>';
+                    }
+
+                    content += `
                     <div class="mb-10">
-                        <h2 class="text-3xl font-bold text-center mb-6 border-b border-gray-700 pb-2 text-yellow-400">${formatChampYear(data.season)} Championship Game</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <h2 class="text-3xl font-bold text-center mb-6 border-b border-gray-700 pb-2 text-yellow-400 cursor-pointer flex justify-center items-center gap-2" data-target="championship-game-${data.season}">
+                            <span>${formatChampYear(data.season)} Championship Game</span>
+                            <svg class="w-5 h-5 transform transition-transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </h2>
+                        <div id="championship-game-${data.season}" class="grid grid-cols-1 md:grid-cols-2 gap-8 game-details">
                             <div class="bg-gray-900/50 p-4 rounded-lg border border-yellow-400/50">
                                 <div class="flex items-center gap-4 mb-3">
                                     <img src="${winner.avatar}" class="w-12 h-12 rounded-full object-cover">
@@ -992,9 +1107,7 @@
                                         <p class="text-sm text-gray-400">Starting Roster - ${winnerScore.toFixed(2)} points</p>
                                     </div>
                                 </div>
-                                <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                                    ${data.winnerRoster.map(p => `<li class="p-2 border ${positionColors[p.position] || 'bg-gray-700/20'} rounded truncate" title="${p.name} (${p.position})">${p.name} <span class="text-gray-400 text-xs">(${p.position})</span></li>`).join('') || '<li>Roster data not available.</li>'}
-                                </ul>
+                                <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">${winnerRosterHtml}</ul>
                             </div>
                             <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-600/50">
                                  <div class="flex items-center gap-4 mb-3">
@@ -1004,13 +1117,25 @@
                                         <p class="text-sm text-gray-400">Starting Roster - ${loserScore.toFixed(2)} points</p>
                                     </div>
                                 </div>
-                                <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                                    ${data.loserRoster.map(p => `<li class="p-2 border ${positionColors[p.position] || 'bg-gray-700/20'} rounded truncate" title="${p.name} (${p.position})">${p.name} <span class="text-gray-400 text-xs">(${p.position})</span></li>`).join('') || '<li>Roster data not available.</li>'}
-                                </ul>
+                                <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">${loserRosterHtml}</ul>
                             </div>
+                            ${explainerHtml}
                         </div>
                     </div>
                     `;
+                });
+
+                container.innerHTML = content;
+                container.querySelectorAll('h2[data-target]').forEach(header => {
+                    header.addEventListener('click', () => {
+                        const targetId = header.dataset.target;
+                        const targetElement = document.getElementById(targetId);
+                        const icon = header.querySelector('svg');
+                        if (targetElement) {
+                            targetElement.classList.toggle('hidden');
+                            icon.classList.toggle('rotate-180');
+                        }
+                    });
                 });
             };
 
@@ -1200,7 +1325,7 @@
 
                 // Most Expensive Acquisitions
                 const sortedBids = [...allFaabBids].sort((a,b) => b.amount - a.amount);
-                sortedBids.filter(bid => bid.amount > 20).forEach(bid => {
+                sortedBids.filter(bid => bid.amount > 0).forEach(bid => {
                     const posColorClass = positionTextColors[bid.position] || 'text-white';
                     const manager = Object.values(managersData).find(m => m.userId === bid.managerId);
                     acquisitionsBody.innerHTML += `
@@ -1250,7 +1375,7 @@
             const renderToiletBowlHistory = () => {
                 const container = document.getElementById('toilet-bowl-games');
                 if (!container) return;
-                container.innerHTML = '';
+                
                 const sortedData = [...toiletBowlData].sort((a, b) => b.season - a.season);
                 const positionColors = { QB: 'bg-rose-500/10 text-rose-300 border-rose-500/30', RB: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30', WR: 'bg-sky-500/10 text-sky-300 border-sky-500/30', TE: 'bg-amber-500/10 text-amber-300 border-amber-500/30', K: 'bg-fuchsia-500/10 text-fuchsia-300 border-fuchsia-500/30', DEF: 'bg-orange-500/10 text-orange-300 border-orange-500/30' };
 
@@ -1258,27 +1383,32 @@
                     container.innerHTML = '<p class="text-gray-400 text-center mt-6">No Toilet Bowl game data available yet.</p>';
                     return;
                 }
-
+                
+                let content = '';
                 sortedData.forEach(data => {
                     const punished = managersData[data.punishedId];
                     const safe = managersData[data.safeId];
                     if (!punished || !safe) return;
+                    
+                    const punishedRosterHtml = data.punishedRoster.map(p => `<li class="p-2 border ${positionColors[p.position] || 'bg-gray-700/20'} rounded flex justify-between items-center" title="${p.name} (${p.position})"><div>${p.name} <span class="text-gray-400 text-xs">(${p.position})</span></div> <span class="font-normal text-gray-400">${p.score.toFixed(2)}</span></li>`).join('') || '<li>Roster data not available.</li>';
+                    const safeRosterHtml = data.safeRoster.map(p => `<li class="p-2 border ${positionColors[p.position] || 'bg-gray-700/20'} rounded flex justify-between items-center" title="${p.name} (${p.position})"><div>${p.name} <span class="text-gray-400 text-xs">(${p.position})</span></div> <span class="font-normal text-gray-400">${p.score.toFixed(2)}</span></li>`).join('') || '<li>Roster data not available.</li>';
 
-                    container.innerHTML += `
+                    content += `
                     <div class="mb-10">
-                        <h2 class="text-3xl font-bold text-center mb-6 border-b border-gray-700 pb-2 text-amber-600">${data.season} Toilet Bowl</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <h2 class="text-3xl font-bold text-center mb-6 border-b border-gray-700 pb-2 text-amber-600 cursor-pointer flex justify-center items-center gap-2" data-target="toilet-game-${data.season}">
+                            <span>${data.season} Toilet Bowl</span>
+                            <svg class="w-5 h-5 transform transition-transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </h2>
+                        <div id="toilet-game-${data.season}" class="grid grid-cols-1 md:grid-cols-2 gap-8 game-details">
                             <div class="bg-gray-900/50 p-4 rounded-lg border border-amber-600/50">
                                 <div class="flex items-center gap-4 mb-3">
                                     <img src="${punished.avatar}" class="w-12 h-12 rounded-full object-cover">
                                     <div>
                                         <h3 class="text-lg font-bold text-amber-600">🚽 ${getDisplayNameWithCrown(punished.userId)}</h3>
-                                        <p class="text-sm text-gray-400">Punishment Roster - ${data.punishedScore.toFixed(2)} points</p>
+                                        <p class="text-sm text-gray-400">💩 Roster - ${data.punishedScore.toFixed(2)} points</p>
                                     </div>
                                 </div>
-                                <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                                    ${data.punishedRoster.map(p => `<li class="p-2 border ${positionColors[p.position] || 'bg-gray-700/20'} rounded truncate" title="${p.name} (${p.position})">${p.name} <span class="text-gray-400 text-xs">(${p.position})</span></li>`).join('') || '<li>Roster data not available.</li>'}
-                                </ul>
+                                <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">${punishedRosterHtml}</ul>
                             </div>
                             <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-600/50">
                                  <div class="flex items-center gap-4 mb-3">
@@ -1288,13 +1418,23 @@
                                         <p class="text-sm text-gray-400">Safe Roster - ${data.safeScore.toFixed(2)} points</p>
                                     </div>
                                 </div>
-                                <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                                    ${data.safeRoster.map(p => `<li class="p-2 border ${positionColors[p.position] || 'bg-gray-700/20'} rounded truncate" title="${p.name} (${p.position})">${p.name} <span class="text-gray-400 text-xs">(${p.position})</span></li>`).join('') || '<li>Roster data not available.</li>'}
-                                </ul>
+                                <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">${safeRosterHtml}</ul>
                             </div>
                         </div>
                     </div>
                     `;
+                });
+                container.innerHTML = content;
+                 container.querySelectorAll('h2[data-target]').forEach(header => {
+                    header.addEventListener('click', () => {
+                        const targetId = header.dataset.target;
+                        const targetElement = document.getElementById(targetId);
+                        const icon = header.querySelector('svg');
+                        if (targetElement) {
+                            targetElement.classList.toggle('hidden');
+                            icon.classList.toggle('rotate-180');
+                        }
+                    });
                 });
             };
 
@@ -1408,7 +1548,7 @@
                             <div class="text-sm text-gray-400 space-y-2 text-left w-full">
                                 <p class="font-bold text-white">💥 Biggest Blowout:</p>
                                 ${wins1 > 0 ? `<p class="text-xs ml-2">${blowout1.score1.toFixed(2)} to ${blowout1.score2.toFixed(2)} (Margin: ${blowout1.margin.toFixed(2)})</p><p class="text-xs ml-2 text-gray-500">${formatYear(blowout1.season)}, Week ${blowout1.week}</p>` : '<p class="text-xs ml-2">Still searching for that first W</p>'}
-                                <p class="font-bold text-white mt-2">💀 Top Player vs ${m2.displayName}:</p>
+                                <p class="font-bold text-white mt-2">💀 Certified ${m2.displayName} Hater:</p>
                                 <p class="text-xs ml-2">${m1Nemesis.name} - ${m1Nemesis.points} total points</p>
                             </div>
                         </div>
@@ -1436,7 +1576,7 @@
                             <div class="text-sm text-gray-400 space-y-2 text-left w-full">
                                 <p class="font-bold text-white">💥 Biggest Blowout:</p>
                                 ${record.losses > 0 ? `<p class="text-xs ml-2">${blowout2.score2.toFixed(2)} to ${blowout2.score1.toFixed(2)} (Margin: ${blowout2.margin.toFixed(2)})</p><p class="text-xs ml-2 text-gray-500">${formatYear(blowout2.season)}, Week ${blowout2.week}</p>` : '<p class="text-xs ml-2">Still searching for that first W</p>'}
-                                <p class="font-bold text-white mt-2">💀 Top Player vs ${m1.displayName}:</p>
+                                <p class="font-bold text-white mt-2">💀 Certified ${m1.displayName} Hater :</p>
                                 <p class="text-xs ml-2">${m2Nemesis.name} - ${m2Nemesis.points} total points</p>
                             </div>
                         </div>
@@ -1469,10 +1609,10 @@
                 
                 document.getElementById('my-team-avatar').src = manager.avatar;
                 document.getElementById('my-team-name').innerHTML = getDisplayNameWithCrown(manager.userId);
-                document.getElementById('my-team-record').textContent = `${manager.stats.wins}-${manager.stats.losses}`;
+                document.getElementById('my-team-record').innerHTML = `<span class="text-green-400">${manager.stats.wins}</span>-<span class="text-red-400">${manager.stats.losses}</span>`;
                 document.getElementById('my-team-winpct').textContent = manager.stats.wins + manager.stats.losses > 0 ? ((manager.stats.wins / (manager.stats.wins + manager.stats.losses)) * 100).toFixed(1) + '%' : '0.0%';
-                document.getElementById('my-team-pf').textContent = manager.stats.pf.toFixed(2);
-                document.getElementById('my-team-pa').textContent = manager.stats.pa.toFixed(2);
+                document.getElementById('my-team-pf').innerHTML = `<span class="text-green-400">${manager.stats.pf.toFixed(2)}</span>`;
+                document.getElementById('my-team-pa').innerHTML = `<span class="text-red-400">${manager.stats.pa.toFixed(2)}</span>`;
                 document.getElementById('my-team-transactions').textContent = manager.totalTransactions;
                 document.getElementById('my-team-earnings').textContent = `$${totalEarnings.toFixed(2)}`;
 
@@ -1485,18 +1625,23 @@
 
                 if (yearlyData.length > 0) {
                     standingsBody.innerHTML = yearlyData.map(s => {
-                        const yearStats = manager.yearlyStats[s.year] || { pf: 0, transactions: 0 };
+                        const yearStats = manager.yearlyStats[s.year] || { pf: 0, pa: 0, transactions: 0 };
+                        const seasonRecord = allSeasonRecords.find(r => r.managerId === managerId && r.year === s.year);
+                        const recordHtml = seasonRecord ? `<span class="text-green-400">${seasonRecord.wins}</span>-<span class="text-red-400">${seasonRecord.losses}</span>` : 'N/A';
+
                         return `
                             <tr class="border-b border-gray-700 last:border-b-0 hover:bg-gray-800/50">
                                 <td class="px-2 py-3 font-semibold">${formatYear(s.year)}</td>
                                 <td class="px-2 py-3 text-center">${s.rank} / ${seasonalData[s.year].totalTeams}</td>
-                                <td class="px-2 py-3 text-right">${yearStats.pf.toFixed(2)}</td>
+                                <td class="px-2 py-3 text-center">${recordHtml}</td>
+                                <td class="px-2 py-3 text-right text-green-400">${yearStats.pf.toFixed(2)}</td>
+                                <td class="px-2 py-3 text-right text-red-400">${(yearStats.pa || 0).toFixed(2)}</td>
                                 <td class="px-2 py-3 text-right">${yearStats.transactions}</td>
                             </tr>
                         `;
                     }).join('');
                 } else {
-                    standingsBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-400">No season data available.</td></tr>';
+                    standingsBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-400">No season data available.</td></tr>';
                 }
 
                 const namesList = document.getElementById('my-team-names');
