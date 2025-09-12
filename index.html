@@ -896,7 +896,7 @@
                     const winPct = manager.stats.wins + manager.stats.losses > 0 ? ((manager.stats.wins / (manager.stats.wins + manager.stats.losses)) * 100).toFixed(1) + '%' : '0.0%';
                     const recordHtml = `<span class="text-green-400 font-semibold">${manager.stats.wins}</span>-<span class="text-red-400">${manager.stats.losses}</span>`;
                     const pointsHtml = `<span class="text-green-400 font-semibold">${manager.stats.pf.toFixed(2)}</span> / <span class="text-red-400">${manager.stats.pa.toFixed(2)}</span>`;
-                    rankingsBody.innerHTML += `<tr class="hover:bg-gray-800/50"><td class="px-4 py-3 whitespace-nowrap text-sm font-medium">${index + 1}</td><td class="px-4 py-3 whitespace-nowrap text-sm"><div class="flex items-center"><img class="h-8 w-8 rounded-full mr-3 object-cover" src="${manager.avatar}" alt=""><div class="font-semibold">${getDisplayNameWithCrown(manager.userId)}</div></div></td><td class="px-4 py-3 whitespace-nowrap text-sm">${recordHtml}</td><td class="px-4 py-3 whitespace-nowrap text-sm">${winPct}</td><td class="px-4 py-3 whitespace-nowrap text-sm">${pointsHtml}</td></tr>`;
+                    rankingsBody.innerHTML += `<tr class="hover:bg-gray-800/50"><td class="px-4 py-3 whitespace-nowrap text-sm font-medium">${index + 1}</td><td class="px-4 py-3 whitespace-nowrap text-sm"><div class="flex items-center"><img class="h-8 w-8 rounded-full mr-3 object-cover border-2 border-orange-500" src="${manager.avatar}" alt=""><div class="font-semibold">${getDisplayNameWithCrown(manager.userId)}</div></div></td><td class="px-4 py-3 whitespace-nowrap text-sm">${recordHtml}</td><td class="px-4 py-3 whitespace-nowrap text-sm">${winPct}</td><td class="px-4 py-3 whitespace-nowrap text-sm">${pointsHtml}</td></tr>`;
                 });
             };
 
@@ -909,7 +909,7 @@
                 if (champions.length > 0) {
                     champions.forEach(c => {
                         const yearsHtml = c.stats.championship_years.map(y => `<p class="text-sm text-yellow-400">🏆 ${formatYear(y)}</p>`).join('');
-                        trophyCase.innerHTML += `<div class="flex items-center gap-3"><img src="${c.avatar}" class="w-10 h-10 rounded-full object-cover"><div><p class="font-semibold">${getDisplayNameWithCrown(c.userId)}</p>${yearsHtml}</div></div>`;
+                        trophyCase.innerHTML += `<div class="flex items-center gap-3"><img src="${c.avatar}" class="w-10 h-10 rounded-full object-cover border-2 border-yellow-400"><div><p class="font-semibold">${getDisplayNameWithCrown(c.userId)}</p>${yearsHtml}</div></div>`;
                     });
                 } else {
                     trophyCase.innerHTML = '<p class="text-gray-400">No champions yet!</p>';
@@ -921,7 +921,7 @@
                      runnerUps.innerHTML += '<h3 class="text-lg font-semibold text-gray-400 mb-2 border-t border-gray-700 pt-4">Runner Ups 🥈</h3>'
                      secondPlace.forEach(m => {
                         const yearsHtml = m.stats.runner_up_years.map(y => `<p class="text-sm text-gray-300">😢 ${formatYear(y)}</p>`).join('');
-                        runnerUps.innerHTML += `<div class="flex items-center gap-3"><img src="${m.avatar}" class="w-10 h-10 rounded-full object-cover"><div><p class="font-semibold">${getDisplayNameWithCrown(m.userId)}</p>${yearsHtml}</div></div>`;
+                        runnerUps.innerHTML += `<div class="flex items-center gap-3"><img src="${m.avatar}" class="w-10 h-10 rounded-full object-cover border-2 border-gray-400"><div><p class="font-semibold">${getDisplayNameWithCrown(m.userId)}</p>${yearsHtml}</div></div>`;
                     });
                 }
 
@@ -942,7 +942,7 @@
                         const manager = Object.values(managersData).find(m => m.displayName === managerName);
                         if (manager) {
                             const yearsHtml = years.map(y => `<p class="text-sm text-gray-300">${formatYear(y)}</p>`).join('');
-                            toiletKingsDiv.innerHTML += `<div class="flex items-center gap-3"><img src="${manager.avatar}" class="w-10 h-10 rounded-full object-cover"><div><p class="font-semibold">${getDisplayNameWithCrown(manager.userId)}</p>${yearsHtml}</div></div>`;
+                            toiletKingsDiv.innerHTML += `<div class="flex items-center gap-3"><img src="${manager.avatar}" class="w-10 h-10 rounded-full object-cover border-2 border-amber-700"><div><p class="font-semibold">${getDisplayNameWithCrown(manager.userId)}</p>${yearsHtml}</div></div>`;
                         }
                     });
                 }
@@ -955,7 +955,7 @@
                     return `
                         <div class="flex items-center justify-between py-2.5 border-b border-gray-800 last:border-b-0 hover:bg-gray-800/50 -mx-4 px-4 rounded-md">
                             <div class="flex items-center gap-3 min-w-0">
-                                <img src="${manager.avatar}" class="w-9 h-9 rounded-full object-cover flex-shrink-0" alt="${manager.displayName}">
+                                <img src="${manager.avatar}" class="w-9 h-9 rounded-full object-cover flex-shrink-0 border-2 border-orange-500" alt="${manager.displayName}">
                                 <div class="min-w-0">
                                     <p class="text-sm font-semibold truncate">${getDisplayNameWithCrown(record.managerId)}</p>
                                     <p class="text-xs text-gray-400">${context}</p>
@@ -973,13 +973,13 @@
                         <div class="py-2.5 border-b border-gray-800 last:border-b-0 hover:bg-gray-800/50 -mx-4 px-4 rounded-md">
                             <div class="flex justify-between items-center text-sm mb-1">
                                 <div class="flex items-center gap-2 min-w-0">
-                                   <img src="${manager1.avatar}" class="w-6 h-6 rounded-full object-cover" alt="${manager1.displayName}">
+                                   <img src="${manager1.avatar}" class="w-6 h-6 rounded-full object-cover border-2 border-orange-500" alt="${manager1.displayName}">
                                    <span class="font-semibold truncate">${getDisplayNameWithCrown(match.manager1Id)}</span>
                                 </div>
                                 <span class="text-xs text-gray-400 mx-1">vs</span>
                                 <div class="flex items-center gap-2 min-w-0 justify-end">
                                    <span class="font-semibold truncate text-right">${getDisplayNameWithCrown(match.manager2Id)}</span>
-                                   <img src="${manager2.avatar}" class="w-6 h-6 rounded-full object-cover" alt="${manager2.displayName}">
+                                   <img src="${manager2.avatar}" class="w-6 h-6 rounded-full object-cover border-2 border-orange-500" alt="${manager2.displayName}">
                                 </div>
                             </div>
                             <div class="text-center">
@@ -998,7 +998,7 @@
                                  <div class="min-w-0">
                                     <p class="font-semibold text-white truncate">${p.name} <span class="text-sm font-normal text-gray-400">(${p.position}, ${p.team || 'FA'})</span></p>
                                     <div class="flex items-center gap-2 mt-1">
-                                        <img src="${manager.avatar}" class="w-5 h-5 rounded-full object-cover" alt="${manager.displayName}">
+                                        <img src="${manager.avatar}" class="w-5 h-5 rounded-full object-cover border-2 border-orange-500" alt="${manager.displayName}">
                                         <p class="text-xs text-gray-400 truncate">for ${getDisplayNameWithCrown(p.managerId)} in ${formatYear(p.year)}, Wk ${p.week}</p>
                                     </div>
                                  </div>
@@ -1101,7 +1101,7 @@
                         <div id="championship-game-${data.season}" class="grid grid-cols-1 md:grid-cols-2 gap-8 game-details">
                             <div class="bg-gray-900/50 p-4 rounded-lg border border-yellow-400/50">
                                 <div class="flex items-center gap-4 mb-3">
-                                    <img src="${winner.avatar}" class="w-12 h-12 rounded-full object-cover">
+                                    <img src="${winner.avatar}" class="w-12 h-12 rounded-full object-cover border-4 border-yellow-400">
                                     <div>
                                         <h3 class="text-lg font-bold text-yellow-400">🏆 ${getDisplayNameWithCrown(winner.userId)}</h3>
                                         <p class="text-sm text-gray-400">Starting Roster - ${winnerScore.toFixed(2)} points</p>
@@ -1111,7 +1111,7 @@
                             </div>
                             <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-600/50">
                                  <div class="flex items-center gap-4 mb-3">
-                                    <img src="${loser.avatar}" class="w-12 h-12 rounded-full object-cover">
+                                    <img src="${loser.avatar}" class="w-12 h-12 rounded-full object-cover border-4 border-gray-400">
                                     <div>
                                         <h3 class="text-lg font-bold text-gray-300">🥈 ${getDisplayNameWithCrown(loser.userId)}</h3>
                                         <p class="text-sm text-gray-400">Starting Roster - ${loserScore.toFixed(2)} points</p>
@@ -1173,7 +1173,7 @@
                         <div class="flex items-center p-2 rounded-md hover:bg-gray-800/50">
                             <div class="flex items-center gap-3 w-full">
                                 <span class="font-bold text-lg w-6 text-gray-400">${index + 1}.</span>
-                                <img src="${avatar}" class="w-8 h-8 rounded-full object-cover">
+                                <img src="${avatar}" class="w-8 h-8 rounded-full object-cover border-2 border-orange-500">
                                 <span class="font-semibold text-sm flex-grow">${getDisplayNameWithCrown(managerId)}</span>
                                  <span class="font-bold text-right ${isMoney ? 'text-green-400' : 'text-white'}">${isMoney ? '$' : ''}${isMoney ? value.toFixed(2) : value}</span>
                             </div>
@@ -1262,7 +1262,7 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start text-sm">
                                     <div>
                                         <div class="flex items-center gap-2 mb-2">
-                                            <img src="${manager1.avatar}" class="w-8 h-8 rounded-full object-cover">
+                                            <img src="${manager1.avatar}" class="w-8 h-8 rounded-full object-cover border-2 border-orange-500">
                                             <p class="font-bold text-orange-400">${getDisplayNameWithCrown(manager1.userId)} received:</p>
                                         </div>
                                         <ul class="list-disc list-inside text-gray-300 pl-2 space-y-1">
@@ -1271,7 +1271,7 @@
                                     </div>
                                     <div>
                                         <div class="flex items-center gap-2 mb-2">
-                                            <img src="${manager2.avatar}" class="w-8 h-8 rounded-full object-cover">
+                                            <img src="${manager2.avatar}" class="w-8 h-8 rounded-full object-cover border-2 border-orange-500">
                                             <p class="font-bold text-orange-400">${getDisplayNameWithCrown(manager2.userId)} received:</p>
                                         </div>
                                         <ul class="list-disc list-inside text-gray-300 pl-2 space-y-1">
@@ -1354,7 +1354,7 @@
                         <div class="flex items-center p-2 rounded-md hover:bg-gray-800/50">
                             <div class="flex items-center gap-3 w-full">
                                 <span class="font-bold text-lg w-6 text-gray-400">${rank}.</span>
-                                <img src="${avatar}" class="w-8 h-8 rounded-full object-cover">
+                                <img src="${avatar}" class="w-8 h-8 rounded-full object-cover border-2 border-orange-500">
                                 <span class="font-semibold text-sm flex-grow">${getDisplayNameWithCrown(managerId)}</span>
                                  <span class="font-bold text-right text-green-400">$${total}</span>
                             </div>
@@ -1402,7 +1402,7 @@
                         <div id="toilet-game-${data.season}" class="grid grid-cols-1 md:grid-cols-2 gap-8 game-details">
                             <div class="bg-gray-900/50 p-4 rounded-lg border border-amber-600/50">
                                 <div class="flex items-center gap-4 mb-3">
-                                    <img src="${punished.avatar}" class="w-12 h-12 rounded-full object-cover">
+                                    <img src="${punished.avatar}" class="w-12 h-12 rounded-full object-cover border-4 border-amber-700">
                                     <div>
                                         <h3 class="text-lg font-bold text-amber-600">🚽 ${getDisplayNameWithCrown(punished.userId)}</h3>
                                         <p class="text-sm text-gray-400">💩 Roster - ${data.punishedScore.toFixed(2)} points</p>
@@ -1412,7 +1412,7 @@
                             </div>
                             <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-600/50">
                                  <div class="flex items-center gap-4 mb-3">
-                                    <img src="${safe.avatar}" class="w-12 h-12 rounded-full object-cover">
+                                    <img src="${safe.avatar}" class="w-12 h-12 rounded-full object-cover border-4 border-orange-500">
                                     <div>
                                         <h3 class="text-lg font-bold text-gray-300">😮‍💨 ${getDisplayNameWithCrown(safe.userId)}</h3>
                                         <p class="text-sm text-gray-400">Safe Roster - ${data.safeScore.toFixed(2)} points</p>
@@ -1664,7 +1664,7 @@
                 }
                 if (rivalId) {
                     const rival = managersData[rivalId];
-                    rivalDiv.innerHTML = `<div class="flex items-center gap-4"><img src="${rival.avatar}" class="w-12 h-12 rounded-full object-cover"><div><p class="font-bold text-lg">${getDisplayNameWithCrown(rival.userId)}</p><p class="text-sm text-red-400">Has given you ${maxLosses} Ls</p></div></div>`;
+                    rivalDiv.innerHTML = `<div class="flex items-center gap-4"><img src="${rival.avatar}" class="w-12 h-12 rounded-full object-cover border-2 border-orange-500"><div><p class="font-bold text-lg">${getDisplayNameWithCrown(rival.userId)}</p><p class="text-sm text-red-400">Has given you ${maxLosses} Ls</p></div></div>`;
                 } else {
                     rivalDiv.innerHTML = '<p class="text-sm text-gray-400">No clear rival yet.</p>';
                 }
@@ -1690,5 +1690,4 @@
     </script>
 </body>
 </html>
-
 
