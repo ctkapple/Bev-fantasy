@@ -17,8 +17,12 @@
             background-color: #1f1f1f; /* Lighter Charcoal */
             border: 1px solid #444444; /* Medium Gray Border */
             border-radius: 0.75rem;
-            padding: 1.5rem;
-            transition: all 0.2s ease-in-out;
+            padding: 1rem; /* Adjusted padding for mobile */
+        }
+        @media (min-width: 768px) { /* md breakpoint */
+            .card {
+                padding: 1.5rem;
+            }
         }
         .card:hover {
             border-color: #f97316; /* Orange */
@@ -60,27 +64,27 @@
     <div id="app" class="container mx-auto p-4 md:p-8 max-w-7xl hidden">
         <header class="text-center mb-10">
             <div id="league-info" class="flex flex-col items-center justify-center gap-4">
-                 <img id="league-avatar" src="https://placehold.co/64x64/1f2937/a0aec0?text=🏈" alt="League Avatar" class="w-28 h-28 rounded-full border-4 border-orange-500 shadow-lg">
+                 <img id="league-avatar" src="https://placehold.co/64x64/1f2937/a0aec0?text=🏈" alt="League Avatar" class="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-orange-500 shadow-lg">
                 <div>
-                    <h1 id="league-name" class="text-5xl md:text-6xl font-extrabold text-orange-500 tracking-tight" style="text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff, 3px 3px 10px rgba(0,0,0,0.7);">Fantasy Football Dashboard</h1>
-                    <p id="league-season" class="text-lg text-gray-300 mt-2">Loading league data...</p>
+                    <h1 id="league-name" class="text-4xl sm:text-5xl md:text-6xl font-extrabold text-orange-500 tracking-tight" style="text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff, 3px 3px 10px rgba(0,0,0,0.7);">Fantasy Football Dashboard</h1>
+                    <p id="league-season" class="text-base sm:text-lg text-gray-300 mt-2">Loading league data...</p>
                 </div>
             </div>
         </header>
 
         <div class="mb-8 border-b-2 border-orange-500">
-            <nav class="flex justify-center space-x-6 flex-wrap" aria-label="Tabs">
-                <button class="tab-button active text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="dashboard">Rankings</button>
-                <button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="myteam">My Teams</button>
-                <button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="records">Records</button>
-                <button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="h2h">H2H</button>
-                <button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="legacies">Legends</button>
-                <button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="rosters">Championships</button>
-                <button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="earnings">Earnings</button>
-                <button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="tradelog">Trade Log</button>
-                <button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="faab">FAAB History</button>
-				<button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="toilet">Toilet Bowl</button>
-                <button class="tab-button text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="rules">Rules</button>
+            <nav class="flex justify-center space-x-2 sm:space-x-6 flex-wrap" aria-label="Tabs">
+                <button class="tab-button active text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="dashboard">Rankings</button>
+                <button class="tab-button text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="myteam">My Teams</button>
+                <button class="tab-button text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="records">Records</button>
+                <button class="tab-button text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="h2h">H2H</button>
+                <button class="tab-button text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="legacies">Legends</button>
+                <button class="tab-button text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="rosters">Championships</button>
+                <button class="tab-button text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="earnings">Earnings</button>
+                <button class="tab-button text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="tradelog">Trade Log</button>
+                <button class="tab-button text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="faab">FAAB History</button>
+				<button class="tab-button text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="toilet">Toilet Bowl</button>
+                <button class="tab-button text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="rules">Rules</button>
             </nav>
         </div>
 
@@ -127,7 +131,7 @@
                 <div id="my-team-data" class="hidden">
                     <div class="card text-center mb-6">
                         <img id="my-team-avatar" src="" alt="Manager Avatar" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-orange-500 object-cover shadow-lg">
-                        <h2 id="my-team-name" class="text-3xl font-bold"></h2>
+                        <h2 id="my-team-name" class="text-2xl sm:text-3xl font-bold"></h2>
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -135,12 +139,12 @@
                             <div class="card">
                                 <h3 class="text-xl font-bold mb-4 text-orange-500">Career Stats</h3>
                                 <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
-                                    <div><p class="text-gray-400 text-sm">Overall Record</p><p id="my-team-record" class="text-2xl font-semibold"></p></div>
-                                    <div><p class="text-gray-400 text-sm">Win %</p><p id="my-team-winpct" class="text-2xl font-semibold"></p></div>
-									<div><p class="text-gray-400 text-sm">Transactions</p><p id="my-team-transactions" class="text-2xl font-semibold"></p></div>
-									<div><p class="text-gray-400 text-sm">Points For</p><p id="my-team-pf" class="text-2xl font-semibold"></p></div>
-									<div><p class="text-gray-400 text-sm">Points Against</p><p id="my-team-pa" class="text-2xl font-semibold"></p></div>
-                                    <div><p class="text-gray-400 text-sm">Lifetime Earnings</p><p id="my-team-earnings" class="text-2xl font-semibold text-green-400"></p></div>
+                                    <div><p class="text-gray-400 text-sm">Overall Record</p><p id="my-team-record" class="text-xl sm:text-2xl font-semibold"></p></div>
+                                    <div><p class="text-gray-400 text-sm">Win %</p><p id="my-team-winpct" class="text-xl sm:text-2xl font-semibold"></p></div>
+									<div><p class="text-gray-400 text-sm">Transactions</p><p id="my-team-transactions" class="text-xl sm:text-2xl font-semibold"></p></div>
+									<div><p class="text-gray-400 text-sm">Points For</p><p id="my-team-pf" class="text-xl sm:text-2xl font-semibold"></p></div>
+									<div><p class="text-gray-400 text-sm">Points Against</p><p id="my-team-pa" class="text-xl sm:text-2xl font-semibold"></p></div>
+                                    <div><p class="text-gray-400 text-sm">Lifetime Earnings</p><p id="my-team-earnings" class="text-xl sm:text-2xl font-semibold text-green-400"></p></div>
                                 </div>
                             </div>
                              <div class="card">
@@ -1095,7 +1099,7 @@
 
                     content += `
                     <div class="mb-10">
-                        <h2 class="text-3xl font-bold text-center mb-6 border-b border-gray-700 pb-2 text-yellow-400 cursor-pointer flex justify-center items-center gap-2" data-target="championship-game-${data.season}">
+                        <h2 class="text-2xl md:text-3xl font-bold text-center mb-6 border-b border-gray-700 pb-2 text-yellow-400 cursor-pointer flex justify-center items-center gap-2" data-target="championship-game-${data.season}">
                             <span>${formatChampYear(data.season)} Championship Game</span>
                             <svg class="w-5 h-5 transform transition-transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </h2>
@@ -1193,11 +1197,11 @@
                     const managerId = managerNameIdMap[managerName];
                     breakdownContainer.innerHTML += `
                         <tr class="hover:bg-gray-800/50">
-                            <td class="py-3 pr-2 font-semibold text-sm">${getDisplayNameWithCrown(managerId)}</td>
-                            <td class="py-3 px-2 text-right text-sm">$${(yearlyData[2021] || 0).toFixed(2)}</td>
-                            <td class="py-3 px-2 text-right text-sm">$${(yearlyData[2022] || 0).toFixed(2)}</td>
-                            <td class="py-3 px-2 text-right text-sm">$${(yearlyData[2023] || 0).toFixed(2)}</td>
-                            <td class="py-3 pl-2 text-right text-sm">$${(yearlyData[2024] || 0).toFixed(2)}</td>
+                            <td class="py-3 pr-2 font-semibold text-sm whitespace-nowrap">${getDisplayNameWithCrown(managerId)}</td>
+                            <td class="py-3 px-2 text-right text-sm whitespace-nowrap">$${(yearlyData[2021] || 0).toFixed(2)}</td>
+                            <td class="py-3 px-2 text-right text-sm whitespace-nowrap">$${(yearlyData[2022] || 0).toFixed(2)}</td>
+                            <td class="py-3 px-2 text-right text-sm whitespace-nowrap">$${(yearlyData[2023] || 0).toFixed(2)}</td>
+                            <td class="py-3 pl-2 text-right text-sm whitespace-nowrap">$${(yearlyData[2024] || 0).toFixed(2)}</td>
                         </tr>
                     `;
                 });
@@ -1438,7 +1442,7 @@
 
                     content += `
                     <div class="mb-10">
-                        <h2 class="text-3xl font-bold text-center mb-6 border-b border-gray-700 pb-2 text-amber-600 cursor-pointer flex justify-center items-center gap-2" data-target="toilet-game-${data.season}">
+                        <h2 class="text-2xl md:text-3xl font-bold text-center mb-6 border-b border-gray-700 pb-2 text-amber-600 cursor-pointer flex justify-center items-center gap-2" data-target="toilet-game-${data.season}">
                             <span>${data.season} Toilet Bowl</span>
                             <svg class="w-5 h-5 transform transition-transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </h2>
@@ -1581,7 +1585,7 @@
                     <div class="grid grid-cols-1 lg:grid-cols-5 items-start gap-6 text-center">
                         <div class="lg:col-span-2 bg-gray-900/30 p-4 rounded-xl border border-gray-700 flex flex-col items-center space-y-3">
                             <img src="${m1.avatar}" class="w-24 h-24 rounded-full object-cover border-4 border-orange-500">
-                            <p class="font-extrabold text-2xl text-orange-500">${getDisplayNameWithCrown(m1.userId)}</p>
+                            <p class="font-extrabold text-xl lg:text-2xl text-orange-500">${getDisplayNameWithCrown(m1.userId)}</p>
                             <div class="text-sm text-gray-400 space-y-2 text-left w-full">
                                 <p class="flex justify-between"><span>Total Points:</span> <span class="font-bold text-white">${totalPoints1.toFixed(2)}</span></p>
                                 <p class="flex justify-between"><span>Avg Points:</span> <span class="font-bold text-white">${(totalPoints1 / history.length).toFixed(2)}</span></p>
@@ -1597,7 +1601,7 @@
                         </div>
 
                         <div class="flex flex-col items-center py-4 lg:col-span-1">
-                            <p class="text-6xl font-black tracking-tighter">${record.wins}-${record.losses}${record.ties > 0 ? `-${record.ties}` : ''}</p>
+                            <p class="text-5xl lg:text-6xl font-black tracking-tighter">${record.wins}-${record.losses}${record.ties > 0 ? `-${record.ties}` : ''}</p>
                             <p class="text-lg text-gray-400 font-medium -mt-2">All-Time Record</p>
                             <hr class="w-2/3 border-t border-gray-700 my-4">
                              <div class="text-sm text-gray-400 space-y-1 w-full">
@@ -1609,7 +1613,7 @@
 
                         <div class="lg:col-span-2 bg-gray-900/30 p-4 rounded-xl border border-gray-700 flex flex-col items-center space-y-3">
                            <img src="${m2.avatar}" class="w-24 h-24 rounded-full object-cover border-4 border-orange-500">
-                            <p class="font-extrabold text-2xl text-orange-500">${getDisplayNameWithCrown(m2.userId)}</p>
+                            <p class="font-extrabold text-xl lg:text-2xl text-orange-500">${getDisplayNameWithCrown(m2.userId)}</p>
                             <div class="text-sm text-gray-400 space-y-2 text-left w-full">
                                 <p class="flex justify-between"><span>Total Points:</span> <span class="font-bold text-white">${totalPoints2.toFixed(2)}</span></p>
                                 <p class="flex justify-between"><span>Avg Points:</span> <span class="font-bold text-white">${(totalPoints2 / history.length).toFixed(2)}</span></p>
@@ -1674,12 +1678,12 @@
 
                         return `
                             <tr class="border-b border-gray-700 last:border-b-0 hover:bg-gray-800/50">
-                                <td class="px-2 py-3 font-semibold">${formatYear(s.year)}</td>
-                                <td class="px-2 py-3 text-center">${s.rank} / ${seasonalData[s.year].totalTeams}</td>
-                                <td class="px-2 py-3 text-center">${recordHtml}</td>
-                                <td class="px-2 py-3 text-right text-green-400">${yearStats.pf.toFixed(2)}</td>
-                                <td class="px-2 py-3 text-right text-red-400">${(yearStats.pa || 0).toFixed(2)}</td>
-                                <td class="px-2 py-3 text-right">${yearStats.transactions}</td>
+                                <td class="px-2 py-3 font-semibold whitespace-nowrap">${formatYear(s.year)}</td>
+                                <td class="px-2 py-3 text-center whitespace-nowrap">${s.rank} / ${seasonalData[s.year].totalTeams}</td>
+                                <td class="px-2 py-3 text-center whitespace-nowrap">${recordHtml}</td>
+                                <td class="px-2 py-3 text-right text-green-400 whitespace-nowrap">${yearStats.pf.toFixed(2)}</td>
+                                <td class="px-2 py-3 text-right text-red-400 whitespace-nowrap">${(yearStats.pa || 0).toFixed(2)}</td>
+                                <td class="px-2 py-3 text-right whitespace-nowrap">${yearStats.transactions}</td>
                             </tr>
                         `;
                     }).join('');
@@ -1733,5 +1737,4 @@
     </script>
 </body>
 </html>
-
 
