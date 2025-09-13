@@ -23,6 +23,7 @@
             border: 1px solid #444444; /* Medium Gray Border */
             border-radius: 0.75rem;
             padding: 1rem; /* Adjusted padding for mobile */
+            transition: transform 0.3s ease, border-color 0.3s ease; /* Added for smooth pop effect */
         }
         @media (min-width: 768px) { /* md breakpoint */
             .card {
@@ -30,6 +31,10 @@
             }
         }
         .card:hover {
+            border-color: #f97316; /* Orange */
+            transform: translateY(-2px);
+        }
+        .card.in-view {
             border-color: #f97316; /* Orange */
             transform: translateY(-2px);
         }
@@ -432,15 +437,50 @@
                         <p class="mb-4 text-gray-300">These poor, toilet-bowl-losing souls, spent the first week of the NFL season camped out at the Anchor from dusk til' dawn. A mere 15 minutes taken off their sentence for every drink they consumed.</p>
                         
                         <h3 class="text-xl font-semibold mb-3 text-orange-500">⚓ Departure Ledger ⚓</h3>
-                        <ul class="list-none list-inside space-y-2 text-gray-300">
-                            <li><strong>2023:</strong> Andrew Johnstone - 17 🍺 
-							left at 8:45 PM</li>
-                            <li><strong>2022:</strong> Adam Ellis - 13 🍺 + 1 🌿🚬
-							left at 9:30 PM</li>
-                            <li><strong>2021:</strong> Adam Ellis - 12 🍺 
-							left at 10:00 PM</li>
-                            <li><strong>2024:</strong> Johnny Jones - TBD</li>
-                        </ul>
+                        <div class="space-y-4">
+                            <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-700 flex items-center justify-between flex-wrap gap-2">
+                                <div>
+                                    <span class="font-bold text-lg text-orange-400">2023:</span>
+                                    <span class="ml-2 font-semibold text-white">Andrew Johnstone</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xl">17 🍺</span>
+                                    <br>
+                                    <span class="text-xs text-gray-400">left at 8:45 PM</span>
+                                </div>
+                            </div>
+                            <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-700 flex items-center justify-between flex-wrap gap-2">
+                                <div>
+                                    <span class="font-bold text-lg text-orange-400">2022:</span>
+                                    <span class="ml-2 font-semibold text-white">Adam Ellis</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xl">13 🍺 + 1 🌿🚬</span>
+                                    <br>
+                                    <span class="text-xs text-gray-400">left at 9:30 PM</span>
+                                </div>
+                            </div>
+                            <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-700 flex items-center justify-between flex-wrap gap-2">
+                                <div>
+                                    <span class="font-bold text-lg text-orange-400">2021:</span>
+                                    <span class="ml-2 font-semibold text-white">Adam Ellis</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xl">12 🍺</span>
+                                    <br>
+                                    <span class="text-xs text-gray-400">left at 10:00 PM</span>
+                                </div>
+                            </div>
+                            <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-700 flex items-center justify-between flex-wrap gap-2">
+                                <div>
+                                    <span class="font-bold text-lg text-orange-400">2024:</span>
+                                    <span class="ml-2 font-semibold text-white">Johnny Jones</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xl font-semibold">TBD</span>
+                                </div>
+                            </div>
+                        </div>
                         <hr class="border-gray-700 my-8">
                         <div id="toilet-bowl-games">
                             <!-- Toilet Bowl game details will be injected here -->
@@ -571,6 +611,31 @@
                 }
             };
 
+            const setupIntersectionObserver = () => {
+                const cards = document.querySelectorAll('.card');
+                if ('IntersectionObserver' in window) {
+                    const observerOptions = {
+                        root: null, // relative to the viewport
+                        rootMargin: '0px',
+                        threshold: 0.6 // Card "pops" when 60% is visible
+                    };
+
+                    const observer = new IntersectionObserver((entries, observer) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                entry.target.classList.add('in-view');
+                            } else {
+                                entry.target.classList.remove('in-view');
+                            }
+                        });
+                    }, observerOptions);
+
+                    cards.forEach(card => {
+                        observer.observe(card);
+                    });
+                }
+            };
+
             const init = async () => {
                 try {
                     loader.classList.remove('hidden');
@@ -608,6 +673,7 @@
                     setupTabs();
                     setupH2HSelector();
                     setupMyTeamSelector();
+                    setupIntersectionObserver(); // Setup observer after content is rendered
 
                 } catch (error) {
                     console.error('Failed to initialize dashboard:', error);
@@ -1747,7 +1813,6 @@
 
                 const standingsBody = document.getElementById('my-team-standings-body');
                 const currentYear = new Date().getFullYear();
-                standingsBody.innerHTML = '';
                 const yearlyData = manager.yearlyStandings
                     .filter(s => s.year < currentYear || (seasonalData[s.year] && seasonalData[s.year].championFound))
                     .sort((a,b) => a.year - b.year);
@@ -1819,12 +1884,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
