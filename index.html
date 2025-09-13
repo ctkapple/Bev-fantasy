@@ -90,6 +90,15 @@
                 transform: translateY(-16px);
             }
         }
+
+        /* Gallery Modal Styles */
+        #gallery-modal-img {
+            -webkit-user-drag: none; /* Prevents dragging the image */
+            user-select: none;
+        }
+        #gallery-prev, #gallery-next {
+            transition: background-color 0.2s ease;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -438,7 +447,7 @@
                         
                         <h3 class="text-xl font-semibold mb-3 text-orange-500">⚓ Departure Ledger ⚓</h3>
                         <div class="space-y-4">
-                            <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-700 flex items-center justify-between flex-wrap gap-2">
+                            <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-700 flex items-center justify-between flex-wrap gap-2 cursor-pointer hover:border-orange-500 transition-colors" data-gallery="2023">
                                 <div>
                                     <span class="font-bold text-lg text-orange-400">2023:</span>
                                     <span class="ml-2 font-semibold text-white">Andrew</span>
@@ -449,7 +458,7 @@
                                     <span class="text-xs text-gray-400">left at 8:45 PM</span>
                                 </div>
                             </div>
-                            <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-700 flex items-center justify-between flex-wrap gap-2">
+                            <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-700 flex items-center justify-between flex-wrap gap-2 cursor-pointer hover:border-orange-500 transition-colors" data-gallery="2022">
                                 <div>
                                     <span class="font-bold text-lg text-orange-400">2022:</span>
                                     <span class="ml-2 font-semibold text-white">Adam</span>
@@ -460,7 +469,7 @@
                                     <span class="text-xs text-gray-400">left at 9:30 PM</span>
                                 </div>
                             </div>
-                            <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-700 flex items-center justify-between flex-wrap gap-2">
+                            <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-700 flex items-center justify-between flex-wrap gap-2 cursor-pointer hover:border-orange-500 transition-colors" data-gallery="2021">
                                 <div>
                                     <span class="font-bold text-lg text-orange-400">2021:</span>
                                     <span class="ml-2 font-semibold text-white">Adam</span>
@@ -505,6 +514,20 @@
         </div>
     </div>
 
+    <!-- Punishment Gallery Modal -->
+    <div id="gallery-modal" class="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-[100] hidden p-4 transition-opacity duration-300">
+        <div class="relative w-full max-w-4xl h-full max-h-[90vh] flex items-center justify-center">
+            <img id="gallery-modal-img" src="" alt="Punishment Evidence" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
+
+            <button id="gallery-modal-close" class="absolute top-0 right-0 m-4 bg-white text-black rounded-full h-10 w-10 flex items-center justify-center font-bold text-2xl leading-none">&times;</button>
+
+            <button id="gallery-prev" class="absolute left-0 ml-2 md:ml-5 bg-white/30 hover:bg-white/50 text-black rounded-full h-12 w-12 flex items-center justify-center font-bold text-3xl leading-none backdrop-blur-sm">&lsaquo;</button>
+            <button id="gallery-next" class="absolute right-0 mr-2 md:mr-5 bg-white/30 hover:bg-white/50 text-black rounded-full h-12 w-12 flex items-center justify-center font-bold text-3xl leading-none backdrop-blur-sm">&rsaquo;</button>
+
+            <div id="gallery-counter" class="absolute bottom-0 mb-4 bg-black/50 text-white text-sm px-3 py-1 rounded-full"></div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const leagueId = '1180633944818466816';
@@ -527,6 +550,14 @@
                 'patgavin': { name: 'Patrick Gavin', avatar: '/assets/pat.png' },
                 'jonesj83': { name: 'Johnny Jones', avatar: '/assets/johhny.png' }
             };
+
+            const punishmentGalleries = {
+                '2023': ['/assets/andyanchor.jpeg', '/assets/andyanchor2.jpeg'],
+                '2022': ['/assets/adam2anchor.jpeg'],
+                '2021': ['/assets/anchoradam1.jpeg', '/assets/anchoradam2.jpeg', '/assets/anchoradam3.jpeg']
+            };
+            let currentGalleryImages = [];
+            let currentGalleryIndex = 0;
 
             const managersData = {};
             let nflPlayers = {};
@@ -636,6 +667,64 @@
                 }
             };
 
+            const setupPunishmentGallery = () => {
+                const modal = document.getElementById('gallery-modal');
+                const modalImg = document.getElementById('gallery-modal-img');
+                const closeBtn = document.getElementById('gallery-modal-close');
+                const prevBtn = document.getElementById('gallery-prev');
+                const nextBtn = document.getElementById('gallery-next');
+                const counter = document.getElementById('gallery-counter');
+                const ledgerEntries = document.querySelectorAll('[data-gallery]');
+
+                const showGalleryImage = (index) => {
+                    currentGalleryIndex = index;
+                    modalImg.src = currentGalleryImages[index];
+                    counter.textContent = `${index + 1} / ${currentGalleryImages.length}`;
+
+                    prevBtn.style.display = index > 0 ? 'flex' : 'none';
+                    nextBtn.style.display = index < currentGalleryImages.length - 1 ? 'flex' : 'none';
+                    counter.style.display = currentGalleryImages.length > 1 ? 'block' : 'none';
+                };
+
+                const openGallery = (galleryKey) => {
+                    currentGalleryImages = punishmentGalleries[galleryKey];
+                    if (!currentGalleryImages || currentGalleryImages.length === 0) return;
+                    
+                    modal.classList.remove('hidden');
+                    showGalleryImage(0);
+                };
+                
+                const closeGallery = () => {
+                    modal.classList.add('hidden');
+                    modalImg.src = ''; // Clear image to stop loading
+                };
+
+                ledgerEntries.forEach(entry => {
+                    entry.addEventListener('click', () => {
+                        openGallery(entry.dataset.gallery);
+                    });
+                });
+
+                nextBtn.addEventListener('click', () => {
+                    if (currentGalleryIndex < currentGalleryImages.length - 1) {
+                        showGalleryImage(currentGalleryIndex + 1);
+                    }
+                });
+
+                prevBtn.addEventListener('click', () => {
+                    if (currentGalleryIndex > 0) {
+                        showGalleryImage(currentGalleryIndex - 1);
+                    }
+                });
+
+                closeBtn.addEventListener('click', closeGallery);
+                modal.addEventListener('click', (e) => {
+                    if (e.target.id === 'gallery-modal') {
+                        closeGallery();
+                    }
+                });
+            };
+
             const init = async () => {
                 try {
                     loader.classList.remove('hidden');
@@ -673,7 +762,8 @@
                     setupTabs();
                     setupH2HSelector();
                     setupMyTeamSelector();
-                    setupIntersectionObserver(); // Setup observer after content is rendered
+                    setupIntersectionObserver(); 
+                    setupPunishmentGallery(); 
 
                 } catch (error) {
                     console.error('Failed to initialize dashboard:', error);
