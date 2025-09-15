@@ -357,7 +357,7 @@
                 // Co-owner teams
                 'kpflats': { name: 'Kevin Flaherty & Chris Cole', avatar: '/assets/kev.jpg' },
                 'cmcole17': { name: 'Kevin Flaherty & Chris Cole', avatar: '/assets/chris.png' },
-                'BIGxP3TE': { name: 'Peter Coluntino & Sean Richardson', avatar: '/assets/pete.png' },
+                'bigxp3te': { name: 'Peter Coluntino & Sean Richardson', avatar: '/assets/pete.png' },
                 'seanrich3': { name: 'Peter Coluntino & Sean Richardson', avatar: '/assets/sean.jpg' },
 
                 // Other members
@@ -374,6 +374,10 @@
                 'jrbates3413': { name: 'Sam Abate', avatar: '/assets/sam.png' },
                 'kmore531196': { name: 'Kevin Morency', avatar: '/assets/kevm.png' }
             };
+            
+            const coOwnerConfig = { 'cmcole17': 'kpflats', 'seanrich3': 'bigxp3te' };
+            let usernameToId = {};
+            let primaryUserIdMap = {};
 
             const managersData = {};
             let nflPlayers = {};
@@ -464,6 +468,23 @@
                     
                     await fetchNflPlayers();
 
+                    // --- Co-owner Setup ---
+                    const usersForMap = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueId}/users`);
+                    usersForMap.forEach(u => usernameToId[u.display_name.toLowerCase()] = u.user_id);
+                    
+                    for (const [secondary, primary] of Object.entries(coOwnerConfig)) {
+                        const secondaryId = usernameToId[secondary];
+                        const primaryId = usernameToId[primary];
+                        if (secondaryId && primaryId) {
+                            primaryUserIdMap[secondaryId] = primaryId;
+                        }
+                    }
+                    usersForMap.forEach(u => {
+                        if (!Object.values(primaryUserIdMap).includes(u.user_id) && !primaryUserIdMap[u.user_id]) {
+                            primaryUserIdMap[u.user_id] = u.user_id;
+                        }
+                    });
+
                     let currentLeagueId = leagueId;
                     let allSeasonsData = [];
                     previousSeasonRosters = [];
@@ -524,10 +545,14 @@
                 const users = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueData.league_id}/users`);
                 const rosters = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueData.league_id}/rosters`);
                 allRosters[season] = rosters;
-                seasonalData[season] = { totalTeams: users.length, league_id: leagueData.league_id };
+                seasonalData[season] = { totalTeams: rosters.length, league_id: leagueData.league_id };
 
                 const rosterIdToOwnerId = {};
-                rosters.forEach(r => { if (r.owner_id) rosterIdToOwnerId[r.roster_id] = r.owner_id; });
+                rosters.forEach(r => { 
+                    if (r.owner_id) {
+                        rosterIdToOwnerId[r.roster_id] = primaryUserIdMap[r.owner_id] || r.owner_id;
+                    }
+                });
 
                 users.forEach(user => {
                     if (!managersData[user.user_id]) {
@@ -545,9 +570,11 @@
                             teamNameHistory: [], yearlyStandings: [], totalTransactions: 0, totalTrades: 0, yearlyStats: {}
                         };
                     }
-                    const managerData = managersData[user.user_id];
+                    const managerData = managersData[primaryUserIdMap[user.user_id] || user.user_id];
                     if (managerData) {
-                        managerData.yearlyStats[season] = { pf: 0, pa: 0, transactions: 0, trades: 0 };
+                         if (!managerData.yearlyStats[season]) {
+                            managerData.yearlyStats[season] = { pf: 0, pa: 0, transactions: 0, trades: 0 };
+                         }
                         const hasYear = managerData.teamNameHistory.some(t => t.year === season);
                         if (!hasYear) {
                             const teamName = user.metadata?.team_name || user.display_name;
@@ -562,7 +589,8 @@
                         const prevRoster = previousSeasonRosters.find(pr => pr.owner_id === currentRoster.owner_id);
                         if (prevRoster && prevRoster.players) {
                             const keptPlayerIds = currentRoster.players.filter(pId => prevRoster.players.includes(pId));
-                            const manager = managersData[currentRoster.owner_id];
+                            const primaryId = primaryUserIdMap[currentRoster.owner_id] || currentRoster.owner_id;
+                            const manager = managersData[primaryId];
                             keptPlayerIds.forEach(playerId => {
                                 const playerInfo = nflPlayers[playerId];
                                 if (!playerInfo) return;
@@ -582,17 +610,18 @@
 
                 for (const r of rosters) {
                     if (r.owner_id) {
-                        const m = managersData[r.owner_id];
+                        const primaryId = primaryUserIdMap[r.owner_id] || r.owner_id;
+                        const m = managersData[primaryId];
                         if (!m) continue;
                         m.stats.wins += r.settings.wins; m.stats.losses += r.settings.losses; m.stats.ties += r.settings.ties;
                         const pf = parseFloat(`${r.settings.fpts}.${r.settings.fpts_decimal}`);
                         const pa = parseFloat(`${r.settings.fpts_against}.${r.settings.fpts_against_decimal}`);
                         m.stats.pf += pf; m.stats.pa += pa;
-                        m.yearlyStats[season].pf = pf;
-                        m.yearlyStats[season].pa = pa;
-                        allSeasonScores.push({ score: pf, managerId: m.userId, year: season });
+                        m.yearlyStats[season].pf += pf;
+                        m.yearlyStats[season].pa += pa;
+                        allSeasonScores.push({ score: pf, managerId: primaryId, year: season });
                         if (r.settings.wins + r.settings.losses > 0) {
-                             allSeasonRecords.push({ wins: r.settings.wins, losses: r.settings.losses, record: `${r.settings.wins}-${r.settings.losses}`, winPct: (r.settings.wins + r.settings.losses) > 0 ? r.settings.wins / (r.settings.wins + r.settings.losses) : 0, pf: pf, managerId: m.userId, year: season });
+                             allSeasonRecords.push({ wins: r.settings.wins, losses: r.settings.losses, record: `${r.settings.wins}-${r.settings.losses}`, winPct: (r.settings.wins + r.settings.losses) > 0 ? r.settings.wins / (r.settings.wins + r.settings.losses) : 0, pf: pf, managerId: primaryId, year: season });
                         }
                     }
                 }
@@ -600,17 +629,21 @@
                 let ranksAssignedViaApi = rosters.some(r => r.owner_id && r.settings.rank);
                 if (ranksAssignedViaApi) {
                     rosters.forEach(r => {
-                        if (r.owner_id && managersData[r.owner_id] && r.settings.rank) {
-                            const manager = managersData[r.owner_id];
-                            const hasYear = manager.yearlyStandings.some(s => s.year === season);
-                            if (!hasYear) manager.yearlyStandings.push({ year: season, rank: r.settings.rank });
+                        if (r.owner_id) {
+                            const primaryId = primaryUserIdMap[r.owner_id] || r.owner_id;
+                            if (managersData[primaryId] && r.settings.rank) {
+                                const manager = managersData[primaryId];
+                                const hasYear = manager.yearlyStandings.some(s => s.year === season);
+                                if (!hasYear) manager.yearlyStandings.push({ year: season, rank: r.settings.rank });
+                            }
                         }
                     });
                 } else if (rosters.some(r => r.owner_id)) {
                     const seasonalStandings = rosters.filter(r => r.owner_id).map(r => ({ owner_id: r.owner_id, wins: r.settings.wins, pf: parseFloat(`${r.settings.fpts}.${r.settings.fpts_decimal}`) }));
                     seasonalStandings.sort((a, b) => b.wins - a.wins || b.pf - a.pf);
                     seasonalStandings.forEach((roster, index) => {
-                        const manager = managersData[roster.owner_id];
+                        const primaryId = primaryUserIdMap[roster.owner_id] || roster.owner_id;
+                        const manager = managersData[primaryId];
                         if (manager) {
                             const hasYear = manager.yearlyStandings.some(s => s.year === season);
                             if (!hasYear) manager.yearlyStandings.push({ year: season, rank: index + 1 });
@@ -765,10 +798,10 @@
                 } catch(e) { 
                      console.warn(`Could not fetch bracket for ${season}. Falling back to roster ranks.`, e);
                      const champRoster = rosters.find(r => r.settings.rank === 1), runnerUpRoster = rosters.find(r => r.settings.rank === 2);
-                     if (champRoster?.owner_id) managersData[champRoster.owner_id].stats.championship_years.push(season);
-                     if (runnerUpRoster?.owner_id) managersData[runnerUpRoster.owner_id].stats.runner_up_years.push(season);
-                     if (champRoster?.players) champRoster.players.forEach(pId => updatePlayerLegacy(pId, season, champRoster.owner_id, true));
-                     if (runnerUpRoster?.players) runnerUpRoster.players.forEach(pId => updatePlayerLegacy(pId, season, runnerUpRoster.owner_id, false));
+                     if (champRoster?.owner_id) managersData[rosterIdToOwnerId[champRoster.roster_id]].stats.championship_years.push(season);
+                     if (runnerUpRoster?.owner_id) managersData[rosterIdToOwnerId[runnerUpRoster.roster_id]].stats.runner_up_years.push(season);
+                     if (champRoster?.players) champRoster.players.forEach(pId => updatePlayerLegacy(pId, season, rosterIdToOwnerId[champRoster.roster_id], true));
+                     if (runnerUpRoster?.players) runnerUpRoster.players.forEach(pId => updatePlayerLegacy(pId, season, rosterIdToOwnerId[runnerUpRoster.roster_id], false));
                 }
             };
 
@@ -808,7 +841,10 @@
             const renderPowerRankings = () => {
                 const rankingsBody = document.getElementById('power-rankings-body');
                 rankingsBody.innerHTML = '';
-                const sortedManagers = Object.values(managersData).sort((a, b) => (b.stats.wins / (b.stats.wins + b.stats.losses) || 0) - (a.stats.wins / (a.stats.wins + a.stats.losses) || 0) || b.stats.pf - a.stats.pf);
+                const secondaryUserIds = Object.keys(coOwnerConfig).map(username => usernameToId[username]).filter(Boolean);
+                const managersToDisplay = Object.values(managersData).filter(manager => !secondaryUserIds.includes(manager.userId));
+                const sortedManagers = managersToDisplay.sort((a, b) => (b.stats.wins / (b.stats.wins + b.stats.losses) || 0) - (a.stats.wins / (a.stats.wins + a.stats.losses) || 0) || b.stats.pf - a.stats.pf);
+
                 sortedManagers.forEach((manager, index) => {
                     const winPct = manager.stats.wins + manager.stats.losses > 0 ? ((manager.stats.wins / (manager.stats.wins + manager.stats.losses)) * 100).toFixed(1) + '%' : '0.0%';
                     const recordHtml = `<span class="text-green-400 font-semibold">${manager.stats.wins}</span>-<span class="text-red-400">${manager.stats.losses}</span>`;
@@ -820,9 +856,13 @@
             const renderTrophyCase = () => {
                 const trophyCase = document.getElementById('trophy-case'), runnerUps = document.getElementById('runner-ups');
                 trophyCase.innerHTML = runnerUps.innerHTML = '';
+                
+                const secondaryUserIds = Object.keys(coOwnerConfig).map(username => usernameToId[username]).filter(Boolean);
+                const managersToDisplay = Object.values(managersData).filter(manager => !secondaryUserIds.includes(manager.userId));
+
 
                 // Champions
-                const champions = Object.values(managersData).filter(m => m.stats.championship_years.length > 0).sort((a, b) => b.stats.championship_years.length - a.stats.championship_years.length);
+                const champions = managersToDisplay.filter(m => m.stats.championship_years.length > 0).sort((a, b) => b.stats.championship_years.length - a.stats.championship_years.length);
                 if (champions.length > 0) {
                     champions.forEach(c => {
                         const yearsHtml = c.stats.championship_years.map(y => `<p class="text-sm text-yellow-400">🏆 ${formatYear(y)}</p>`).join('');
@@ -833,7 +873,7 @@
                 }
 
                 // Runner Ups
-                const secondPlace = Object.values(managersData).filter(m => m.stats.runner_up_years.length > 0).sort((a, b) => b.stats.runner_up_years.length - a.stats.runner_up_years.length);
+                const secondPlace = managersToDisplay.filter(m => m.stats.runner_up_years.length > 0).sort((a, b) => b.stats.runner_up_years.length - a.stats.runner_up_years.length);
                 if (secondPlace.length > 0) {
                      runnerUps.innerHTML += '<h3 class="text-lg font-semibold text-gray-400 mb-2 border-t border-gray-700 pt-4">Runner Ups 🥈</h3>'
                      secondPlace.forEach(m => {
@@ -1213,7 +1253,11 @@
             const setupH2HSelector = () => {
                 const m1Select = document.getElementById('manager1-select'), m2Select = document.getElementById('manager2-select');
                 m1Select.innerHTML = m2Select.innerHTML = '<option value="" selected>-- Select a Manager --</option>';
-                const sortedManagers = Object.values(managersData).sort((a, b) => a.displayName.localeCompare(b.displayName));
+                
+                const secondaryUserIds = Object.keys(coOwnerConfig).map(username => usernameToId[username]).filter(Boolean);
+                const managersToDisplay = Object.values(managersData).filter(manager => !secondaryUserIds.includes(manager.userId));
+                const sortedManagers = managersToDisplay.sort((a, b) => a.displayName.localeCompare(b.displayName));
+                
                 sortedManagers.forEach(m => {
                     m1Select.add(new Option(m.displayName, m.userId));
                     m2Select.add(new Option(m.displayName, m.userId));
@@ -1356,7 +1400,10 @@
             
             const setupMyTeamSelector = () => {
                 const select = document.getElementById('my-team-select');
-                const sortedManagers = Object.values(managersData).sort((a, b) => a.displayName.localeCompare(b.displayName));
+                const secondaryUserIds = Object.keys(coOwnerConfig).map(username => usernameToId[username]).filter(Boolean);
+                const managersToDisplay = Object.values(managersData).filter(manager => !secondaryUserIds.includes(manager.userId));
+                const sortedManagers = managersToDisplay.sort((a, b) => a.displayName.localeCompare(b.displayName));
+
                 sortedManagers.forEach(m => select.add(new Option(m.displayName, m.userId)));
                 select.addEventListener('change', (e) => renderMyTeam(e.target.value));
             };
