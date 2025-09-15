@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fantasy Football League Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111111; /* Dark Charcoal */
+            color: #e5e7eb; /* Light Gray */
+        }
+        .card {
+            background-color: #1f1f1f; /* Lighter Charcoal */
+            border: 1px solid #444444; /* Medium Gray Border */
+            border-radius: 0.75rem;
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card:hover {
+            border-color: #f97316; /* Orange */
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+        }
+        .league-link {
+            display: block;
+            padding: 1.5rem;
+            text-align: center;
+            font-weight: 700;
+            color: #e5e7eb;
+            text-decoration: none;
+        }
+        .league-name {
+            font-size: 1.5rem; /* 24px */
+            line-height: 2rem; /* 32px */
+            margin-bottom: 0.5rem;
+            color: #f97316; /* Orange */
+        }
+        .league-tagline {
+            font-size: 0.875rem; /* 14px */
+            line-height: 1.25rem; /* 20px */
+            color: #9ca3af; /* Gray */
+        }
+    </style>
+</head>
+<body class="antialiased flex items-center justify-center min-h-screen p-4">
+
+    <div class="container mx-auto max-w-2xl">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold text-orange-500 tracking-tight" style="text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff, 3px 3px 10px rgba(0,0,0,0.7);">
+                Fantasy Football League Hub
+            </h1>
+            <p class="text-base sm:text-lg text-gray-300 mt-4">
+                Select a league to view all-time stats, records, and more.
+            </p>
+        </header>
+
+        <main class="space-y-6">
+            <!-- JRWLL Memorial Cup -->
+            <div class="card">
+                <a href="jrwll.html" class="league-link">
+                    <p class="league-name">JRWLL Memorial Cup</p>
+                    <p class="league-tagline">#ForTheCure</p>
+                </a>
+            </div>
+
+            <!-- Super Beef 3-Way Dynasty League -->
+            <div class="card">
+                <a href="sb3.html" class="league-link">
+                    <p class="league-name">Super Beef 3-Way</p>
+                    <p class="league-tagline">Dynasty League</p>
+                </a>
+            </div>
+            
+            <!-- BestBall Sidepot -->
+            <div class="card">
+                <a href="bb.html" class="league-link">
+                    <p class="league-name">BestBall Sidepot</p>
+                    <p class="league-tagline">The ultimate test of roster building</p>
+                </a>
+            </div>
+        </main>
+
+        <footer class="text-center mt-12 py-6 border-t-2 border-orange-500 text-xs text-gray-500">
+            <p>Fantasy Football League Hub • Engineered and Maintained by Commissioner Dooling</p>
+        </footer>
+    </div>
+
+</body>
+</html>
