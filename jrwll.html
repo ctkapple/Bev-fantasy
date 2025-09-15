@@ -1,1 +1,1987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bev Fantasy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Favicon Links -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/resources/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/resources/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/resources/favicon-16x16.png">
+    <link rel="manifest" href="/resources/site.webmanifest">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111111; /* Dark Charcoal */
+            color: #e5e7eb; /* Light Gray */
+        }
+        .card {
+            background-color: #1f1f1f; /* Lighter Charcoal */
+            border: 1px solid #444444; /* Medium Gray Border */
+            border-radius: 0.75rem;
+            padding: 1rem; /* Adjusted padding for mobile */
+            transition: transform 0.3s ease, border-color 0.3s ease; /* Added for smooth pop effect */
+        }
+        @media (min-width: 768px) { /* md breakpoint */
+            .card {
+                padding: 1.5rem;
+            }
+        }
+        .card:hover {
+            border-color: #f97316; /* Orange */
+            transform: translateY(-2px);
+        }
+        .card.in-view {
+            border-color: #f97316; /* Orange */
+            transform: translateY(-2px);
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        .tab-button.active {
+            color: #f97316; /* Orange */
+            border-bottom-color: #f97316;
+        }
+        .tab-button:not(.active) {
+            border-bottom-color: transparent;
+            color: #9ca3af; /* Gray */
+        }
+        .tab-button:hover:not(.active) {
+            color: #e5e7eb;
+        }
+        .prose h3 { color: #f97316 !important; }
+
+        /* New Bouncing Loader */
+        .bouncing-loader {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 120px;
+        }
+
+        .bouncing-loader > div {
+            width: 16px;
+            height: 16px;
+            margin: 3px 6px;
+            border-radius: 50%;
+            background-color: #fff;
+            animation: bouncing-loader 0.6s infinite alternate;
+        }
+
+        .bouncing-loader > div:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .bouncing-loader > div:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bouncing-loader {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0.1;
+                transform: translateY(-16px);
+            }
+        }
+
+        /* Gallery Modal Styles */
+        #gallery-modal-img {
+            -webkit-user-drag: none; /* Prevents dragging the image */
+            user-select: none;
+        }
+        #gallery-prev, #gallery-next {
+            transition: background-color 0.2s ease;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div id="loader" class="fixed inset-0 bg-gray-900 bg-opacity-80 flex flex-col justify-center items-center z-50">
+        <!-- New Bouncing Loader -->
+        <div class="bouncing-loader">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <p class="text-white text-lg mt-4">Loading stats from Sleeper... please wait</p>
+        <p class="text-white text-sm mt-2">This could take up to 30 seconds</p>
+    </div>
+
+    <div id="app" class="container mx-auto p-4 md:p-8 max-w-7xl hidden">
+        <header class="text-center mb-10">
+            <div id="league-info" class="flex flex-col items-center justify-center gap-4">
+                 <img id="league-avatar" src="https://placehold.co/64x64/1f2937/a0aec0?text=🏈" alt="League Avatar" class="w-24 h-24 sm:w-28 sm:h-28 rounded-full shadow-lg">
+                <div>
+                    <h1 id="league-name" class="text-4xl sm:text-5xl md:text-6xl font-extrabold text-orange-500 tracking-tight" style="text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff, 3px 3px 10px rgba(0,0,0,0.7);">Fantasy Football Dashboard</h1>
+                    <p id="league-season" class="text-base sm:text-lg text-gray-300 mt-2">Loading league data...</p>
+                </div>
+            </div>
+        </header>
+
+        <div class="mb-8 border-b-2 border-orange-500">
+            <nav class="flex justify-center space-x-2 sm:space-x-6 flex-wrap" aria-label="Tabs">
+                <button class="tab-button active text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="dashboard">Rankings</button>
+                <button class="tab-button text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="myteam">My Team</button>
+				<button class="tab-button text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="h2h">H2H</button>
+                <button class="tab-button text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="rosters">Championships</button>
+				<button class="tab-button text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="toilet">Toilet Bowl</button>
+				<button class="tab-button text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="records">Records</button>
+                <button class="tab-button text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="earnings">Earnings</button>
+				<button class="tab-button text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="legacies">Legends</button>
+                <button class="tab-button text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="tradelog">Trades</button>
+                <button class="tab-button text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="faab">FAAB</button>
+                <button class="tab-button text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="rules">Rules</button>
+            </nav>
+        </div>
+
+        <main id="tab-content">
+            <div id="dashboard-content" class="tab-pane active">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="card lg:col-span-2">
+                        <h2 class="text-xl font-bold mb-4 text-orange-500">All-Time Standings</h2>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="border-b border-gray-700">
+                                    <tr>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Rank</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Manager</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Record (<span class="text-green-400">W</span>-<span class="text-red-400">L</span>)</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Win %</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"><span class="text-green-400">PF</span> / <span class="text-red-400">PA</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="power-rankings-body" class="divide-y divide-gray-800">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2 class="text-xl font-bold mb-4 text-yellow-400">Trophy Case 🏆</h2>
+                        <div id="trophy-case" class="space-y-4">
+                           </div>
+                         <div id="runner-ups" class="mt-6 space-y-4">
+                           </div>
+                         <div id="toilet-kings" class="mt-6 space-y-4">
+                           </div>
+                    </div>
+                </div>
+            </div>
+             <div id="myteam-content" class="tab-pane hidden">
+                <div class="card mb-6">
+                    <label for="my-team-select" class="block text-lg font-medium text-orange-500 mb-2">Please select your name</label>
+                    <select id="my-team-select" class="bg-gray-900 border border-gray-700 rounded-md p-2 w-full max-w-md text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                        <option value="">-- Select a Manager --</option>
+                    </select>
+                </div>
+
+                <div id="my-team-data" class="hidden">
+                    <div class="card text-center mb-6">
+                        <img id="my-team-avatar" src="" alt="Manager Avatar" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-orange-500 object-cover shadow-lg cursor-pointer hover:scale-110 transition-transform">
+                        <h2 id="my-team-name" class="text-2xl sm:text-3xl font-bold"></h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 space-y-6">
+                            <div class="card">
+                                <h3 class="text-xl font-bold mb-4 text-orange-500">Career Stats</h3>
+                                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
+                                    <div><p class="text-gray-400 text-sm">Overall Record</p><p id="my-team-record" class="text-xl sm:text-2xl font-semibold"></p></div>
+                                    <div><p class="text-gray-400 text-sm">Win %</p><p id="my-team-winpct" class="text-xl sm:text-2xl font-semibold"></p></div>
+									<div><p class="text-gray-400 text-sm">Transactions</p><p id="my-team-transactions" class="text-xl sm:text-2xl font-semibold"></p></div>
+									<div><p class="text-gray-400 text-sm">Points For</p><p id="my-team-pf" class="text-xl sm:text-2xl font-semibold"></p></div>
+									<div><p class="text-gray-400 text-sm">Points Against</p><p id="my-team-pa" class="text-xl sm:text-2xl font-semibold"></p></div>
+                                    <div><p class="text-gray-400 text-sm">Lifetime Earnings</p><p id="my-team-earnings" class="text-xl sm:text-2xl font-semibold text-green-400"></p></div>
+                                </div>
+                            </div>
+                             <div class="card">
+                                <h3 class="text-xl font-bold mb-4 text-orange-500">Franchise Highlights</h3>
+                                <div id="my-team-highlights" class="space-y-3 text-sm"></div>
+                            </div>
+							<div class="card">
+                                <h3 class="text-xl font-bold mb-4 text-orange-500">Year by Year</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-sm text-left">
+                                        <thead class="text-xs text-gray-400 uppercase border-b border-gray-700">
+                                            <tr>
+                                                <th scope="col" class="px-2 py-3">Year</th>
+                                                <th scope="col" class="px-2 py-3 text-center">Finish</th>
+                                                <th scope="col" class="px-2 py-3 text-center">Record</th>
+                                                <th scope="col" class="px-2 py-3 text-right text-green-400">Points For</th>
+                                                <th scope="col" class="px-2 py-3 text-right text-red-400">Points Against</th>
+                                                <th scope="col" class="px-2 py-3 text-right">Moves</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="my-team-standings-body">
+                                            </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-6">
+                             <div class="card">
+                                <h3 class="text-xl font-bold mb-4 text-orange-500">Franchise Rival</h3>
+                                <div id="my-team-rival"></div>
+                            </div>
+                             <div class="card">
+                                <h3 class="text-xl font-bold mb-4 text-orange-500">Franchise Legends</h3>
+                                 <p class="text-xs text-gray-500 -mt-4 mb-4">Your longest tenured players</p>
+                                <ul id="my-team-favorites" class="space-y-3"></ul>
+                            </div>
+                             <div class="card">
+                                <h3 class="text-xl font-bold mb-4 text-orange-500">Arch-Nemeses</h3>
+                                 <p class="text-xs text-gray-500 -mt-4 mb-4">Players who have dropped the most points on you</p>
+                                <ul id="my-team-nemeses" class="space-y-3"></ul>
+                            </div>
+                             <div class="card">
+                                <h3 class="text-xl font-bold mb-4 text-orange-500">Team Name History</h3>
+                                <ul id="my-team-names" class="space-y-2"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="records-content" class="tab-pane hidden">
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-3 flex items-center gap-2">🚀 Highest Scoring Seasons</h3><div id="highest-season-scores" class="space-y-1"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-3 flex items-center gap-2">🥶 Lowest Scoring Seasons</h3><div id="lowest-season-scores" class="space-y-1"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-3 flex items-center gap-2">🔥 Highest Scoring Weeks</h3><div id="highest-weekly-scores" class="space-y-1"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-3 flex items-center gap-2">🧊 Lowest Scoring Weeks</h3><div id="lowest-weekly-scores" class="space-y-1"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-3 flex items-center gap-2">🏆 Best Seasons</h3><div id="best-seasons" class="space-y-1"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-3 flex items-center gap-2">🚽 Worst Seasons</h3><div id="worst-seasons" class="space-y-1"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-3 flex items-center gap-2">💥 Biggest Blowouts</h3><div id="biggest-blowouts" class="space-y-1"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-3 flex items-center gap-2">🤏 Closest Games</h3><div id="closest-games" class="space-y-1"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-3 flex items-center gap-2">🔫 Biggest Shootouts</h3><div id="biggest-shootouts" class="space-y-1"></div></div>
+                    <div class="card"><h3 class="text-lg font-semibold text-orange-500 mb-3 flex items-center gap-2">⭐ Highest Scoring Players</h3><div id="highest-scoring-players" class="space-y-1"></div></div>
+                 </div>
+            </div>
+
+            <div id="h2h-content" class="tab-pane hidden">
+                <div class="card">
+                    <h2 class="text-xl font-bold mb-4 text-orange-500">Head-to-Head Comparison</h2>
+                    <div class="flex flex-col sm:flex-row gap-4 items-center mb-6">
+                        <select id="manager1-select" class="bg-gray-900 border border-gray-700 rounded-md p-2 w-full sm:w-1/2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"></select>
+                        <span class="font-bold text-lg">VS</span>
+                        <select id="manager2-select" class="bg-gray-900 border border-gray-700 rounded-md p-2 w-full sm:w-1/2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"></select>
+                    </div>
+                    <div id="h2h-result" class="text-center p-4">
+                        <p class="text-gray-400">Please select two members to compare head-to-head</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="legacies-content" class="tab-pane hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card">
+                        <h2 class="text-xl font-bold mb-4 text-orange-500">Ring Chasers</h2>
+                        <p class="text-sm text-gray-400 mb-6">Players with the most appearances in the championship.</p>
+                        <div id="player-legacies-list" class="space-y-4">
+                            </div>
+                    </div>
+                    <div class="card">
+                        <h2 class="text-xl font-bold mb-4 text-orange-500">Loyalty Club</h2>
+                        <p class="text-sm text-gray-400 mb-6">Players we just can't quit. (Kept or Drafted twice in a row)</p>
+                        <div id="most-kept-players-list" class="space-y-4">
+                            </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="rosters-content" class="tab-pane hidden">
+                <div class="card">
+                     <div id="championship-rosters-list">
+                        </div>
+                </div>
+            </div>
+
+            <div id="rules-content" class="tab-pane hidden">
+                <div class="card prose prose-invert max-w-none text-gray-300">
+                    <h2 class="text-2xl font-bold text-white mb-6">League Constitution</h2>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="text-xl font-semibold mb-3">League Rules</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>No collusion or roster dumping.</li>
+                                <li>Always field a full lineup; exceptions can be made when dealing with a significant number of injuries.</li>
+                                <li>No rule changes will be made mid-season without a unanimous-minus-one vote.</li>
+                                <li>Waivers use a Free Agent Acquisition Budget (FAAB) auction system with a yearly budget of $100. $0 bids are permitted.</li>
+                                <li><strong>$100 Buy-in.</strong> Payouts are as follows:
+                                    <ul class="list-disc list-inside ml-6 mt-1">
+                                        <li>League Champion: $650</li>
+                                        <li>Runner-Up: $150</li>
+                                        <li>3rd Place: $35</li>
+                                        <li>Highest Scorer of the Week (regular season): $10</li>
+                                        <li>Winner of the Weekly Prop: $15</li>
+                                    </ul>
+                                </li>
+                                <li>The loser of the toilet bowl must choose their punishment from a list of options or similar concepts, such as: a tattoo chosen by the champion, a beer mile, stand-up comedy at an open mic, filming a music video, shaving off eyebrows, or staying at a designated location from 8 AM to 1 AM (each alcoholic drink consumed reduces the time by 15 or 30 minutes- loser's choice).</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h3 class="text-xl font-semibold mb-3">Keeper Rules</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>You may keep a maximum of three players but are not required to keep any.</li>
+                                <li>Players are kept for one round higher than where they were drafted and replace your pick in that round.</li>
+                                <li>If you do not have the required draft pick, you must use a higher-round pick to keep the player.</li>
+                                <li>You may trade for a pick in the round you wish to keep a player in, but it must be done before the draft order has been finalized.</li>
+                                <li>If you wish to keep two players in the same round, you may trade for an additional pick in that round. This can be done before or after the draft order is decided.</li>
+                                <li>Undrafted players on a roster at the end of the year can be kept. Their keeper cost will be two rounds below their end-of-season ADP (based on the league platform).</li>
+                                <li>Drafted players who are dropped or traded retain their original draft position for keeper purposes.</li>
+                                <li>Players can only be kept for a maximum of two consecutive years after their initial draft.</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h3 class="text-xl font-semibold mb-3">Trade Rules</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>Trading of draft picks and FAAB budget is allowed.</li>
+                                <li>Trade deadline for draft picks: End of Week 7.</li>
+                                <li>Trade deadline for players: End of Week 10.</li>
+                                <li>Trades are processed instantly upon acceptance by both parties.</li>
+                                <li>No "rental" trades (i.e., trading a player with the agreement to trade them back later).</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="earnings-content" class="tab-pane hidden">
+                <div class="card mb-6 max-w-3xl mx-auto">
+                    <h2 class="text-xl font-bold mb-4 text-orange-500">Lifetime Winnings 💰</h2>
+                    <div id="earnings-leaderboard" class="space-y-3">
+                        </div>
+                </div>
+                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="card lg:col-span-2">
+                         <h2 class="text-xl font-bold mb-4 text-orange-500">Yearly Payouts</h2>
+                         <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="border-b border-gray-700">
+                                    <tr>
+                                        <th class="text-left py-2 text-xs font-medium text-gray-400 uppercase">Manager</th>
+                                        <th class="text-right py-2 text-xs font-medium text-gray-400 uppercase">2021</th>
+                                        <th class="text-right py-2 text-xs font-medium text-gray-400 uppercase">2022</th>
+                                        <th class="text-right py-2 text-xs font-medium text-gray-400 uppercase">2023</th>
+                                        <th class="text-right py-2 text-xs font-medium text-gray-400 uppercase">2024</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="earnings-breakdown" class="divide-y divide-gray-800">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                     <div class="space-y-6">
+                        <div class="card">
+                             <h2 class="text-xl font-bold mb-4 text-orange-500">Prop Wins</h2>
+                            <div id="prop-leaderboard" class="space-y-2"></div>
+                        </div>
+                        <div class="card">
+                             <h2 class="text-xl font-bold mb-4 text-orange-500">Highest Scorer Wins</h2>
+                            <div id="highscore-leaderboard" class="space-y-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trade Log Tab -->
+            <div id="tradelog-content" class="tab-pane hidden">
+                <div class="card">
+                    <div id="trade-log-list">
+                        <!-- Trade logs will be injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAAB History Tab -->
+            <div id="faab-content" class="tab-pane hidden">
+                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="card lg:col-span-2">
+                        <h2 class="text-xl font-bold mb-4 text-orange-500">Most Expensive Acquisitions</h2>
+                         <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-800">
+                                <thead class="bg-gray-900/50">
+                                    <tr>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Pos</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Player</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Manager</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Amount</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Season</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="faab-acquisitions-body" class="divide-y divide-gray-800">
+                                    <!-- Rows will be injected here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="card">
+                            <h2 class="text-xl font-bold mb-4 text-orange-500">Biggest Ballers 🤑</h2>
+                            <div id="faab-ballers-list" class="space-y-3">
+                                <!-- Ballers will be injected here -->
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h2 class="text-xl font-bold mb-4 text-orange-500">Frugal Heroes 📉</h2>
+                            <div id="faab-frugal-list" class="space-y-3">
+                                <!-- Frugal heroes will be injected here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="toilet-content" class="tab-pane hidden">
+                <div class="card">
+                    <div class="max-w-none text-gray-300">
+                        <h2 class="text-2xl font-bold text-white mb-6">Toilet Bowl Punishment History</h2>
+                        <p class="mb-4 text-gray-300">These poor, toilet-bowl-losing souls, spent the first week of the NFL season camped out at the Anchor from dusk til' dawn. A mere 15-30 minutes taken off their sentence for every drink they consumed.</p>
+                        
+                        <h3 class="text-xl font-semibold mb-3 text-orange-500">⚓ Departure Ledger ⚓</h3>
+                        <div class="space-y-4">
+                            <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-700 flex items-center justify-between flex-wrap gap-2 cursor-pointer hover:border-orange-500 transition-colors" data-gallery="2024">
+                                <div>
+                                    <span class="font-bold text-lg text-orange-400">2024:</span>
+                                    <span class="ml-2 font-semibold text-white">Johnny</span>
+                                </div>
+                                <div class="text-right">
+									<span class="text-xl">13🍺</span>
+                                    <br>
+                                    <span class="text-xs text-gray-400">left at 7:15pm</span>
+                                </div>
+                            </div>
+                            <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-700 flex items-center justify-between flex-wrap gap-2 cursor-pointer hover:border-orange-500 transition-colors" data-gallery="2023">
+                                <div>
+                                    <span class="font-bold text-lg text-orange-400">2023:</span>
+                                    <span class="ml-2 font-semibold text-white">Andrew</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xl">17🍺</span>
+                                    <br>
+                                    <span class="text-xs text-gray-400">left at 8:45 PM</span>
+                                </div>
+                            </div>
+                            <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-700 flex items-center justify-between flex-wrap gap-2 cursor-pointer hover:border-orange-500 transition-colors" data-gallery="2022">
+                                <div>
+                                    <span class="font-bold text-lg text-orange-400">2022:</span>
+                                    <span class="ml-2 font-semibold text-white">Adam</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xl">14🍺</span>
+                                    <br>
+                                    <span class="text-xs text-gray-400">left at 9:30 PM</span>
+                                </div>
+                            </div>
+                            <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-700 flex items-center justify-between flex-wrap gap-2 cursor-pointer hover:border-orange-500 transition-colors" data-gallery="2021">
+                                <div>
+                                    <span class="font-bold text-lg text-orange-400">2021:</span>
+                                    <span class="ml-2 font-semibold text-white">Adam</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xl">11🍺 + 1🌿</span>
+                                    <br>
+                                    <span class="text-xs text-gray-400">left at 10:00 PM</span>
+                                </div>
+                            </div>
+                        </div>
+                        <hr class="border-gray-700 my-8">
+                        <div id="toilet-bowl-games">
+                            <!-- Toilet Bowl game details will be injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+        
+        <footer class="text-center mt-12 py-6 border-t-2 border-orange-500 text-xs text-gray-500 space-y-2">
+            <p>Beverly Fantasy Official Website • Engineered and Maintained by Commissioner Dooling • Established in 2025 • All Statistics Certified Accurate*</p>
+            <p class="italic">*Results not guaranteed.</p>
+        </footer>
+    </div>
+    
+    <!-- Avatar Modal -->
+    <div id="avatar-modal" class="fixed inset-0 bg-black bg-opacity-85 flex justify-center items-center z-[100] hidden p-4 transition-opacity duration-300">
+        <div class="relative">
+            <img id="avatar-modal-img" src="" alt="Expanded Avatar" class="max-w-[80vw] max-h-[80vh] rounded-full border-4 border-orange-500 shadow-2xl">
+            <button id="avatar-modal-close" class="absolute -top-2 -right-2 bg-white text-black rounded-full h-8 w-8 flex items-center justify-center font-bold text-lg leading-none">&times;</button>
+        </div>
+    </div>
+
+    <!-- Punishment Gallery Modal -->
+    <div id="gallery-modal" class="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-[100] hidden p-4 transition-opacity duration-300">
+        <div class="relative w-full max-w-4xl h-full max-h-[90vh] flex items-center justify-center">
+            <img id="gallery-modal-img" src="" alt="Punishment Evidence" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
+
+            <button id="gallery-modal-close" class="absolute top-0 right-0 m-4 bg-white text-black rounded-full h-10 w-10 flex items-center justify-center font-bold text-2xl leading-none">&times;</button>
+
+            <button id="gallery-prev" class="absolute left-0 ml-2 md:ml-5 bg-white/30 hover:bg-white/50 text-black rounded-full h-12 w-12 flex items-center justify-center font-bold text-3xl leading-none backdrop-blur-sm">&lsaquo;</button>
+            <button id="gallery-next" class="absolute right-0 mr-2 md:mr-5 bg-white/30 hover:bg-white/50 text-black rounded-full h-12 w-12 flex items-center justify-center font-bold text-3xl leading-none backdrop-blur-sm">&rsaquo;</button>
+
+            <div id="gallery-counter" class="absolute bottom-0 mb-4 bg-black/50 text-white text-sm px-3 py-1 rounded-full"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const leagueId = '1180633944818466816';
+            const loader = document.getElementById('loader');
+            const app = document.getElementById('app');
+            const tabs = document.querySelectorAll('.tab-button');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+
+            const managerInfoMap = {
+                'seanrich3': { name: 'Sean Richardson', avatar: '/assets/sean.jpg' },
+                'mzeroka': { name: 'Malcolm Zeroka', avatar: '/assets/Malcolm.jpg' },
+                'loperz': { name: 'Matt Pitman', avatar: '/assets/pitman.png' },
+                'kpflats': { name: 'Kevin Flaherty', avatar: '/assets/kev.jpg' },
+                'brianharty': { name: 'Brian Harty', avatar: '/assets/brian.png' },
+                'manzom': { name: 'Matt Manzo', avatar: '/assets/Manzo.png' },
+                'wgd': { name: 'Will Dooling', avatar: '/assets/will.png' },
+                'ajohnstone34': { name: 'Andrew Johnstone', avatar: '/assets/andy.jpg' },
+                'archmaesterebrose': { name: 'Adam Ellis', avatar: '/assets/adam.png' },
+                'cademarc': { name: 'Connor Cademartori', avatar: '/assets/connor.jpg' },
+                'patgavin': { name: 'Patrick Gavin', avatar: '/assets/pat.png' },
+                'jonesj83': { name: 'Johnny Jones', avatar: '/assets/johhny.png' }
+            };
+
+            const punishmentGalleries = {
+                '2023': ['/assets/andyanchor.jpeg', '/assets/andyanchor2.jpeg'],
+                '2022': ['/assets/adam2anchor.jpeg'],
+                '2021': ['/assets/anchoradam1.jpeg', '/assets/anchoradam2.jpeg', '/assets/anchoradam3.jpeg'],
+				'2024': ['/assets/johnanchor.JPEG', '/assets/johnanchor2.JPEG', '/assets/johnanchor3.JPEG']
+            };
+            let currentGalleryImages = [];
+            let currentGalleryIndex = 0;
+
+            const managersData = {};
+            let nflPlayers = {};
+            const playerLegacyData = {};
+            const mostKeptPlayers = {};
+            let previousSeasonRosters = [];
+            let championshipRostersData = [];
+            let seasonalData = {};
+            let h2hMatchups = {};
+            let allTrades = {};
+            let allRosters = {};
+            let allFaabBids = [];
+            let reigningChampId = null;
+            let toiletBowlData = [];
+
+            const positionTextColors = { QB: 'text-rose-300', RB: 'text-emerald-300', WR: 'text-sky-300', TE: 'text-amber-300', K: 'text-fuchsia-300', DEF: 'text-orange-300' };
+
+            const allTimeRecords = {
+                topWeeklyScores: [], topSeasonScores: [], lowestWeeklyScores: [], lowestSeasonScores: [], 
+                topSeasonRecords: [], bottomSeasonRecords: [], biggestBlowouts: [], closestGames: [],
+                biggestShootouts: [], topPlayerScores: [],
+            };
+
+            const allWeeklyScores = [], allSeasonScores = [], allSeasonRecords = [],
+                  allMatchupDetails = [], allPlayerScores = [];
+
+            const formatYear = (year) => year;
+            
+            // --- Avatar Modal Logic ---
+            const expandAvatar = (src) => {
+                const modal = document.getElementById('avatar-modal');
+                const modalImg = document.getElementById('avatar-modal-img');
+                if (modal && modalImg) {
+                    modalImg.src = src;
+                    modal.classList.remove('hidden');
+                }
+            };
+            // Make it globally accessible for inline onclick handlers
+            window.expandAvatar = expandAvatar; 
+            
+            document.getElementById('avatar-modal-close').addEventListener('click', () => {
+                document.getElementById('avatar-modal').classList.add('hidden');
+            });
+            document.getElementById('avatar-modal').addEventListener('click', (e) => {
+                // Hide modal if user clicks on the background, but not on the image itself
+                if (e.target.id === 'avatar-modal') {
+                     document.getElementById('avatar-modal').classList.add('hidden');
+                }
+            });
+
+
+             const getDisplayNameWithCrown = (managerId) => {
+                const manager = managersData[managerId];
+                if (!manager) return 'Unknown Manager';
+                let name = manager.displayName;
+                if (manager.userId === reigningChampId) {
+                    name += ' <span title="Reigning Champ">👑</span>';
+                }
+                return name;
+            };
+
+            const fetchWithRetry = async (url, retries = 3, delay = 1000) => {
+                for (let i = 0; i < retries; i++) {
+                    try {
+                        const response = await fetch(url);
+                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                        return await response.json();
+                    } catch (error) {
+                        console.warn(`Attempt ${i + 1} failed for ${url}. Retrying in ${delay}ms...`);
+                        if (i === retries - 1) throw error;
+                        await new Promise(res => setTimeout(res, delay));
+                        delay *= 2;
+                    }
+                }
+            };
+
+            const fetchNflPlayers = async () => {
+                try {
+                    nflPlayers = await fetchWithRetry('https://api.sleeper.app/v1/players/nfl');
+                } catch (error) {
+                    console.error("Failed to fetch NFL player data:", error);
+                }
+            };
+
+            const setupIntersectionObserver = () => {
+                const cards = document.querySelectorAll('.card');
+                if ('IntersectionObserver' in window) {
+                    const observerOptions = {
+                        root: null, // relative to the viewport
+                        rootMargin: '0px',
+                        threshold: 0.6 // Card "pops" when 60% is visible
+                    };
+
+                    const observer = new IntersectionObserver((entries, observer) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                entry.target.classList.add('in-view');
+                            } else {
+                                entry.target.classList.remove('in-view');
+                            }
+                        });
+                    }, observerOptions);
+
+                    cards.forEach(card => {
+                        observer.observe(card);
+                    });
+                }
+            };
+
+            const setupPunishmentGallery = () => {
+                const modal = document.getElementById('gallery-modal');
+                const modalImg = document.getElementById('gallery-modal-img');
+                const closeBtn = document.getElementById('gallery-modal-close');
+                const prevBtn = document.getElementById('gallery-prev');
+                const nextBtn = document.getElementById('gallery-next');
+                const counter = document.getElementById('gallery-counter');
+                const ledgerEntries = document.querySelectorAll('[data-gallery]');
+
+                const showGalleryImage = (index) => {
+                    currentGalleryIndex = index;
+                    modalImg.src = currentGalleryImages[index];
+                    counter.textContent = `${index + 1} / ${currentGalleryImages.length}`;
+
+                    prevBtn.style.display = index > 0 ? 'flex' : 'none';
+                    nextBtn.style.display = index < currentGalleryImages.length - 1 ? 'flex' : 'none';
+                    counter.style.display = currentGalleryImages.length > 1 ? 'block' : 'none';
+                };
+
+                const openGallery = (galleryKey) => {
+                    currentGalleryImages = punishmentGalleries[galleryKey];
+                    if (!currentGalleryImages || currentGalleryImages.length === 0) return;
+                    
+                    modal.classList.remove('hidden');
+                    showGalleryImage(0);
+                };
+                
+                const closeGallery = () => {
+                    modal.classList.add('hidden');
+                    modalImg.src = ''; // Clear image to stop loading
+                };
+
+                ledgerEntries.forEach(entry => {
+                    entry.addEventListener('click', () => {
+                        openGallery(entry.dataset.gallery);
+                    });
+                });
+
+                nextBtn.addEventListener('click', () => {
+                    if (currentGalleryIndex < currentGalleryImages.length - 1) {
+                        showGalleryImage(currentGalleryIndex + 1);
+                    }
+                });
+
+                prevBtn.addEventListener('click', () => {
+                    if (currentGalleryIndex > 0) {
+                        showGalleryImage(currentGalleryIndex - 1);
+                    }
+                });
+
+                closeBtn.addEventListener('click', closeGallery);
+                modal.addEventListener('click', (e) => {
+                    if (e.target.id === 'gallery-modal') {
+                        closeGallery();
+                    }
+                });
+            };
+
+            const init = async () => {
+                try {
+                    loader.classList.remove('hidden');
+                    app.classList.add('hidden');
+                    
+                    await fetchNflPlayers();
+
+                    let currentLeagueId = leagueId;
+                    let allSeasonsData = [];
+                    previousSeasonRosters = [];
+
+                    while (currentLeagueId) {
+                        const leagueData = await fetchWithRetry(`https://api.sleeper.app/v1/league/${currentLeagueId}`);
+                        allSeasonsData.unshift(leagueData);
+                        currentLeagueId = leagueData.previous_league_id;
+                    }
+
+                    if (allSeasonsData.length === 0) throw new Error("No league data could be fetched.");
+                    
+                    const latestLeagueData = allSeasonsData[allSeasonsData.length - 1];
+                    updateLeagueInfo(latestLeagueData, allSeasonsData[0].season);
+
+                    for (const seasonData of allSeasonsData) {
+                        await processSeason(seasonData);
+                    }
+
+                    const lastCompletedSeason = new Date().getFullYear() - 1;
+                    const reigningChamp = Object.values(managersData).find(m => m.stats.championship_years.includes(lastCompletedSeason));
+                    if(reigningChamp) {
+                        reigningChampId = reigningChamp.userId;
+                    }
+
+                    calculateAndSortRecords();
+                    renderDashboard();
+                    setupTabs();
+                    setupH2HSelector();
+                    setupMyTeamSelector();
+                    setupIntersectionObserver(); 
+                    setupPunishmentGallery(); 
+
+                } catch (error) {
+                    console.error('Failed to initialize dashboard:', error);
+                    document.getElementById('league-name').textContent = 'Error Loading Data';
+                    document.getElementById('league-season').textContent = 'Could not fetch league data. Please check the League ID and try again.';
+                } finally {
+                    loader.classList.add('hidden');
+                    app.classList.remove('hidden');
+                }
+            };
+
+            const updatePlayerLegacy = (playerId, season, managerId, isWinner) => {
+                const playerInfo = nflPlayers[playerId];
+                if (!playerInfo) return;
+
+                if (!playerLegacyData[playerId]) {
+                    playerLegacyData[playerId] = {
+                        name: `${playerInfo.first_name} ${playerInfo.last_name}`,
+                        position: playerInfo.position, appearances: 0, history: []
+                    };
+                }
+                playerLegacyData[playerId].appearances++;
+                playerLegacyData[playerId].history.push({ season, managerId, isWinner });
+            };
+
+            const processSeason = async (leagueData) => {
+                const season = leagueData.season;
+                const users = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueData.league_id}/users`);
+                const rosters = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueData.league_id}/rosters`);
+                allRosters[season] = rosters;
+                seasonalData[season] = { totalTeams: users.length, league_id: leagueData.league_id };
+
+                const rosterIdToOwnerId = {};
+                rosters.forEach(r => { if (r.owner_id) rosterIdToOwnerId[r.roster_id] = r.owner_id; });
+
+                users.forEach(user => {
+                    if (!managersData[user.user_id]) {
+                        const usernameLower = user.display_name.toLowerCase();
+                        const customInfo = managerInfoMap[usernameLower];
+                        
+                        const displayName = customInfo ? customInfo.name : user.display_name;
+                        const avatar = customInfo ? customInfo.avatar : (user.avatar ? `https://sleepercdn.com/avatars/${user.avatar}` : 'https://placehold.co/48x48/1f2937/a0aec0?text=🏈');
+                        
+                        managersData[user.user_id] = {
+                            userId: user.user_id, displayName: displayName,
+                            avatar: avatar,
+                            stats: { wins: 0, losses: 0, ties: 0, pf: 0, pa: 0, championship_years: [], runner_up_years: [] },
+                            h2h: {}, rosteredPlayers: {}, pointsScoredAgainst: {},
+                            teamNameHistory: [], yearlyStandings: [], totalTransactions: 0, totalTrades: 0, yearlyStats: {}
+                        };
+                    }
+                    const managerData = managersData[user.user_id];
+                    if (managerData) {
+                        managerData.yearlyStats[season] = { pf: 0, pa: 0, transactions: 0, trades: 0 };
+                        const hasYear = managerData.teamNameHistory.some(t => t.year === season);
+                        if (!hasYear) {
+                            const teamName = user.metadata?.team_name || user.display_name;
+                            managerData.teamNameHistory.push({ year: season, name: teamName });
+                        }
+                    }
+                });
+                
+                if (previousSeasonRosters.length > 0) {
+                    rosters.forEach(currentRoster => {
+                        if (!currentRoster.owner_id || !currentRoster.players) return;
+                        const prevRoster = previousSeasonRosters.find(pr => pr.owner_id === currentRoster.owner_id);
+                        if (prevRoster && prevRoster.players) {
+                            const keptPlayerIds = currentRoster.players.filter(pId => prevRoster.players.includes(pId));
+                            const manager = managersData[currentRoster.owner_id];
+                            keptPlayerIds.forEach(playerId => {
+                                const playerInfo = nflPlayers[playerId];
+                                if (!playerInfo) return;
+                                if (!mostKeptPlayers[playerId]) {
+                                    mostKeptPlayers[playerId] = {
+                                        name: `${playerInfo.first_name} ${playerInfo.last_name}`,
+                                        position: playerInfo.position, count: 0, history: []
+                                    };
+                                }
+                                mostKeptPlayers[playerId].count++;
+                                mostKeptPlayers[playerId].history.push({ season, managerId: manager.userId });
+                            });
+                        }
+                    });
+                }
+                previousSeasonRosters = rosters;
+
+                for (const r of rosters) {
+                    if (r.owner_id) {
+                        const m = managersData[r.owner_id];
+                        if (!m) continue;
+                        m.stats.wins += r.settings.wins; m.stats.losses += r.settings.losses; m.stats.ties += r.settings.ties;
+                        const pf = parseFloat(`${r.settings.fpts}.${r.settings.fpts_decimal}`);
+                        const pa = parseFloat(`${r.settings.fpts_against}.${r.settings.fpts_against_decimal}`);
+                        m.stats.pf += pf; m.stats.pa += pa;
+                        m.yearlyStats[season].pf = pf;
+                        m.yearlyStats[season].pa = pa;
+                        allSeasonScores.push({ score: pf, managerId: m.userId, year: season });
+                        if (r.settings.wins + r.settings.losses > 0) {
+                             allSeasonRecords.push({ wins: r.settings.wins, losses: r.settings.losses, record: `${r.settings.wins}-${r.settings.losses}`, winPct: (r.settings.wins + r.settings.losses) > 0 ? r.settings.wins / (r.settings.wins + r.settings.losses) : 0, pf: pf, managerId: m.userId, year: season });
+                        }
+                    }
+                }
+
+                let ranksAssignedViaApi = rosters.some(r => r.owner_id && r.settings.rank);
+                if (ranksAssignedViaApi) {
+                    rosters.forEach(r => {
+                        if (r.owner_id && managersData[r.owner_id] && r.settings.rank) {
+                            const manager = managersData[r.owner_id];
+                            const hasYear = manager.yearlyStandings.some(s => s.year === season);
+                            if (!hasYear) manager.yearlyStandings.push({ year: season, rank: r.settings.rank });
+                        }
+                    });
+                } else if (rosters.some(r => r.owner_id)) {
+                    const seasonalStandings = rosters.filter(r => r.owner_id).map(r => ({ owner_id: r.owner_id, wins: r.settings.wins, pf: parseFloat(`${r.settings.fpts}.${r.settings.fpts_decimal}`) }));
+                    seasonalStandings.sort((a, b) => b.wins - a.wins || b.pf - a.pf);
+                    seasonalStandings.forEach((roster, index) => {
+                        const manager = managersData[roster.owner_id];
+                        if (manager) {
+                            const hasYear = manager.yearlyStandings.some(s => s.year === season);
+                            if (!hasYear) manager.yearlyStandings.push({ year: season, rank: index + 1 });
+                        }
+                    });
+                }
+
+                allTrades[season] = [];
+                for (let week = 1; week <= 18; week++) {
+                    try {
+                        const transactions = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueData.league_id}/transactions/${week}`);
+                        transactions.forEach(t => {
+                            if(t.type === 'trade' && t.status === 'complete') {
+                                allTrades[season].push(t);
+                                t.roster_ids.forEach(roster_id => {
+                                    const owner_id = rosterIdToOwnerId[roster_id];
+                                    if(owner_id && managersData[owner_id]) {
+                                        managersData[owner_id].totalTrades++;
+                                    }
+                                });
+                            }
+                            if(t.type === 'waiver' && t.status === 'complete' && t.settings.waiver_bid) {
+                                const rosterId = t.roster_ids[0];
+                                const ownerId = rosterIdToOwnerId[rosterId];
+                                if(ownerId) {
+                                    const manager = managersData[ownerId];
+                                    const playerId = Object.keys(t.adds)[0];
+                                    const player = nflPlayers[playerId];
+                                    if (manager && player) {
+                                        allFaabBids.push({
+                                            managerId: manager.userId,
+                                            player: `${player.first_name} ${player.last_name}`,
+                                            position: player.position,
+                                            amount: t.settings.waiver_bid,
+                                            season: season
+                                        });
+                                    }
+                                }
+                            }
+                            const rosterId = t.roster_ids[0];
+                            const ownerId = rosterIdToOwnerId[rosterId];
+                            if(ownerId && managersData[ownerId]) {
+                                managersData[ownerId].totalTransactions++;
+                                managersData[ownerId].yearlyStats[season].transactions++;
+                            }
+                        });
+                    } catch (e) {}
+                }
+                if (allTrades[season].length > 0) {
+                    allTrades[season].sort((a, b) => b.status_updated - a.status_updated);
+                }
+                
+                for (let week = 1; week <= 18; week++) {
+                     try {
+                        const matchups = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueData.league_id}/matchups/${week}`);
+                        
+                        matchups.forEach(matchup => {
+                            const ownerId = rosterIdToOwnerId[matchup.roster_id];
+                            if(!ownerId || !managersData[ownerId] || !matchup.players) return;
+                             matchup.players.forEach(pId => {
+                                 managersData[ownerId].rosteredPlayers[pId] = (managersData[ownerId].rosteredPlayers[pId] || 0) + 1;
+                             });
+                        });
+                        
+                        if (week < leagueData.settings.playoff_week_start) {
+                            const processedMatchupIds = new Set();
+                            matchups.forEach(matchup => {
+                                const ownerId = rosterIdToOwnerId[matchup.roster_id];
+                                if(!ownerId || !managersData[ownerId]) return;
+                                if (matchup.players_points) for (const pId in matchup.players_points) if(nflPlayers[pId]) allPlayerScores.push({ score: matchup.players_points[pId], name: `${nflPlayers[pId].first_name} ${nflPlayers[pId].last_name}`, position: nflPlayers[pId].position, team: nflPlayers[pId].team, managerId: ownerId, year: season, week });
+                                allWeeklyScores.push({ score: matchup.points, managerId: ownerId, year: season, week });
+                                const opponent = matchups.find(m => m.matchup_id === matchup.matchup_id && m.roster_id !== matchup.roster_id);
+                                if (opponent && !processedMatchupIds.has(matchup.matchup_id)) {
+                                     processedMatchupIds.add(matchup.matchup_id);
+                                     const oppId = rosterIdToOwnerId[opponent.roster_id];
+                                     if(!oppId || !managersData[oppId]) return;
+                                     const m1 = managersData[ownerId], m2 = managersData[oppId];
+
+                                     if(opponent.players_points) {
+                                         for (const [pId, pts] of Object.entries(opponent.players_points)) {
+                                             m1.pointsScoredAgainst[pId] = (m1.pointsScoredAgainst[pId] || 0) + pts;
+                                         }
+                                     }
+                                      if(matchup.players_points) {
+                                         for (const [pId, pts] of Object.entries(matchup.players_points)) {
+                                             m2.pointsScoredAgainst[pId] = (m2.pointsScoredAgainst[pId] || 0) + pts;
+                                         }
+                                     }
+
+                                    if(!m1.h2h[oppId]) m1.h2h[oppId] = { wins: 0, losses: 0, ties: 0 };
+                                    if(!m2.h2h[ownerId]) m2.h2h[ownerId] = { wins: 0, losses: 0, ties: 0 };
+
+                                    if (matchup.points > opponent.points) {
+                                        m1.h2h[oppId].wins++;
+                                        m2.h2h[ownerId].losses++;
+                                    } else if (matchup.points < opponent.points) {
+                                        m1.h2h[oppId].losses++;
+                                        m2.h2h[ownerId].wins++;
+                                    } else if (matchup.points > 0) {
+                                        m1.h2h[oppId].ties++;
+                                        m2.h2h[ownerId].ties++;
+                                    }
+                                     
+                                     allMatchupDetails.push({ season, week, manager1Id: ownerId, manager2Id: oppId, score1: matchup.points, score2: opponent.points, margin: Math.abs(matchup.points - opponent.points), totalScore: matchup.points + opponent.points});
+                                     const key = [ownerId, oppId].sort().join('-');
+                                     if(!h2hMatchups[key]) h2hMatchups[key] = [];
+                                     h2hMatchups[key].push({ season, week, m1: ownerId, m2: oppId, score1: matchup.points, score2: opponent.points, player_points1: matchup.players_points, player_points2: opponent.players_points});
+                                }
+                            });
+                        }
+                    } catch(e) {}
+                }
+
+                try {
+                    const bracket = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueData.league_id}/winners_bracket`);
+                    const finalRound = Math.max(...bracket.map(m => m.r));
+                    const championshipMatch = bracket.find(m => m.r === finalRound && m.p === 1);
+                    if (championshipMatch) {
+                        seasonalData[season].championFound = true;
+                        const wRoster = rosters.find(r => r.roster_id === championshipMatch.w), lRoster = rosters.find(r => r.roster_id === championshipMatch.l);
+                        const wId = rosterIdToOwnerId[championshipMatch.w], lId = rosterIdToOwnerId[championshipMatch.l];
+                        if (wId && managersData[wId]) managersData[wId].stats.championship_years.push(season);
+                        if (lId && managersData[lId]) managersData[lId].stats.runner_up_years.push(season);
+                        if (wRoster?.players) wRoster.players.forEach(pId => updatePlayerLegacy(pId, season, wId, true));
+                        if (lRoster?.players) lRoster.players.forEach(pId => updatePlayerLegacy(pId, season, lId, false));
+
+                        const championshipWeek = leagueData.settings.playoff_week_start + finalRound - 1;
+                        const championshipMatchups = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueData.league_id}/matchups/${championshipWeek}`);
+                        const winnerMatchup = championshipMatchups.find(m => m.roster_id === championshipMatch.w);
+                        const loserMatchup = championshipMatchups.find(m => m.roster_id === championshipMatch.l);
+                        
+                        const getRosterDetails = (starters, playerPoints) => {
+                            if (!starters) return [];
+                            return starters.map(pId => {
+                                const player = nflPlayers[pId];
+                                const score = playerPoints ? (playerPoints[pId] || 0) : 0;
+                                return player ? { name: `${player.first_name} ${player.last_name}`, position: player.position, score: score } : { name: 'Unknown Player', position: 'N/A', score: 0 };
+                            });
+                        };
+
+                        if (winnerMatchup && loserMatchup) {
+                            championshipRostersData.push({
+                                season: season, winnerId: wId, 
+                                winnerRoster: getRosterDetails(winnerMatchup.starters, winnerMatchup.players_points), 
+                                winnerScore: winnerMatchup.points,
+                                loserId: lId, 
+                                loserRoster: getRosterDetails(loserMatchup.starters, loserMatchup.players_points), 
+                                loserScore: loserMatchup.points
+                            });
+                        }
+                    }
+                } catch(e) { 
+                     console.warn(`Could not fetch bracket for ${season}. Falling back to roster ranks.`, e);
+                     const champRoster = rosters.find(r => r.settings.rank === 1), runnerUpRoster = rosters.find(r => r.settings.rank === 2);
+                     if (champRoster?.owner_id) managersData[champRoster.owner_id].stats.championship_years.push(season);
+                     if (runnerUpRoster?.owner_id) managersData[runnerUpRoster.owner_id].stats.runner_up_years.push(season);
+                     if (champRoster?.players) champRoster.players.forEach(pId => updatePlayerLegacy(pId, season, champRoster.owner_id, true));
+                     if (runnerUpRoster?.players) runnerUpRoster.players.forEach(pId => updatePlayerLegacy(pId, season, runnerUpRoster.owner_id, false));
+                }
+
+                // Do not fetch the losers bracket for 2021, as the data is incorrect. It will be manually added later.
+                if (String(season) !== '2021') {
+                    try {
+                        const losersBracket = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueData.league_id}/losers_bracket`);
+                        if (losersBracket && losersBracket.length > 0) {
+                            const finalLoserRound = Math.max(...losersBracket.map(m => m.r));
+                            const toiletBowlMatch = losersBracket.find(m => m.r === finalLoserRound);
+
+                            if (toiletBowlMatch) {
+                                const punishedRoster = rosters.find(r => r.roster_id === toiletBowlMatch.w);
+                                const safeRoster = rosters.find(r => r.roster_id === toiletBowlMatch.l);
+                                const punishedId = punishedRoster ? punishedRoster.owner_id : null;
+                                const safeId = safeRoster ? safeRoster.owner_id : null;
+
+                                const toiletBowlWeek = leagueData.settings.playoff_week_start + finalLoserRound - 1;
+                                const toiletBowlMatchups = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueData.league_id}/matchups/${toiletBowlWeek}`);
+
+                                const punishedMatchup = toiletBowlMatchups.find(m => m.roster_id === toiletBowlMatch.w);
+                                const safeMatchup = toiletBowlMatchups.find(m => m.roster_id === toiletBowlMatch.l);
+
+                                const getRosterDetails = (starters, playerPoints) => {
+                                    if (!starters) return [];
+                                    return starters.map(pId => {
+                                        const player = nflPlayers[pId];
+                                        const score = playerPoints ? (playerPoints[pId] || 0) : 0;
+                                        return player ? { name: `${player.first_name} ${player.last_name}`, position: player.position, score: score } : { name: 'Unknown Player', position: 'N/A', score: 0 };
+                                    });
+                                };
+
+                                if (punishedId && safeId && punishedMatchup && safeMatchup) {
+                                    toiletBowlData.push({
+                                        season: season,
+                                        punishedId: punishedId,
+                                        punishedRoster: getRosterDetails(punishedMatchup.starters, punishedMatchup.players_points),
+                                        punishedScore: punishedMatchup.points,
+                                        safeId: safeId,
+                                        safeRoster: getRosterDetails(safeMatchup.starters, safeMatchup.players_points),
+                                        safeScore: safeMatchup.points
+                                    });
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        console.warn(`Could not fetch losers bracket for ${season}.`, e);
+                    }
+                }
+            };
+
+            const updateLeagueInfo = (leagueData, startSeason) => {
+                document.getElementById('league-name').textContent = leagueData.name;
+                document.getElementById('league-season').textContent = `${startSeason} - ${new Date().getFullYear()}`;
+                if(leagueData.avatar) document.getElementById('league-avatar').src = `https://sleepercdn.com/avatars/${leagueData.avatar}`;
+            };
+            
+            const calculateAndSortRecords = () => {
+                const currentYear = new Date().getFullYear();
+
+                allTimeRecords.topWeeklyScores = [...allWeeklyScores].sort((a, b) => b.score - a.score).slice(0, 5);
+                allTimeRecords.topSeasonScores = [...allSeasonScores].sort((a, b) => b.score - a.score).slice(0, 5);
+                allTimeRecords.lowestWeeklyScores = [...allWeeklyScores].filter(s => s.score > 0 && s.year < currentYear).sort((a, b) => a.score - b.score).slice(0, 5);
+                allTimeRecords.lowestSeasonScores = [...allSeasonScores].filter(s => s.year < currentYear).sort((a, b) => a.score - b.score).slice(0, 5);
+                allTimeRecords.topSeasonRecords = [...allSeasonRecords].filter(r => r.year < currentYear).sort((a, b) => b.winPct - a.winPct || b.pf - a.pf).slice(0, 5);
+                allTimeRecords.bottomSeasonRecords = [...allSeasonRecords].filter(r => r.year < currentYear).sort((a, b) => a.winPct - b.winPct || a.pf - b.pf).slice(0, 5);
+                const blowoutsAndCloseGames = allMatchupDetails.map(m => ({...m, margin: Math.abs(m.score1 - m.score2)}));
+                allTimeRecords.biggestBlowouts = [...blowoutsAndCloseGames].sort((a,b) => b.margin - a.margin).slice(0,5);
+                allTimeRecords.closestGames = [...blowoutsAndCloseGames].filter(m => m.totalScore > 0).sort((a,b) => a.margin - b.margin).slice(0,5);
+                allTimeRecords.biggestShootouts = [...allMatchupDetails].sort((a,b) => b.totalScore - a.totalScore).slice(0,5);
+                allTimeRecords.topPlayerScores = [...allPlayerScores].sort((a,b) => b.score - a.score).slice(0,5);
+            };
+
+            const renderDashboard = () => {
+                renderPowerRankings();
+                renderTrophyCase();
+                renderAllTimeRecords();
+                renderPlayerLegacies();
+                renderMostKeptPlayers();
+                renderChampionshipRosters();
+                renderLifetimeEarnings();
+                renderTradeLog();
+                renderFaabHistory();
+                renderToiletBowlHistory();
+            };
+
+            const renderPowerRankings = () => {
+                const rankingsBody = document.getElementById('power-rankings-body');
+                rankingsBody.innerHTML = '';
+                const sortedManagers = Object.values(managersData).sort((a, b) => (b.stats.wins / (b.stats.wins + b.stats.losses) || 0) - (a.stats.wins / (a.stats.wins + a.stats.losses) || 0) || b.stats.pf - a.stats.pf);
+                sortedManagers.forEach((manager, index) => {
+                    const winPct = manager.stats.wins + manager.stats.losses > 0 ? ((manager.stats.wins / (manager.stats.wins + manager.stats.losses)) * 100).toFixed(1) + '%' : '0.0%';
+                    const recordHtml = `<span class="text-green-400 font-semibold">${manager.stats.wins}</span>-<span class="text-red-400">${manager.stats.losses}</span>`;
+                    const pointsHtml = `<span class="text-green-400 font-semibold">${manager.stats.pf.toFixed(2)}</span> / <span class="text-red-400">${manager.stats.pa.toFixed(2)}</span>`;
+                    rankingsBody.innerHTML += `<tr class="hover:bg-gray-800/50"><td class="px-4 py-3 whitespace-nowrap text-sm font-medium">${index + 1}</td><td class="px-4 py-3 whitespace-nowrap text-sm"><div class="flex items-center"><img onclick="expandAvatar(this.src)" class="h-8 w-8 rounded-full mr-3 object-cover border-2 border-orange-500 cursor-pointer hover:scale-110 transition-transform" src="${manager.avatar}" alt=""><div class="font-semibold">${getDisplayNameWithCrown(manager.userId)}</div></div></td><td class="px-4 py-3 whitespace-nowrap text-sm">${recordHtml}</td><td class="px-4 py-3 whitespace-nowrap text-sm">${winPct}</td><td class="px-4 py-3 whitespace-nowrap text-sm">${pointsHtml}</td></tr>`;
+                });
+            };
+
+            const renderTrophyCase = () => {
+                const trophyCase = document.getElementById('trophy-case'), runnerUps = document.getElementById('runner-ups'), toiletKingsDiv = document.getElementById('toilet-kings');
+                trophyCase.innerHTML = runnerUps.innerHTML = toiletKingsDiv.innerHTML = '';
+
+                // Champions
+                const champions = Object.values(managersData).filter(m => m.stats.championship_years.length > 0).sort((a, b) => b.stats.championship_years.length - a.stats.championship_years.length);
+                if (champions.length > 0) {
+                    champions.forEach(c => {
+                        const yearsHtml = c.stats.championship_years.map(y => `<p class="text-sm text-yellow-400">🏆 ${formatYear(y)}</p>`).join('');
+                        trophyCase.innerHTML += `<div class="flex items-center gap-3"><img onclick="expandAvatar(this.src)" src="${c.avatar}" class="w-10 h-10 rounded-full object-cover border-2 border-yellow-400 cursor-pointer hover:scale-110 transition-transform"><div><p class="font-semibold">${getDisplayNameWithCrown(c.userId)}</p>${yearsHtml}</div></div>`;
+                    });
+                } else {
+                    trophyCase.innerHTML = '<p class="text-gray-400">No champions yet!</p>';
+                }
+
+                // Runner Ups
+                const secondPlace = Object.values(managersData).filter(m => m.stats.runner_up_years.length > 0).sort((a, b) => b.stats.runner_up_years.length - a.stats.runner_up_years.length);
+                if (secondPlace.length > 0) {
+                     runnerUps.innerHTML += '<h3 class="text-lg font-semibold text-gray-400 mb-2 border-t border-gray-700 pt-4">Runner Ups 🥈</h3>'
+                     secondPlace.forEach(m => {
+                        const yearsHtml = m.stats.runner_up_years.map(y => `<p class="text-sm text-gray-300">😢 ${formatYear(y)}</p>`).join('');
+                        runnerUps.innerHTML += `<div class="flex items-center gap-3"><img onclick="expandAvatar(this.src)" src="${m.avatar}" class="w-10 h-10 rounded-full object-cover border-2 border-gray-400 cursor-pointer hover:scale-110 transition-transform"><div><p class="font-semibold">${getDisplayNameWithCrown(m.userId)}</p>${yearsHtml}</div></div>`;
+                    });
+                }
+
+                // Toilet Kings (Manual Data)
+                const toiletKingData = [
+                    { year: 2021, name: 'Adam Ellis' }, { year: 2022, name: 'Adam Ellis' },
+                    { year: 2023, name: 'Andrew Johnstone' }, { year: 2024, name: 'Johnny Jones' }
+                ];
+                const toiletKingsByName = toiletKingData.reduce((acc, curr) => {
+                    if (!acc[curr.name]) acc[curr.name] = [];
+                    acc[curr.name].push(curr.year);
+                    return acc;
+                }, {});
+
+                if (Object.keys(toiletKingsByName).length > 0) {
+                    toiletKingsDiv.innerHTML += '<h3 class="text-lg font-semibold text-amber-800 mb-2 border-t border-gray-700 pt-4">Toilet King 🚽</h3>';
+                    Object.entries(toiletKingsByName).forEach(([managerName, years]) => {
+                        const manager = Object.values(managersData).find(m => m.displayName === managerName);
+                        if (manager) {
+                            const yearsHtml = years.map(y => `<p class="text-sm text-gray-300">💩 ${formatYear(y)}</p>`).join('');
+                            toiletKingsDiv.innerHTML += `<div class="flex items-center gap-3"><img onclick="expandAvatar(this.src)" src="${manager.avatar}" class="w-10 h-10 rounded-full object-cover border-2 border-amber-700 cursor-pointer hover:scale-110 transition-transform"><div><p class="font-semibold">${getDisplayNameWithCrown(manager.userId)}</p>${yearsHtml}</div></div>`;
+                        }
+                    });
+                }
+            };
+            
+            const renderAllTimeRecords = () => {
+                const createRecordHTML = (record, value, context) => {
+                    const manager = managersData[record.managerId];
+                    if (!manager) return '';
+                    return `
+                        <div class="flex items-center justify-between py-2.5 border-b border-gray-800 last:border-b-0 hover:bg-gray-800/50 -mx-4 px-4 rounded-md">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <img onclick="expandAvatar(this.src)" src="${manager.avatar}" class="w-9 h-9 rounded-full object-cover flex-shrink-0 border-2 border-orange-500 cursor-pointer hover:scale-110 transition-transform" alt="${manager.displayName}">
+                                <div class="min-w-0">
+                                    <p class="text-sm font-semibold truncate">${getDisplayNameWithCrown(record.managerId)}</p>
+                                    <p class="text-xs text-gray-400">${context}</p>
+                                </div>
+                            </div>
+                            <span class="font-bold text-lg text-white ml-2">${value}</span>
+                        </div>`;
+                };
+
+                const createMatchupHTML = (match, label, value) => {
+                    const manager1 = managersData[match.manager1Id];
+                    const manager2 = managersData[match.manager2Id];
+                    if (!manager1 || !manager2) return '';
+                    return `
+                        <div class="py-2.5 border-b border-gray-800 last:border-b-0 hover:bg-gray-800/50 -mx-4 px-4 rounded-md">
+                            <div class="flex items-center text-sm mb-1">
+                                <div class="flex items-center gap-2 flex-1 min-w-0">
+                                   <img onclick="expandAvatar(this.src)" src="${manager1.avatar}" class="w-6 h-6 rounded-full object-cover border-2 border-orange-500 cursor-pointer hover:scale-110 transition-transform" alt="${manager1.displayName}">
+                                   <span class="font-semibold truncate">${getDisplayNameWithCrown(match.manager1Id)}</span>
+                                </div>
+                                <span class="text-xs text-gray-400 px-2">vs</span>
+                                <div class="flex items-center gap-2 flex-1 min-w-0 justify-end">
+                                   <span class="font-semibold truncate text-right">${getDisplayNameWithCrown(match.manager2Id)}</span>
+                                   <img onclick="expandAvatar(this.src)" src="${manager2.avatar}" class="w-6 h-6 rounded-full object-cover border-2 border-orange-500 cursor-pointer hover:scale-110 transition-transform" alt="${manager2.displayName}">
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <p class="font-bold text-lg">${match.score1.toFixed(2)} – ${match.score2.toFixed(2)}</p>
+                                <p class="text-xs text-gray-400">${formatYear(match.season)}, Wk ${match.week} (${label}: <span class="font-semibold text-gray-300">${value.toFixed(2)}</span>)</p>
+                            </div>
+                         </div>`;
+                };
+
+                const createPlayerRecordHTML = (p) => {
+                    const manager = managersData[p.managerId];
+                    if (!manager) return '';
+                    return `
+                        <div class="py-2.5 border-b border-gray-800 last:border-b-0 hover:bg-gray-800/50 -mx-4 px-4 rounded-md">
+                            <div class="flex items-center justify-between">
+                                 <div class="min-w-0">
+                                    <p class="font-semibold text-white truncate">${p.name} <span class="text-sm font-normal text-gray-400">(${p.position}, ${p.team || 'FA'})</span></p>
+                                     <p class="text-xs text-gray-400 truncate mt-1">for ${getDisplayNameWithCrown(p.managerId)} in ${formatYear(p.year)}, Wk ${p.week}</p>
+                                 </div>
+                                 <span class="font-bold text-lg text-white ml-2">${p.score.toFixed(2)}</span>
+                            </div>
+                        </div>`;
+                };
+
+                const populate = (elementId, data, htmlGenerator) => {
+                    const container = document.getElementById(elementId);
+                    container.innerHTML = data.length > 0 ? data.map(htmlGenerator).join('') : '<p class="text-sm text-gray-500 text-center py-4">Not enough data yet.</p>';
+                };
+
+                populate('highest-season-scores', allTimeRecords.topSeasonScores, r => createRecordHTML(r, r.score.toFixed(2), formatYear(r.year)));
+                populate('lowest-season-scores', allTimeRecords.lowestSeasonScores, r => createRecordHTML(r, r.score.toFixed(2), formatYear(r.year)));
+                populate('highest-weekly-scores', allTimeRecords.topWeeklyScores, r => createRecordHTML(r, r.score.toFixed(2), `${formatYear(r.year)}, Wk ${r.week}`));
+                populate('lowest-weekly-scores', allTimeRecords.lowestWeeklyScores, r => createRecordHTML(r, r.score.toFixed(2), `${formatYear(r.year)}, Wk ${r.week}`));
+                populate('best-seasons', allTimeRecords.topSeasonRecords, r => createRecordHTML(r, r.record, formatYear(r.year)));
+                populate('worst-seasons', allTimeRecords.bottomSeasonRecords, r => createRecordHTML(r, r.record, formatYear(r.year)));
+                populate('biggest-blowouts', allTimeRecords.biggestBlowouts, m => createMatchupHTML(m, 'Margin', m.margin));
+                populate('closest-games', allTimeRecords.closestGames, m => createMatchupHTML(m, 'Margin', m.margin));
+                populate('biggest-shootouts', allTimeRecords.biggestShootouts, m => createMatchupHTML(m, 'Total', m.totalScore));
+                populate('highest-scoring-players', allTimeRecords.topPlayerScores, p => createPlayerRecordHTML(p));
+            };
+
+            const renderPlayerLegacies = () => {
+                const listDiv = document.getElementById('player-legacies-list');
+                const sortedPlayers = Object.values(playerLegacyData).filter(p => p.appearances > 1).sort((a, b) => b.appearances - a.appearances);
+                if (sortedPlayers.length === 0) { listDiv.innerHTML = '<p class="text-gray-400">Not enough data yet.</p>'; return; }
+                listDiv.innerHTML = sortedPlayers.slice(0, 10).map((player) => `
+                    <div class="flex items-center bg-gray-900/50 p-4 rounded-lg border border-gray-700 mb-3">
+                        <div class="flex flex-col items-center justify-center w-20">
+                            <span class="text-5xl font-extrabold text-orange-500">${player.appearances}</span>
+                            <span class="text-xs text-gray-400 -mt-1">APPEARANCES</span>
+                        </div>
+                        <div class="border-l border-gray-600 pl-4 ml-4 flex-grow">
+                            <h4 class="font-bold text-white text-lg">${player.name} <span class="text-base font-normal text-gray-400">(${player.position})</span></h4>
+                            <ul class="list-disc list-inside mt-1 space-y-1">
+                                ${player.history.map(h => `<li class="text-xs text-gray-400">${formatYear(h.season)} on ${getDisplayNameWithCrown(h.managerId)}'s team (${h.isWinner ? '🏆 Won' : '🥈 Lost'})</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `).join('');
+            };
+            
+            const renderMostKeptPlayers = () => {
+                const listDiv = document.getElementById('most-kept-players-list');
+                const sortedPlayers = Object.values(mostKeptPlayers).sort((a, b) => b.count - a.count);
+                if (sortedPlayers.length === 0) { listDiv.innerHTML = '<p class="text-gray-400">Not enough multi-season data yet.</p>'; return; }
+                listDiv.innerHTML = sortedPlayers.slice(0, 10).map((player) => `
+                     <div class="flex items-center bg-gray-900/50 p-4 rounded-lg border border-gray-700 mb-3">
+                        <div class="flex flex-col items-center justify-center w-20">
+                            <span class="text-5xl font-extrabold text-orange-500">${player.count}</span>
+                            <span class="text-xs text-gray-400 -mt-1">TIMES KEPT</span>
+                        </div>
+                        <div class="border-l border-gray-600 pl-4 ml-4 flex-grow">
+                            <h4 class="font-bold text-white text-lg">${player.name} <span class="text-base font-normal text-gray-400">(${player.position})</span></h4>
+                            <ul class="list-disc list-inside mt-1 space-y-1">
+                                ${player.history.map(h => `<li class="text-xs text-gray-400">Kept by ${getDisplayNameWithCrown(h.managerId)} for ${formatYear(h.season)}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `).join('');
+            };
+
+            const renderChampionshipRosters = () => {
+                const container = document.getElementById('championship-rosters-list');
+                container.innerHTML = '';
+                const sortedData = [...championshipRostersData].sort((a,b) => b.season - a.season);
+                const positionColors = { QB: 'bg-rose-500/10 text-rose-300 border-rose-500/30', RB: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30', WR: 'bg-sky-500/10 text-sky-300 border-sky-500/30', TE: 'bg-amber-500/10 text-amber-300 border-amber-500/30', K: 'bg-fuchsia-500/10 text-fuchsia-300 border-fuchsia-500/30', DEF: 'bg-orange-500/10 text-orange-300 border-orange-500/30' };
+                const manualScores = { 2021: { winner: 282.55, loser: 218.84 }, 2022: { winner: 171.76, loser: 168.00 } };
+                const formatChampYear = (year) => year;
+
+                if (sortedData.length === 0) { container.innerHTML = '<p class="text-gray-400 text-center">No championship roster data available yet.</p>'; return; }
+
+                let content = '';
+                sortedData.forEach(data => {
+                    const winner = managersData[data.winnerId], loser = managersData[data.loserId];
+                    if (!winner || !loser) return;
+
+                    const winnerScore = manualScores[data.season] ? manualScores[data.season].winner : data.winnerScore;
+                    const loserScore = manualScores[data.season] ? manualScores[data.season].loser : data.loserScore;
+                    
+                    const winnerRosterHtml = data.winnerRoster.map(p => `<li class="p-2 border ${positionColors[p.position] || 'bg-gray-700/20'} rounded flex justify-between items-center" title="${p.name} (${p.position})"><div>${p.name} <span class="text-gray-400 text-xs">(${p.position})</span></div> <span class="font-normal text-gray-400">${p.score.toFixed(2)}</span></li>`).join('') || '<li>Roster data not available.</li>';
+                    const loserRosterHtml = data.loserRoster.map(p => `<li class="p-2 border ${positionColors[p.position] || 'bg-gray-700/20'} rounded flex justify-between items-center" title="${p.name} (${p.position})"><div>${p.name} <span class="text-gray-400 text-xs">(${p.position})</span></div> <span class="font-normal text-gray-400">${p.score.toFixed(2)}</span></li>`).join('') || '<li>Roster data not available.</li>';
+
+                    let explainerHtml = '';
+                    if (String(data.season) === '2021') {
+                        explainerHtml = '<p class="text-xs text-gray-500 mt-4 text-center col-span-1 md:col-span-2 italic">*In 2021 the league had not yet added Sean Richardson or Pat Gavin, and was doing 2 week long championship matches.</p>';
+                    } else if (String(data.season) === '2022') {
+                        explainerHtml = '<p class="text-xs text-gray-500 mt-4 text-center col-span-1 md:col-span-2 italic">*This was the Damar Hamlin championship, Brian was trailing by 6.55 with Diggs playing at the time of the game being cancelled. Brian and Kevin came to an agreement to split a portion of the pot and extend their match into Week 18.</p>';
+                    }
+
+                    content += `
+                    <div class="mb-10">
+                        <h2 class="text-2xl md:text-3xl font-bold text-center mb-6 border-b border-gray-700 pb-2 text-yellow-400 cursor-pointer flex justify-center items-center gap-2" data-target="championship-game-${data.season}">
+                            <span>${formatChampYear(data.season)} Championship Game</span>
+                            <svg class="w-5 h-5 transform transition-transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </h2>
+                        <div id="championship-game-${data.season}" class="grid grid-cols-1 md:grid-cols-2 gap-8 game-details">
+                            <div class="bg-gray-900/50 p-4 rounded-lg border border-yellow-400/50">
+                                <div class="flex items-center gap-4 mb-3">
+                                    <img onclick="expandAvatar(this.src)" src="${winner.avatar}" class="w-12 h-12 rounded-full object-cover border-4 border-yellow-400 cursor-pointer hover:scale-110 transition-transform">
+                                    <div>
+                                        <h3 class="text-lg font-bold text-yellow-400">🏆 ${getDisplayNameWithCrown(winner.userId)}</h3>
+                                        <p class="text-sm text-gray-400">Starting Roster - ${winnerScore.toFixed(2)} points</p>
+                                    </div>
+                                </div>
+                                <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">${winnerRosterHtml}</ul>
+                            </div>
+                            <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-600/50">
+                                 <div class="flex items-center gap-4 mb-3">
+                                    <img onclick="expandAvatar(this.src)" src="${loser.avatar}" class="w-12 h-12 rounded-full object-cover border-4 border-gray-400 cursor-pointer hover:scale-110 transition-transform">
+                                    <div>
+                                        <h3 class="text-lg font-bold text-gray-300">🥈 ${getDisplayNameWithCrown(loser.userId)}</h3>
+                                        <p class="text-sm text-gray-400">Starting Roster - ${loserScore.toFixed(2)} points</p>
+                                    </div>
+                                </div>
+                                <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">${loserRosterHtml}</ul>
+                            </div>
+                            ${explainerHtml}
+                        </div>
+                    </div>
+                    `;
+                });
+
+                container.innerHTML = content;
+                container.querySelectorAll('h2[data-target]').forEach(header => {
+                    header.addEventListener('click', () => {
+                        const targetId = header.dataset.target;
+                        const targetElement = document.getElementById(targetId);
+                        const icon = header.querySelector('svg');
+                        if (targetElement) {
+                            targetElement.classList.toggle('hidden');
+                            icon.classList.toggle('rotate-180');
+                        }
+                    });
+                });
+            };
+
+            const renderLifetimeEarnings = () => {
+                 const earningsData = {
+                    'Will Dooling':      { 2021: 50,    2022: 35,    2023: 740,   2024: 57.5,  props: 8.5, highs: 6 },
+                    'Connor Cademartori': { 2021: 35,    2022: 35,    2023: 17.5,  2024: 30,    props: 3.5, highs: 6 },
+                    'Sean Richardson':    { 2021: 0,     2022: 45,    2023: 0,     2024: 175,   props: 2,   highs: 3 },
+                    'Malcolm Zeroka':     { 2021: 0,     2022: 0,     2023: 27.5,  2024: 732.5, props: 4,   highs: 5 },
+                    'Andrew Johnstone':   { 2021: 10,    2022: 65,    2023: 45,    2024: 25,    props: 6,   highs: 5 },
+                    'Patrick Gavin':      { 2021: 0,     2022: 50,    2023: 10,    2024: 15,    props: 3,   highs: 1 },
+                    'Matt Pitman':        { 2021: 40,    2022: 110,   2023: 105,   2024: 25,    props: 11,  highs: 7 },
+                    'Matt Manzo':         { 2021: 50,    2022: 87.5,  2023: 0,     2024: 120,   props: 5.5, highs: 4 },
+                    'Kevin Flaherty':     { 2021: 475,   2022: 495,   2023: 15,    2024: 0,     props: 3,   highs: 2 },
+                    'Johnny Jones':       { 2021: 0,     2022: 10,    2023: 150,   2024: 0,     props: 0,   highs: 1 },
+                    'Adam Ellis':         { 2021: 0,     2022: 10,    2023: 35,    2024: 0,     props: 0,   highs: 1 },
+                    'Brian Harty':        { 2021: 247.5, 2022: 257.5, 2023: 0,     2024: 150,   props: 3,   highs: 2 }
+                };
+
+                const leaderboardContainer = document.getElementById('earnings-leaderboard');
+                const breakdownContainer = document.getElementById('earnings-breakdown');
+                const propContainer = document.getElementById('prop-leaderboard');
+                const highscoreContainer = document.getElementById('highscore-leaderboard');
+
+                leaderboardContainer.innerHTML = breakdownContainer.innerHTML = propContainer.innerHTML = highscoreContainer.innerHTML = '';
+                
+                const totals = Object.entries(earningsData).map(([name, data]) => ({ name, total: (data[2021] || 0) + (data[2022] || 0) + (data[2023] || 0) + (data[2024] || 0) })).sort((a, b) => b.total - a.total);
+                const propTotals = Object.entries(earningsData).map(([name, data]) => ({ name, total: data.props })).sort((a, b) => b.total - a.total);
+                const highscoreTotals = Object.entries(earningsData).map(([name, data]) => ({ name, total: data.highs })).sort((a, b) => b.total - a.total);
+
+                const createLeaderboardHTML = (managerId, value, index, isMoney=false) => {
+                    const managerDetails = Object.values(managersData).find(m => m.userId === managerId);
+                    const avatar = managerDetails ? managerDetails.avatar : 'https://placehold.co/48x48/1f2937/a0aec0?text=🏈';
+                    return `
+                        <div class="flex items-center p-2 rounded-md hover:bg-gray-800/50">
+                            <div class="flex items-center gap-3 w-full">
+                                <span class="font-bold text-lg w-6 text-gray-400">${index + 1}.</span>
+                                <img onclick="expandAvatar(this.src)" src="${avatar}" class="w-8 h-8 rounded-full object-cover border-2 border-orange-500 cursor-pointer hover:scale-110 transition-transform">
+                                <span class="font-semibold text-sm flex-grow">${getDisplayNameWithCrown(managerId)}</span>
+                                 <span class="font-bold text-right ${isMoney ? 'text-green-400' : 'text-white'}">${isMoney ? '$' : ''}${isMoney ? value.toFixed(2) : value}</span>
+                            </div>
+                        </div>`;
+                };
+                
+                const managerNameIdMap = {};
+                Object.values(managersData).forEach(m => { managerNameIdMap[m.displayName] = m.userId; });
+
+                totals.forEach((manager, index) => leaderboardContainer.innerHTML += createLeaderboardHTML(managerNameIdMap[manager.name], manager.total, index, true));
+                propTotals.forEach((manager, index) => propContainer.innerHTML += createLeaderboardHTML(managerNameIdMap[manager.name], manager.total, index));
+                highscoreTotals.forEach((manager, index) => highscoreContainer.innerHTML += createLeaderboardHTML(managerNameIdMap[manager.name], manager.total, index));
+
+                Object.keys(earningsData).sort().forEach(managerName => {
+                    const yearlyData = earningsData[managerName];
+                    const managerId = managerNameIdMap[managerName];
+                    breakdownContainer.innerHTML += `
+                        <tr class="hover:bg-gray-800/50">
+                            <td class="py-3 pr-2 font-semibold text-sm whitespace-nowrap">${getDisplayNameWithCrown(managerId)}</td>
+                            <td class="py-3 px-2 text-right text-sm whitespace-nowrap">$${(yearlyData[2021] || 0).toFixed(2)}</td>
+                            <td class="py-3 px-2 text-right text-sm whitespace-nowrap">$${(yearlyData[2022] || 0).toFixed(2)}</td>
+                            <td class="py-3 px-2 text-right text-sm whitespace-nowrap">$${(yearlyData[2023] || 0).toFixed(2)}</td>
+                            <td class="py-3 pl-2 text-right text-sm whitespace-nowrap">$${(yearlyData[2024] || 0).toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+            };
+
+            const renderTradeLog = () => {
+                const listContainer = document.getElementById('trade-log-list');
+                if (!listContainer) return;
+
+                const getTradePieces = (trade, receiver_r_id) => {
+                    let pieces = [];
+                    const giver_r_id = trade.roster_ids.find(id => id !== receiver_r_id);
+
+                    if (trade.adds) {
+                        for (const [pId, rId] of Object.entries(trade.adds)) {
+                            if (rId === receiver_r_id) {
+                                const player = nflPlayers[pId];
+                                if (player) {
+                                    const posColor = positionTextColors[player.position] || 'text-gray-300';
+                                    pieces.push(`<span class="font-semibold ${posColor}">${player.first_name} ${player.last_name}</span> <span class="text-xs text-gray-400">(${player.position})</span>`);
+                                } else {
+                                    pieces.push('<span>Unknown Player</span>');
+                                }
+                            }
+                        }
+                    }
+                    if (trade.draft_picks) {
+                        for (const pick of trade.draft_picks) {
+                            if (pick.owner_id === receiver_r_id && pick.previous_owner_id === giver_r_id) {
+                                pieces.push(`<span class="inline-block bg-sky-500/10 text-sky-300 border border-sky-500/30 px-2 py-0.5 rounded text-xs font-semibold">
+                                    ${pick.season} Round ${pick.round} Pick</span>`);
+                            }
+                        }
+                    }
+                    if (trade.waiver_budget) {
+                        for (const budget of trade.waiver_budget) {
+                            if (budget.receiver === receiver_r_id && budget.sender === giver_r_id) {
+                                pieces.push(`<span class="inline-block bg-green-500/10 text-green-300 border border-green-500/30 px-2 py-0.5 rounded text-xs font-semibold">
+                                    $${budget.amount} FAAB</span>`);
+                            }
+                        }
+                    }
+                    return pieces;
+                };
+
+                const sortedSeasons = Object.keys(allTrades).sort((a, b) => b - a);
+                let content = '';
+
+                for (const season of sortedSeasons) {
+                    if (allTrades[season].length === 0) continue;
+
+                    let tradesHtml = '';
+                    for (const trade of allTrades[season]) {
+                        const [r_id1, r_id2] = trade.roster_ids;
+                        const rostersForSeason = allRosters[season] || [];
+                        const owner1_id = rostersForSeason.find(r => r.roster_id === r_id1)?.owner_id;
+                        const owner2_id = rostersForSeason.find(r => r.roster_id === r_id2)?.owner_id;
+                        const manager1 = owner1_id ? managersData[owner1_id] : null;
+                        const manager2 = owner2_id ? managersData[owner2_id] : null;
+
+                        if (!manager1 || !manager2) continue;
+
+                        const date = new Date(trade.status_updated).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+                        const piecesForManager1 = getTradePieces(trade, r_id1);
+                        const piecesForManager2 = getTradePieces(trade, r_id2);
+
+                        tradesHtml += `
+                            <div class="p-4 rounded-lg bg-gray-900/50 border border-gray-700">
+                                <p class="text-sm text-gray-400 mb-3">On <span class="font-semibold text-gray-300">${date}</span></p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 items-start text-sm">
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <img onclick="expandAvatar(this.src)" src="${manager1.avatar}" class="w-8 h-8 rounded-full object-cover border-2 border-orange-500 cursor-pointer hover:scale-110 transition-transform">
+                                            <p class="font-bold text-orange-400">${getDisplayNameWithCrown(manager1.userId)} received:</p>
+                                        </div>
+                                        <ul class="space-y-2 pl-2">
+                                            ${piecesForManager1.length > 0 ? piecesForManager1.map(p => `<li>${p}</li>`).join('') : '<li class="text-gray-500">Nothing</li>'}
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <img onclick="expandAvatar(this.src)" src="${manager2.avatar}" class="w-8 h-8 rounded-full object-cover border-2 border-orange-500 cursor-pointer hover:scale-110 transition-transform">
+                                            <p class="font-bold text-orange-400">${getDisplayNameWithCrown(manager2.userId)} received:</p>
+                                        </div>
+                                        <ul class="space-y-2 pl-2">
+                                            ${piecesForManager2.length > 0 ? piecesForManager2.map(p => `<li>${p}</li>`).join('') : '<li class="text-gray-500">Nothing</li>'}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>`;
+                    }
+                    
+                    content += `
+                        <div class="mb-6">
+                            <h3 class="text-xl font-bold text-orange-500 mb-3 cursor-pointer flex justify-between items-center" data-year="${season}">
+                                <span>${season} Trades (${allTrades[season].length})</span>
+                                <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </h3>
+                            <div class="space-y-4 pl-4 border-l-2 border-gray-700 trade-list hidden" id="trades-${season}">${tradesHtml}</div>
+                        </div>`;
+                }
+
+                if (!content) {
+                    listContainer.innerHTML = '<p class="text-gray-400">No trades have been made in league history.</p>';
+                } else {
+                    listContainer.innerHTML = content;
+                    const firstTradeList = listContainer.querySelector('.trade-list');
+                    if (firstTradeList) {
+                        firstTradeList.classList.remove('hidden');
+                        const firstHeader = firstTradeList.previousElementSibling;
+                        if(firstHeader && firstHeader.querySelector('svg')) firstHeader.querySelector('svg').classList.add('rotate-180');
+                    }
+                    listContainer.querySelectorAll('h3[data-year]').forEach(header => {
+                        header.addEventListener('click', () => {
+                            const year = header.dataset.year;
+                            const tradeList = document.getElementById(`trades-${year}`);
+                            const icon = header.querySelector('svg');
+                            tradeList.classList.toggle('hidden');
+                            icon.classList.toggle('rotate-180');
+                        });
+                    });
+                }
+            };
+
+            const renderFaabHistory = () => {
+                const acquisitionsBody = document.getElementById('faab-acquisitions-body');
+                const ballersList = document.getElementById('faab-ballers-list');
+                const frugalList = document.getElementById('faab-frugal-list');
+                
+                acquisitionsBody.innerHTML = '';
+                ballersList.innerHTML = '';
+                frugalList.innerHTML = '';
+
+                // Most Expensive Acquisitions
+                const sortedBids = [...allFaabBids].sort((a,b) => b.amount - a.amount);
+                sortedBids.filter(bid => bid.amount > 20).forEach(bid => {
+                    const posColorClass = positionTextColors[bid.position] || 'text-white';
+                    const manager = Object.values(managersData).find(m => m.userId === bid.managerId);
+                    acquisitionsBody.innerHTML += `
+                        <tr class="hover:bg-gray-800/50">
+                            <td class="px-4 py-3 whitespace-nowrap text-sm font-bold ${posColorClass}">${bid.position}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm font-semibold">${bid.player}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm">${getDisplayNameWithCrown(bid.managerId)}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm font-bold text-green-400">$${bid.amount}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm">${bid.season}</td>
+                        </tr>
+                    `;
+                });
+
+                // FAAB Spending Totals
+                const faabTotals = {};
+                allFaabBids.forEach(bid => {
+                    faabTotals[bid.managerId] = (faabTotals[bid.managerId] || 0) + bid.amount;
+                });
+                
+                const sortedManagersByFaab = Object.entries(faabTotals).sort((a,b) => b[1] - a[1]);
+                
+                const createManagerFaabHTML = (managerId, total, rank) => {
+                    const managerDetails = managersData[managerId];
+                     const avatar = managerDetails ? managerDetails.avatar : 'https://placehold.co/48x48/1f2937/a0aec0?text=🏈';
+                    return `
+                        <div class="flex items-center p-2 rounded-md hover:bg-gray-800/50">
+                            <div class="flex items-center gap-3 w-full">
+                                <span class="font-bold text-lg w-6 text-gray-400">${rank}.</span>
+                                <img onclick="expandAvatar(this.src)" src="${avatar}" class="w-8 h-8 rounded-full object-cover border-2 border-orange-500 cursor-pointer hover:scale-110 transition-transform">
+                                <span class="font-semibold text-sm flex-grow">${getDisplayNameWithCrown(managerId)}</span>
+                                 <span class="font-bold text-right text-green-400">$${total}</span>
+                            </div>
+                        </div>`;
+                };
+
+                // Biggest Ballers
+                sortedManagersByFaab.slice(0, 6).forEach(([managerId, total], index) => {
+                    ballersList.innerHTML += createManagerFaabHTML(managerId, total, index + 1);
+                });
+
+                // Frugal Heroes
+                sortedManagersByFaab.slice(-6).reverse().forEach(([managerId, total], index) => {
+                    frugalList.innerHTML += createManagerFaabHTML(managerId, total, sortedManagersByFaab.length - index);
+                });
+            };
+
+            const renderToiletBowlHistory = () => {
+                const container = document.getElementById('toilet-bowl-games');
+                if (!container) return;
+
+                // Manually define the correct 2021 Toilet Bowl data
+                const loperzId = Object.keys(managersData).find(id => managersData[id].displayName === 'Matt Pitman');
+                const ebroseId = Object.keys(managersData).find(id => managersData[id].displayName === 'Adam Ellis');
+
+                const manualToiletBowl2021 = {
+                    season: 2021,
+                    safeId: loperzId, // loperz won the matchup and was safe
+                    safeScore: 135.27,
+                    safeRoster: [
+                        { name: 'Kyler Murray', position: 'QB', score: 26.92 },
+                        { name: 'Austin Ekeler', position: 'RB', score: 18.7 },
+                        { name: 'Darrel Williams', position: 'RB', score: 24.2 },
+                        { name: 'AJ Brown', position: 'WR', score: 5.1 },
+                        { name: 'Keenan Allen', position: 'WR', score: 12.4 },
+                        { name: 'Dionte Johnson', position: 'WR', score: 13.1 },
+                        { name: 'Foster Moreau', position: 'TE', score: 1.4 },
+                        { name: 'Michael Pittman', position: 'WR', score: 7.7 },
+                        { name: 'Tyler Bass', position: 'K', score: 3 },
+                        { name: 'Chicago Bears', position: 'DEF', score: 22.75 }
+                    ],
+                    punishedId: ebroseId, // Ebrose lost and was the toilet bowl 'winner' (loser)
+                    punishedScore: 107.83,
+                    punishedRoster: [
+                        { name: 'Justin Herbert', position: 'QB', score: 21.68 },
+                        { name: 'Nick Chubb', position: 'RB', score: 5.8 },
+                        { name: 'Damien Harris', position: 'RB', score: 17.2 },
+                        { name: 'Stefon Diggs', position: 'WR', score: 7.7 },
+                        { name: 'Marquez Valdes-Scantling', position: 'WR', score: 0.8 },
+                        { name: 'Russel Gage', position: 'WR', score: 6.5 },
+                        { name: 'Gerald Everett', position: 'TE', score: 5.1 },
+                        { name: 'Devin Singletary', position: 'RB', score: 23 },
+                        { name: 'Nick Folk', position: 'K', score: 6.3 },
+                        { name: 'Los Angeles Chargers', position: 'DEF', score: 13.75 }
+                    ]
+                };
+
+                // Since we no longer fetch 2021 data, we can combine our clean API data with the manual object
+                const correctedData = [...toiletBowlData];
+                if (loperzId && ebroseId) {
+                    correctedData.push(manualToiletBowl2021);
+                }
+                
+                const sortedData = correctedData.sort((a, b) => b.season - a.season);
+                const positionColors = { QB: 'bg-rose-500/10 text-rose-300 border-rose-500/30', RB: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30', WR: 'bg-sky-500/10 text-sky-300 border-sky-500/30', TE: 'bg-amber-500/10 text-amber-300 border-amber-500/30', K: 'bg-fuchsia-500/10 text-fuchsia-300 border-fuchsia-500/30', DEF: 'bg-orange-500/10 text-orange-300 border-orange-500/30' };
+
+                if (sortedData.length === 0) {
+                    container.innerHTML = '<p class="text-gray-400 text-center mt-6">No Toilet Bowl game data available yet.</p>';
+                    return;
+                }
+                
+                let content = '';
+                sortedData.forEach(data => {
+                    const punished = managersData[data.punishedId];
+                    const safe = managersData[data.safeId];
+                    if (!punished || !safe) return;
+                    
+                    const punishedRosterHtml = data.punishedRoster.map(p => `<li class="p-2 border ${positionColors[p.position] || 'bg-gray-700/20'} rounded flex justify-between items-center" title="${p.name} (${p.position})"><div>${p.name} <span class="text-gray-400 text-xs">(${p.position})</span></div> <span class="font-normal text-gray-400">${p.score.toFixed(2)}</span></li>`).join('') || '<li>Roster data not available.</li>';
+                    const safeRosterHtml = data.safeRoster.map(p => `<li class="p-2 border ${positionColors[p.position] || 'bg-gray-700/20'} rounded flex justify-between items-center" title="${p.name} (${p.position})"><div>${p.name} <span class="text-gray-400 text-xs">(${p.position})</span></div> <span class="font-normal text-gray-400">${p.score.toFixed(2)}</span></li>`).join('') || '<li>Roster data not available.</li>';
+
+                    content += `
+                    <div class="mb-10">
+                        <h2 class="text-2xl md:text-3xl font-bold text-center mb-6 border-b border-gray-700 pb-2 text-amber-600 cursor-pointer flex justify-center items-center gap-2" data-target="toilet-game-${data.season}">
+                            <span>${data.season} Toilet Bowl</span>
+                            <svg class="w-5 h-5 transform transition-transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </h2>
+                        <div id="toilet-game-${data.season}" class="grid grid-cols-1 md:grid-cols-2 gap-8 game-details">
+                            <div class="bg-gray-900/50 p-4 rounded-lg border border-amber-600/50">
+                                <div class="flex items-center gap-4 mb-3">
+                                    <img onclick="expandAvatar(this.src)" src="${punished.avatar}" class="w-12 h-12 rounded-full object-cover border-4 border-amber-700 cursor-pointer hover:scale-110 transition-transform">
+                                    <div>
+                                        <h3 class="text-lg font-bold text-amber-600">🚽 ${getDisplayNameWithCrown(punished.userId)}</h3>
+                                        <p class="text-sm text-gray-400">💩 Roster - ${data.punishedScore.toFixed(2)} points</p>
+                                    </div>
+                                </div>
+                                <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">${punishedRosterHtml}</ul>
+                            </div>
+                            <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-600/50">
+                                 <div class="flex items-center gap-4 mb-3">
+                                    <img onclick="expandAvatar(this.src)" src="${safe.avatar}" class="w-12 h-12 rounded-full object-cover border-4 border-gray-400 cursor-pointer hover:scale-110 transition-transform">
+                                    <div>
+                                        <h3 class="text-lg font-bold text-gray-300">😮‍💨 ${getDisplayNameWithCrown(safe.userId)}</h3>
+                                        <p class="text-sm text-gray-400">Safe Roster - ${data.safeScore.toFixed(2)} points</p>
+                                    </div>
+                                </div>
+                                <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">${safeRosterHtml}</ul>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                });
+                container.innerHTML = content;
+                 container.querySelectorAll('h2[data-target]').forEach(header => {
+                    header.addEventListener('click', () => {
+                        const targetId = header.dataset.target;
+                        const targetElement = document.getElementById(targetId);
+                        const icon = header.querySelector('svg');
+                        if (targetElement) {
+                            targetElement.classList.toggle('hidden');
+                            icon.classList.toggle('rotate-180');
+                        }
+                    });
+                });
+            };
+
+            const setupTabs = () => tabs.forEach(tab => tab.addEventListener('click', () => { tabs.forEach(t => t.classList.remove('active')); tab.classList.add('active'); tabPanes.forEach(p => p.classList.toggle('hidden', p.id !== `${tab.dataset.tab}-content`)); }));
+
+            const setupH2HSelector = () => {
+                const m1Select = document.getElementById('manager1-select'), m2Select = document.getElementById('manager2-select');
+                m1Select.innerHTML = m2Select.innerHTML = '<option value="" selected>-- Select a Manager --</option>';
+                const sortedManagers = Object.values(managersData).sort((a, b) => a.displayName.localeCompare(b.displayName));
+                sortedManagers.forEach(m => {
+                    m1Select.add(new Option(m.displayName, m.userId));
+                    m2Select.add(new Option(m.displayName, m.userId));
+                });
+                m1Select.addEventListener('change', updateH2H);
+                m2Select.addEventListener('change', updateH2H);
+                updateH2H();
+            };
+
+             const updateH2H = () => {
+                const m1Id = document.getElementById('manager1-select').value;
+                const m2Id = document.getElementById('manager2-select').value;
+                const resultDiv = document.getElementById('h2h-result');
+
+                if (!m1Id || !m2Id || m1Id === m2Id) {
+                    resultDiv.innerHTML = '<p class="text-gray-400">Please select two members to compare head-to-head</p>';
+                    return;
+                }
+
+                const m1 = managersData[m1Id];
+                const m2 = managersData[m2Id];
+                const key = [m1Id, m2Id].sort().join('-');
+                const history = (h2hMatchups[key] || []).sort((a,b) => a.season - b.season || a.week - b.week);
+                
+                if (history.length === 0) {
+                    resultDiv.innerHTML = '<p class="text-gray-400">These managers have not played each other in the regular season.</p>';
+                    return;
+                }
+                
+                let wins1 = 0, losses1 = 0, ties = 0, totalPoints1 = 0, totalPoints2 = 0;
+                let longestStreak1 = 0, currentStreak1 = 0, longestStreak2 = 0, currentStreak2 = 0;
+                
+                let closestGame = { margin: Infinity, score1: 0, score2: 0, season: 0, week: 0 };
+                let blowout1 = { margin: 0, score1: 0, score2: 0, season: 0, week: 0 };
+                let blowout2 = { margin: 0, score1: 0, score2: 0, season: 0, week: 0 };
+                let playerPointsForM1 = {}, playerPointsForM2 = {};
+
+                history.forEach(match => {
+                    const isM1Owner1 = match.m1 === m1Id;
+                    const score1 = isM1Owner1 ? match.score1 : match.score2;
+                    const score2 = isM1Owner1 ? match.score2 : match.score1;
+                    const p_pts1 = isM1Owner1 ? match.player_points1 : match.player_points2;
+                    const p_pts2 = isM1Owner1 ? match.player_points2 : match.player_points1;
+
+                    totalPoints1 += score1;
+                    totalPoints2 += score2;
+
+                    if (score1 > score2) {
+                        wins1++;
+                        currentStreak1++;
+                        currentStreak2 = 0;
+                    } else if (score2 > score1) {
+                        losses1++;
+                        currentStreak2++;
+                        currentStreak1 = 0;
+                    } else if (score1 > 0) {
+                        ties++;
+                        currentStreak1 = 0;
+                        currentStreak2 = 0;
+                    }
+                    longestStreak1 = Math.max(longestStreak1, currentStreak1);
+                    longestStreak2 = Math.max(longestStreak2, currentStreak2);
+                    
+                    const margin = Math.abs(score1 - score2);
+                    if (margin > 0 && margin < closestGame.margin) {
+                        closestGame = { margin, score1, score2, season: match.season, week: match.week };
+                    }
+                    if (score1 > score2 && margin > blowout1.margin) {
+                        blowout1 = { margin, score1, score2, season: match.season, week: match.week };
+                    }
+                    if (score2 > score1 && margin > blowout2.margin) {
+                        blowout2 = { margin, score1, score2, season: match.season, week: match.week };
+                    }
+                    
+                    if (p_pts1) for (const [pId, pts] of Object.entries(p_pts1)) playerPointsForM1[pId] = (playerPointsForM1[pId] || 0) + pts;
+                    if (p_pts2) for (const [pId, pts] of Object.entries(p_pts2)) playerPointsForM2[pId] = (playerPointsForM2[pId] || 0) + pts;
+                });
+
+                const findTopPlayer = (pointsObject) => {
+                    if (!pointsObject || Object.keys(pointsObject).length === 0) return { name: 'N/A', points: 0 };
+                    const topId = Object.keys(pointsObject).reduce((a, b) => pointsObject[a] > pointsObject[b] ? a : b);
+                    const player = nflPlayers[topId];
+                    return { name: player ? `${player.first_name} ${player.last_name}` : 'Unknown Player', points: pointsObject[topId].toFixed(2) };
+                };
+                
+                const m1Nemesis = findTopPlayer(playerPointsForM1);
+                const m2Nemesis = findTopPlayer(playerPointsForM2);
+
+                const record = m1.h2h[m2Id] || { wins: 0, losses: 0, ties: 0 };
+
+                resultDiv.innerHTML = `
+                    <div class="grid grid-cols-1 lg:grid-cols-5 items-start gap-6 text-center">
+                        <div class="lg:col-span-2 bg-gray-900/30 p-4 rounded-xl border border-gray-700 flex flex-col items-center space-y-3">
+                            <img onclick="expandAvatar(this.src)" src="${m1.avatar}" class="w-24 h-24 rounded-full object-cover border-4 border-orange-500 cursor-pointer hover:scale-110 transition-transform">
+                            <p class="font-extrabold text-xl lg:text-2xl text-orange-500">${getDisplayNameWithCrown(m1.userId)}</p>
+                            <div class="text-sm text-gray-400 space-y-2 text-left w-full">
+                                <p class="flex justify-between"><span>Total Points:</span> <span class="font-bold text-white">${totalPoints1.toFixed(2)}</span></p>
+                                <p class="flex justify-between"><span>Avg Points:</span> <span class="font-bold text-white">${(totalPoints1 / history.length).toFixed(2)}</span></p>
+                                <p class="flex justify-between"><span>Longest Win Streak:</span> <span class="font-bold text-white">${longestStreak1}</span></p>
+                            </div>
+                            <hr class="w-full border-t border-gray-700 my-2">
+                            <div class="text-sm text-gray-400 space-y-2 text-left w-full">
+                                <p class="font-bold text-white">💥 Biggest Blowout:</p>
+                                ${wins1 > 0 ? `<p class="text-xs ml-2">${blowout1.score1.toFixed(2)} to ${blowout1.score2.toFixed(2)} (Margin: ${blowout1.margin.toFixed(2)})</p><p class="text-xs ml-2 text-gray-500">${formatYear(blowout1.season)}, Week ${blowout1.week}</p>` : '<p class="text-xs ml-2">Still searching for that first W</p>'}
+                                <p class="font-bold text-white mt-2">💀 Certified ${m2.displayName} Hater:</p>
+                                <p class="text-xs ml-2">${m1Nemesis.name} - ${m1Nemesis.points} total points</p>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col items-center py-4 lg:col-span-1">
+                            <p class="text-5xl lg:text-6xl font-black tracking-tighter">${record.wins}-${record.losses}${record.ties > 0 ? `-${record.ties}` : ''}</p>
+                            <p class="text-lg text-gray-400 font-medium -mt-2">All-Time Record</p>
+                            <hr class="w-2/3 border-t border-gray-700 my-4">
+                             <div class="text-sm text-gray-400 space-y-1 w-full">
+                                <p class="font-bold text-white">🤝 Closest Game:</p>
+                                <p class="text-xs">${closestGame.score1.toFixed(2)} vs ${closestGame.score2.toFixed(2)} (Margin: ${closestGame.margin.toFixed(2)})</p>
+                                <p class="text-xs text-gray-500">${formatYear(closestGame.season)}, Week ${closestGame.week}</p>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-2 bg-gray-900/30 p-4 rounded-xl border border-gray-700 flex flex-col items-center space-y-3">
+                           <img onclick="expandAvatar(this.src)" src="${m2.avatar}" class="w-24 h-24 rounded-full object-cover border-4 border-orange-500 cursor-pointer hover:scale-110 transition-transform">
+                            <p class="font-extrabold text-xl lg:text-2xl text-orange-500">${getDisplayNameWithCrown(m2.userId)}</p>
+                            <div class="text-sm text-gray-400 space-y-2 text-left w-full">
+                                <p class="flex justify-between"><span>Total Points:</span> <span class="font-bold text-white">${totalPoints2.toFixed(2)}</span></p>
+                                <p class="flex justify-between"><span>Avg Points:</span> <span class="font-bold text-white">${(totalPoints2 / history.length).toFixed(2)}</span></p>
+                                <p class="flex justify-between"><span>Longest Win Streak:</span> <span class="font-bold text-white">${longestStreak2}</span></p>
+                            </div>
+                            <hr class="w-full border-t border-gray-700 my-2">
+                            <div class="text-sm text-gray-400 space-y-2 text-left w-full">
+                                <p class="font-bold text-white">💥 Biggest Blowout:</p>
+                                ${record.losses > 0 ? `<p class="text-xs ml-2">${blowout2.score2.toFixed(2)} to ${blowout2.score1.toFixed(2)} (Margin: ${blowout2.margin.toFixed(2)})</p><p class="text-xs ml-2 text-gray-500">${formatYear(blowout2.season)}, Week ${blowout2.week}</p>` : '<p class="text-xs ml-2">Still searching for that first W</p>'}
+                                <p class="font-bold text-white mt-2">💀 Certified ${m1.displayName} Hater :</p>
+                                <p class="text-xs ml-2">${m2Nemesis.name} - ${m2Nemesis.points} total points</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            };
+            
+            const setupMyTeamSelector = () => {
+                const select = document.getElementById('my-team-select');
+                const sortedManagers = Object.values(managersData).sort((a, b) => a.displayName.localeCompare(b.displayName));
+                sortedManagers.forEach(m => select.add(new Option(m.displayName, m.userId)));
+                select.addEventListener('change', (e) => renderMyTeam(e.target.value));
+            };
+
+            const renderMyTeam = (managerId) => {
+                const dataContainer = document.getElementById('my-team-data');
+                if (!managerId) { dataContainer.classList.add('hidden'); return; }
+
+                const manager = managersData[managerId];
+                 const earningsData = {
+                    'Will Dooling':      { 2021: 50,    2022: 35,    2023: 740,   2024: 57.5  }, 'Connor Cademartori': { 2021: 35,    2022: 35,    2023: 17.5,  2024: 30    },
+                    'Sean Richardson':    { 2021: 0,     2022: 45,    2023: 0,     2024: 175   }, 'Malcolm Zeroka':     { 2021: 0,     2022: 0,     2023: 27.5,  2024: 732.5 },
+                    'Andrew Johnstone':   { 2021: 10,    2022: 65,    2023: 45,    2024: 25    }, 'Patrick Gavin':      { 2021: 0,     2022: 50,    2023: 10,    2024: 15    },
+                    'Matt Pitman':        { 2021: 40,    2022: 110,   2023: 105,   2024: 25    }, 'Matt Manzo':         { 2021: 50,    2022: 87.5,  2023: 0,     2024: 120   },
+                    'Kevin Flaherty':     { 2021: 475,   2022: 495,   2023: 15,    2024: 0     }, 'Johnny Jones':       { 2021: 0,     2022: 10,    2023: 150,   2024: 0     },
+                    'Adam Ellis':         { 2021: 0,     2022: 10,    2023: 35,    2024: 0     }, 'Brian Harty':        { 2021: 247.5, 2022: 257.5, 2023: 0,     2024: 150   }
+                };
+                const managerEarnings = earningsData[manager.displayName];
+                const totalEarnings = managerEarnings ? Object.values(managerEarnings).reduce((a, b) => a + b, 0) : 0;
+                
+                const myTeamAvatar = document.getElementById('my-team-avatar');
+                myTeamAvatar.src = manager.avatar;
+                myTeamAvatar.onclick = () => expandAvatar(manager.avatar);
+
+                document.getElementById('my-team-name').innerHTML = getDisplayNameWithCrown(manager.userId);
+                document.getElementById('my-team-record').innerHTML = `<span class="text-green-400">${manager.stats.wins}</span>-<span class="text-red-400">${manager.stats.losses}</span>`;
+                document.getElementById('my-team-winpct').textContent = manager.stats.wins + manager.stats.losses > 0 ? ((manager.stats.wins / (manager.stats.wins + manager.stats.losses)) * 100).toFixed(1) + '%' : '0.0%';
+                document.getElementById('my-team-pf').innerHTML = `<span class="text-green-400">${manager.stats.pf.toFixed(2)}</span>`;
+                document.getElementById('my-team-pa').innerHTML = `<span class="text-red-400">${manager.stats.pa.toFixed(2)}</span>`;
+                document.getElementById('my-team-transactions').textContent = manager.totalTransactions;
+                document.getElementById('my-team-earnings').textContent = `$${totalEarnings.toFixed(2)}`;
+
+                const standingsBody = document.getElementById('my-team-standings-body');
+                const currentYear = new Date().getFullYear();
+                const yearlyData = manager.yearlyStandings
+                    .filter(s => s.year < currentYear || (seasonalData[s.year] && seasonalData[s.year].championFound))
+                    .sort((a,b) => a.year - b.year);
+
+                if (yearlyData.length > 0) {
+                    standingsBody.innerHTML = yearlyData.map(s => {
+                        const yearStats = manager.yearlyStats[s.year] || { pf: 0, pa: 0, transactions: 0 };
+                        const seasonRecord = allSeasonRecords.find(r => r.managerId === managerId && r.year === s.year);
+                        const recordHtml = seasonRecord ? `<span class="text-green-400">${seasonRecord.wins}</span>-<span class="text-red-400">${seasonRecord.losses}</span>` : 'N/A';
+
+                        return `
+                            <tr class="border-b border-gray-700 last:border-b-0 hover:bg-gray-800/50">
+                                <td class="px-2 py-3 font-semibold whitespace-nowrap">${formatYear(s.year)}</td>
+                                <td class="px-2 py-3 text-center whitespace-nowrap">${s.rank} / ${seasonalData[s.year].totalTeams}</td>
+                                <td class="px-2 py-3 text-center whitespace-nowrap">${recordHtml}</td>
+                                <td class="px-2 py-3 text-right text-green-400 whitespace-nowrap">${yearStats.pf.toFixed(2)}</td>
+                                <td class="px-2 py-3 text-right text-red-400 whitespace-nowrap">${(yearStats.pa || 0).toFixed(2)}</td>
+                                <td class="px-2 py-3 text-right whitespace-nowrap">${yearStats.transactions}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    standingsBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-400">No season data available.</td></tr>';
+                }
+
+                const namesList = document.getElementById('my-team-names');
+                namesList.innerHTML = manager.teamNameHistory.sort((a,b) => a.year - b.year).map(t => `<li>${formatYear(t.year)}: <span class="font-bold">${t.name || 'N/A'}</span></li>`).join('');
+
+                const favoritesList = document.getElementById('my-team-favorites');
+                const sortedFavorites = Object.entries(manager.rosteredPlayers).map(([playerId, count]) => ({ playerId, count })).sort((a,b) => b.count - a.count).slice(0, 5);
+                favoritesList.innerHTML = sortedFavorites.map(fav => { const p = nflPlayers[fav.playerId]; return p ? `<li class="text-sm">${p.first_name} ${p.last_name} <span class="text-gray-400">(${p.position}) - ${fav.count} weeks</span></li>` : ''; }).join('') || '<p class="text-sm text-gray-400">Not enough data.</p>';
+
+                const nemesesList = document.getElementById('my-team-nemeses');
+                const sortedNemeses = Object.entries(manager.pointsScoredAgainst).map(([playerId, points]) => ({ playerId, points })).sort((a,b) => b.points - a.points).slice(0, 5);
+                nemesesList.innerHTML = sortedNemeses.map(nem => { const p = nflPlayers[nem.playerId]; return p ? `<li class="text-sm">${p.first_name} ${p.last_name} <span class="text-gray-400">(${p.position}) - ${nem.points.toFixed(2)} pts</span></li>` : ''; }).join('') || '<p class="text-sm text-gray-400">Not enough data.</p>';
+
+                const rivalDiv = document.getElementById('my-team-rival');
+                let rivalId = null, maxLosses = 0;
+                if (manager.h2h && Object.keys(manager.h2h).length > 0) {
+                    for (const [oppId, record] of Object.entries(manager.h2h)) {
+                        if (record.losses > maxLosses) { maxLosses = record.losses; rivalId = oppId; }
+                    }
+                }
+                if (rivalId) {
+                    const rival = managersData[rivalId];
+                    rivalDiv.innerHTML = `<div class="flex items-center gap-4"><img onclick="expandAvatar(this.src)" src="${rival.avatar}" class="w-12 h-12 rounded-full object-cover border-2 border-red-500 cursor-pointer hover:scale-110 transition-transform"><div><p class="font-bold text-lg">${getDisplayNameWithCrown(rival.userId)}</p><p class="text-sm text-red-400">Has given you ${maxLosses} Ls</p></div></div>`;
+                } else {
+                    rivalDiv.innerHTML = '<p class="text-sm text-gray-400">No clear rival yet.</p>';
+                }
+
+                const highlightsDiv = document.getElementById('my-team-highlights');
+                let highlightsHTML = '';
+                if(manager.stats.championship_years.length > 0) highlightsHTML += `<p>🏆 Champion (${manager.stats.championship_years.map(y => formatYear(y)).join(', ')})</p>`;
+                if(manager.stats.runner_up_years.length > 0) highlightsHTML += `<p>🥈 Runner Up (${manager.stats.runner_up_years.map(y => formatYear(y)).join(', ')})</p>`;
+                const bestSeason = allSeasonRecords.filter(r => r.managerId === manager.userId).sort((a,b) => b.winPct - a.winPct || b.pf - a.pf)[0];
+                if(bestSeason) highlightsHTML += `<p>⭐ Best Season: ${bestSeason.record} (${formatYear(bestSeason.year)})</p>`;
+                const bestWeek = allWeeklyScores.filter(s => s.managerId === manager.userId).sort((a,b) => b.score - a.score)[0];
+                if(bestWeek) highlightsHTML += `<p>🔥 Best Week: ${bestWeek.score.toFixed(2)} pts (${formatYear(bestWeek.year)}, Week ${bestWeek.week})</p>`;
+                 const bestSeasonScore = allSeasonScores.filter(s => s.managerId === manager.userId).sort((a,b) => b.score - a.score)[0];
+                if(bestSeasonScore) highlightsHTML += `<p>🚀 Highest Scoring Season: ${bestSeasonScore.score.toFixed(2)} pts (${formatYear(bestSeasonScore.year)})</p>`;
+                highlightsHTML += `<p>🤝 Trades Completed: ${manager.totalTrades || 0}</p>`;
+                highlightsDiv.innerHTML = highlightsHTML || '<p>No highlights recorded yet.</p>';
+
+                dataContainer.classList.remove('hidden');
+            };
+
+            init();
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
 
