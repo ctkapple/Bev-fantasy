@@ -353,7 +353,27 @@
             const tabs = document.querySelectorAll('.tab-button');
             const tabPanes = document.querySelectorAll('.tab-pane');
 
-            const managerInfoMap = {};
+            const managerInfoMap = {
+                // Co-owner teams
+                'kpflats': { name: 'Kevin Flaherty & Chris Cole', avatar: '/assets/kev.jpg' },
+                'cmcole17': { name: 'Kevin Flaherty & Chris Cole', avatar: '/assets/chris.png' },
+                'BIGxP3TE': { name: 'Peter Coluntino & Sean Richardson', avatar: '/assets/pete.png' },
+                'seanrich3': { name: 'Peter Coluntino & Sean Richardson', avatar: '/assets/sean.jpg' },
+
+                // Other members
+                'mzeroka': { name: 'Malcolm Zeroka', avatar: '/assets/Malcolm.jpg' },
+                'loperz': { name: 'Matt Pitman', avatar: '/assets/pitman.png' },
+                'brianharty': { name: 'Brian Harty', avatar: '/assets/brian.png' },
+                'manzom': { name: 'Matt Manzo', avatar: '/assets/Manzo.png' },
+                'wgd': { name: 'Will Dooling', avatar: '/assets/will.png' },
+                'ajohnstone34': { name: 'Andrew Johnstone', avatar: '/assets/andy.jpg' },
+                'archmaesterebrose': { name: 'Adam Ellis', avatar: '/assets/adam.png' },
+                'cademarc': { name: 'Connor Cademartori', avatar: '/assets/connor.jpg' },
+                'patgavin': { name: 'Patrick Gavin', avatar: '/assets/pat.png' },
+                'jonesj83': { name: 'Johnny Jones', avatar: '/assets/johhny.png' },
+                'jrbates3413': { name: 'Sam Abate', avatar: '/assets/sam.png' },
+                'kmore531196': { name: 'Kevin Morency', avatar: '/assets/kevm.png' }
+            };
 
             const managersData = {};
             let nflPlayers = {};
@@ -1434,3 +1454,4 @@
     </script>
 </body>
 </html>
+
