@@ -603,6 +603,8 @@
             let reigningChampId = null;
             let toiletBowlData = [];
             let cornerstoneSortState = { column: 'weeks', order: 'desc' };
+            let currentCompletedWeek = 0;
+            let currentSeasonYear = new Date().getFullYear();
 
 
             const positionTextColors = { QB: 'text-rose-300', RB: 'text-emerald-300', WR: 'text-sky-300', TE: 'text-amber-300', K: 'text-fuchsia-300', DEF: 'text-orange-300' };
@@ -762,6 +764,14 @@
                     loader.classList.remove('hidden');
                     app.classList.add('hidden');
                     
+                    const state = await fetchWithRetry('https://api.sleeper.app/v1/state/nfl');
+                    currentSeasonYear = parseInt(state.season);
+                    if (state.season_type === 'regular' || state.season_type === 'postseason') {
+                        currentCompletedWeek = state.week > 0 ? state.week - 1 : 0;
+                    } else {
+                        currentCompletedWeek = 0; // Pre-season or off-season
+                    }
+
                     await fetchNflPlayers();
 
                     let currentLeagueId = leagueId;
@@ -921,7 +931,8 @@
                 }
 
                 allTrades[season] = [];
-                for (let week = 1; week <= 18; week++) {
+                const maxWeekForTransactions = (parseInt(season) === currentSeasonYear) ? currentCompletedWeek + 1 : 18;
+                for (let week = 1; week <= maxWeekForTransactions; week++) {
                     try {
                         const transactions = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueData.league_id}/transactions/${week}`);
                         transactions.forEach(t => {
@@ -965,7 +976,8 @@
                     allTrades[season].sort((a, b) => b.status_updated - a.status_updated);
                 }
                 
-                for (let week = 1; week <= 18; week++) {
+                const maxWeekForMatchups = (parseInt(season) === currentSeasonYear) ? currentCompletedWeek : 18;
+                for (let week = 1; week <= maxWeekForMatchups; week++) {
                      try {
                         const matchups = await fetchWithRetry(`https://api.sleeper.app/v1/league/${leagueData.league_id}/matchups/${week}`);
                         
