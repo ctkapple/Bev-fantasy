@@ -99,6 +99,12 @@
         #gallery-prev, #gallery-next {
             transition: background-color 0.2s ease;
         }
+        th .sort-arrow {
+            display: inline-block;
+            width: 0.8em;
+            text-align: center;
+            transition: transform 0.2s ease-in-out;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -242,6 +248,27 @@
                                 <h3 class="text-xl font-bold mb-4 text-orange-500">Team Name History</h3>
                                 <ul id="my-team-names" class="space-y-2"></ul>
                             </div>
+                        </div>
+                    </div>
+                    <!-- NEW SECTION: Player Tenure -->
+                    <div class="card mt-6">
+                        <h3 class="text-xl font-bold mb-4 text-orange-500">Franchise Cornerstones</h3>
+                        <p class="text-xs text-gray-500 -mt-4 mb-4">All players ever rostered on your team, sorted by tenure.</p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead class="text-xs text-gray-400 uppercase border-b border-gray-700">
+                                    <tr>
+                                        <th scope="col" class="px-4 py-3 cursor-pointer hover:text-white" data-sort="position">Position <span class="sort-arrow"></span></th>
+                                        <th scope="col" class="px-4 py-3 cursor-pointer hover:text-white" data-sort="name">Name <span class="sort-arrow"></span></th>
+                                        <th scope="col" class="px-4 py-3 text-right cursor-pointer hover:text-white" data-sort="points">Points Scored <span class="sort-arrow"></span></th>
+                                        <th scope="col" class="px-4 py-3 text-right cursor-pointer hover:text-white" data-sort="weeks">Weeks Rostered <span class="sort-arrow"></span></th>
+                                        <th scope="col" class="px-4 py-3 text-right cursor-pointer hover:text-white" data-sort="years">Years Played <span class="sort-arrow"></span></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="my-team-tenure-body">
+                                    <!-- Player rows will be injected here -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -575,6 +602,8 @@
             let allFaabBids = [];
             let reigningChampId = null;
             let toiletBowlData = [];
+            let cornerstoneSortState = { column: 'weeks', order: 'desc' };
+
 
             const positionTextColors = { QB: 'text-rose-300', RB: 'text-emerald-300', WR: 'text-sky-300', TE: 'text-amber-300', K: 'text-fuchsia-300', DEF: 'text-orange-300' };
 
@@ -814,7 +843,7 @@
                             userId: user.user_id, displayName: displayName,
                             avatar: avatar,
                             stats: { wins: 0, losses: 0, ties: 0, pf: 0, pa: 0, championship_years: [], runner_up_years: [] },
-                            h2h: {}, rosteredPlayers: {}, pointsScoredAgainst: {},
+                            h2h: {}, rosteredPlayers: {}, pointsScoredAgainst: {}, pointsScoredByPlayer: {}, rosteredPlayerSeasons: {},
                             teamNameHistory: [], yearlyStandings: [], totalTransactions: 0, totalTrades: 0, yearlyStats: {}
                         };
                     }
@@ -943,9 +972,22 @@
                         matchups.forEach(matchup => {
                             const ownerId = rosterIdToOwnerId[matchup.roster_id];
                             if(!ownerId || !managersData[ownerId] || !matchup.players) return;
-                             matchup.players.forEach(pId => {
-                                 managersData[ownerId].rosteredPlayers[pId] = (managersData[ownerId].rosteredPlayers[pId] || 0) + 1;
-                             });
+                            const manager = managersData[ownerId];
+                            matchup.players.forEach(pId => {
+                                manager.rosteredPlayers[pId] = (manager.rosteredPlayers[pId] || 0) + 1;
+                                if (!manager.rosteredPlayerSeasons[pId]) {
+                                    manager.rosteredPlayerSeasons[pId] = new Set();
+                                }
+                                manager.rosteredPlayerSeasons[pId].add(season);
+                            });
+                            // This new part will sum points for STARTERS only
+                            if (matchup.players_points && matchup.starters) {
+                                matchup.starters.forEach(playerId => {
+                                    if (matchup.players_points[playerId]) {
+                                        manager.pointsScoredByPlayer[playerId] = (manager.pointsScoredByPlayer[playerId] || 0) + matchup.players_points[playerId];
+                                    }
+                                });
+                            }
                         });
                         
                         if (week < leagueData.settings.playoff_week_start) {
@@ -1969,7 +2011,96 @@
                 highlightsHTML += `<p>🤝 Trades Completed: ${manager.totalTrades || 0}</p>`;
                 highlightsDiv.innerHTML = highlightsHTML || '<p>No highlights recorded yet.</p>';
 
+                renderTenureSection(manager);
+
                 dataContainer.classList.remove('hidden');
+            };
+
+            const renderTenureSection = (manager) => {
+                const tenureBody = document.getElementById('my-team-tenure-body');
+                const tableHeaders = document.getElementById('my-team-tenure-body').closest('table').querySelectorAll('thead th');
+
+                // 1. Get and process the data
+                const tenureData = Object.entries(manager.rosteredPlayers)
+                    .map(([playerId, count]) => {
+                        const playerInfo = nflPlayers[playerId];
+                        if (!playerInfo) return null;
+                        const yearsSet = manager.rosteredPlayerSeasons[playerId] || new Set();
+                        return {
+                            playerId,
+                            position: playerInfo.position || 'N/A',
+                            name: `${playerInfo.first_name} ${playerInfo.last_name}`,
+                            points: manager.pointsScoredByPlayer[playerId] || 0,
+                            weeks: count,
+                            years: Array.from(yearsSet).sort()
+                        };
+                    })
+                    .filter(p => p);
+
+                // 2. Sort the data
+                tenureData.sort((a, b) => {
+                    const col = cornerstoneSortState.column;
+                    const order = cornerstoneSortState.order === 'asc' ? 1 : -1;
+
+                    let valA = a[col];
+                    let valB = b[col];
+
+                    if (col === 'years') { // Sort by number of years
+                        valA = a.years.length;
+                        valB = b.years.length;
+                    }
+
+                    if (typeof valA === 'string') {
+                        return valA.localeCompare(valB) * order;
+                    } else {
+                        return (valA - valB) * order;
+                    }
+                });
+
+                // 3. Render the table body
+                if (tenureData.length > 0) {
+                    tenureBody.innerHTML = tenureData.map(playerData => {
+                        const posColorClass = positionTextColors[playerData.position] || 'text-gray-300';
+                        return `
+                            <tr class="border-b border-gray-800 last:border-b-0 hover:bg-gray-800/50">
+                                <td class="px-4 py-3 font-bold ${posColorClass}">${playerData.position}</td>
+                                <td class="px-4 py-3 font-semibold">${playerData.name}</td>
+                                <td class="px-4 py-3 text-right">${playerData.points.toFixed(2)}</td>
+                                <td class="px-4 py-3 text-right">${playerData.weeks}</td>
+                                <td class="px-4 py-3 text-right text-xs">${playerData.years.join(', ')}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    tenureBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-400">No players rostered for this manager.</td></tr>';
+                }
+                
+                // 4. Update header arrows and attach listeners
+                tableHeaders.forEach(header => {
+                    const sortKey = header.dataset.sort;
+                    const arrow = header.querySelector('.sort-arrow');
+                    if(arrow) {
+                        if (sortKey === cornerstoneSortState.column) {
+                            arrow.textContent = cornerstoneSortState.order === 'asc' ? '▲' : '▼';
+                        } else {
+                            arrow.textContent = '';
+                        }
+                    }
+
+                    if (!header.hasAttribute('data-listener-attached')) {
+                        header.addEventListener('click', () => {
+                            const newSortColumn = header.dataset.sort;
+                            if (cornerstoneSortState.column === newSortColumn) {
+                                cornerstoneSortState.order = cornerstoneSortState.order === 'asc' ? 'desc' : 'asc';
+                            } else {
+                                cornerstoneSortState.column = newSortColumn;
+                                cornerstoneSortState.order = (newSortColumn === 'name' || newSortColumn === 'position') ? 'asc' : 'desc';
+                            }
+                            renderTenureSection(manager); // Re-render this section
+                        });
+                        header.setAttribute('data-listener-attached', 'true');
+                    }
+                });
             };
 
             init();
@@ -1977,11 +2108,4 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
 
