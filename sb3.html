@@ -113,6 +113,7 @@
         <div class="mb-8 border-b-2 border-orange-500">
             <nav class="flex justify-center space-x-2 sm:space-x-6 flex-wrap" aria-label="Tabs">
                 <button class="tab-button active text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="dashboard">Rankings</button>
+                <button class="tab-button text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="draftodds">Draft Odds</button>
                 <button class="tab-button text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="myteam">My Team</button>
 				<button class="tab-button text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="h2h">H2H</button>
                 <button class="tab-button text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2" data-tab="rosters">Championships</button>
@@ -278,6 +279,29 @@
                 <div class="card">
                      <div id="championship-rosters-list">
                         </div>
+                </div>
+            </div>
+
+            <!-- Draft Odds Tab -->
+            <div id="draftodds-content" class="tab-pane hidden">
+                <div class="card">
+                    <h2 id="draft-odds-title" class="text-xl font-bold mb-4 text-orange-500">Projected Rookie Draft Order</h2>
+                     <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead class="border-b border-gray-700">
+                                <tr>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Pick</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Manager</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Record</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Max PF</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Final Rank</th>
+                                </tr>
+                            </thead>
+                            <tbody id="draft-odds-body" class="divide-y divide-gray-800">
+                                <!-- Draft order will be injected here -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
             
@@ -836,6 +860,7 @@
                 renderChampionshipRosters();
                 renderTradeLog();
                 renderFaabHistory();
+                renderDraftOdds();
             };
 
             const renderPowerRankings = () => {
@@ -1068,6 +1093,111 @@
                             icon.classList.toggle('rotate-180');
                         }
                     });
+                });
+            };
+            
+            const renderDraftOdds = () => {
+                const draftBody = document.getElementById('draft-odds-body');
+                const draftTitle = document.getElementById('draft-odds-title');
+                draftBody.innerHTML = '';
+
+                const currentYear = new Date().getFullYear();
+                const seasonToUse = allRosters[currentYear.toString()] ? currentYear.toString() : Object.keys(allRosters).sort((a, b) => b - a)[0];
+                
+                draftTitle.textContent = `${parseInt(seasonToUse) + 1} Projected Rookie Draft Order`;
+
+                if (!seasonToUse || !allRosters[seasonToUse]) {
+                    draftBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-400">Draft order data is not yet available.</td></tr>';
+                    return;
+                }
+
+                const rosters = [...allRosters[seasonToUse]];
+                const totalTeams = rosters.length;
+                const playoffTeamsCount = 7; // Top 7 teams make playoffs
+                let draftOrder = [];
+
+                // Check if we are viewing the current, ongoing season
+                if (seasonToUse === currentYear.toString()) {
+                    // Mid-season projection logic
+                    rosters.sort((a, b) => {
+                        const winPctA = a.settings.wins / (a.settings.wins + a.settings.losses) || 0;
+                        const winPctB = b.settings.wins / (b.settings.wins + b.settings.losses) || 0;
+                        const pfA = parseFloat(`${a.settings.fpts}.${a.settings.fpts_decimal}`);
+                        const pfB = parseFloat(`${b.settings.fpts}.${b.settings.fpts_decimal}`);
+                        if (winPctB !== winPctA) return winPctB - winPctA;
+                        return pfB - pfA;
+                    });
+
+                    let projectedPlayoffTeams = rosters.slice(0, playoffTeamsCount);
+                    const projectedNonPlayoffTeams = rosters.slice(playoffTeamsCount);
+
+                    projectedNonPlayoffTeams.sort((a, b) => {
+                        const maxPfA = parseFloat(`${a.settings.ppts}.${a.settings.ppts_decimal}`);
+                        const maxPfB = parseFloat(`${b.settings.ppts}.${b.settings.ppts_decimal}`);
+                        return maxPfA - maxPfB;
+                    });
+                    
+                    // Sort playoff teams by wins (ascending), then Max PF (ascending) for their draft order
+                    projectedPlayoffTeams.sort((a, b) => {
+                        if (a.settings.wins !== b.settings.wins) {
+                            return a.settings.wins - b.settings.wins;
+                        }
+                        const maxPfA = parseFloat(`${a.settings.ppts}.${a.settings.ppts_decimal}`);
+                        const maxPfB = parseFloat(`${b.settings.ppts}.${b.settings.ppts_decimal}`);
+                        return maxPfA - maxPfB;
+                    });
+                    
+                    draftOrder = [...projectedNonPlayoffTeams, ...projectedPlayoffTeams];
+
+                } else {
+                    // End-of-season logic (using final ranks)
+                    const nonPlayoffTeams = rosters
+                        .filter(r => r.settings.rank > playoffTeamsCount)
+                        .sort((a, b) => {
+                            const maxPfA = parseFloat(`${a.settings.ppts}.${a.settings.ppts_decimal}`);
+                            const maxPfB = parseFloat(`${b.settings.ppts}.${b.settings.ppts_decimal}`);
+                            return maxPfA - maxPfB;
+                        });
+                    
+                    const playoffTeams = rosters
+                        .filter(r => r.settings.rank <= playoffTeamsCount)
+                        .sort((a, b) => a.settings.rank - b.settings.rank); 
+                    
+                    // Combine them for the final draft order, playoff teams pick after non-playoff teams
+                    draftOrder = [...nonPlayoffTeams, ...playoffTeams.reverse()];
+                }
+
+
+                draftOrder.forEach((roster, index) => {
+                    const ownerId = roster.owner_id ? (primaryUserIdMap[roster.owner_id] || roster.owner_id) : null;
+                    if (!ownerId || !managersData[ownerId]) return;
+
+                    const manager = managersData[ownerId];
+                    const pick = `1.${(index + 1).toString().padStart(2, '0')}`;
+                    const record = `${roster.settings.wins}-${roster.settings.losses}`;
+                    const maxPf = roster.settings.ppts ? `${roster.settings.ppts}.${roster.settings.ppts_decimal}` : 'N/A';
+                    const finalRank = roster.settings.rank || 'N/A';
+
+                    let dividerRow = '';
+                    if (index === (totalTeams - playoffTeamsCount -1)) {
+                         dividerRow = `<tr class="bg-orange-500/10"><td colspan="5" class="py-2 px-4 text-center text-xs font-semibold uppercase text-orange-400 tracking-wider">Projected Playoff Teams</td></tr>`;
+                    }
+                    
+                    draftBody.innerHTML += `
+                        <tr class="hover:bg-gray-800/50">
+                            <td class="px-4 py-3 whitespace-nowrap text-sm font-bold">${pick}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                <div class="flex items-center">
+                                    <img onclick="expandAvatar(this.src)" class="h-8 w-8 rounded-full mr-3 object-cover border-2 border-orange-500 cursor-pointer hover:scale-110 transition-transform" src="${manager.avatar}" alt="">
+                                    <div class="font-semibold">${getDisplayNameWithCrown(manager.userId)}</div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm">${record}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm">${maxPf}</td>
+                             <td class="px-4 py-3 whitespace-nowrap text-sm font-semibold">${finalRank}</td>
+                        </tr>
+                        ${dividerRow}
+                    `;
                 });
             };
 
@@ -1501,4 +1631,6 @@
     </script>
 </body>
 </html>
+
+
 
