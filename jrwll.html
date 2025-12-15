@@ -1452,7 +1452,7 @@
 
                 leaderboardContainer.innerHTML = breakdownContainer.innerHTML = propContainer.innerHTML = highscoreContainer.innerHTML = '';
                 
-                const totals = Object.entries(earningsData).map(([name, data]) => ({ name, total: (data[2021] || 0) + (data[2022] || 0) + (data[2023] || 0) + (data[2024] || 0) })).sort((a, b) => b.total - a.total);
+                const totals = Object.entries(earningsData).map(([name, data]) => ({ name, total: (data[2021] || 0) + (data[2022] || 0) + (data[2023] || 0) + (data[2024] || 0) + (data[2025] || 0) })).sort((a, b) => b.total - a.total);
                 const propTotals = Object.entries(earningsData).map(([name, data]) => ({ name, total: data.props })).sort((a, b) => b.total - a.total);
                 const highscoreTotals = Object.entries(earningsData).map(([name, data]) => ({ name, total: data.highs })).sort((a, b) => b.total - a.total);
 
