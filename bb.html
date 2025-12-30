@@ -85,9 +85,49 @@
                 transform: translateY(-16px);
             }
         }
+
+				/* Switcher Button Styles */
+		.switcher-container {
+		    position: fixed;
+		    top: 1rem;
+		    right: 1rem;
+		    z-index: 1000;
+		}
+		
+		#switcher-menu {
+		    transition: all 0.2s ease-in-out;
+		    transform-origin: top right;
+		}
+		
+		.switcher-item {
+		    transition: background-color 0.2s;
+		    display: block;
+		    padding: 0.5rem 1rem;
+		    color: #e5e7eb;
+		    text-decoration: none;
+		}
+		
+		.switcher-item:hover {
+		    background-color: #f97316;
+		    color: white;
+		}
     </style>
 </head>
 <body class="antialiased">
+		<div class="switcher-container">
+    <div class="relative inline-block text-left">
+        <button id="switcher-button" class="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg border border-gray-600 shadow-xl transition-all">
+            <span>Leagues</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="9 5l7 7-7 7"></path></svg>
+        </button>
+        
+        <div id="switcher-menu" class="hidden absolute right-0 mt-2 w-48 bg-[#1f1f1f] border border-gray-600 rounded-lg shadow-2xl overflow-hidden">
+            <a href="index.html" class="switcher-item border-b border-gray-700" data-page="index.html">🏠 Home</a>
+            <a href="sb3.html" class="switcher-item border-b border-gray-700" data-page="sb3.html">🏆 Dynasty</a>
+            <a href="jrwll.html" class="switcher-item border-b border-gray-700" data-page="jrwll.html">🛡️ Keeper</a>
+            <a href="bb.html" class="switcher-item" data-page="bb.html">🏈 Bestball</a>
+        </div>
+    </div>
     <div id="loader" class="fixed inset-0 bg-gray-900 bg-opacity-80 flex flex-col justify-center items-center z-50">
         <!-- New Bouncing Loader -->
         <div class="bouncing-loader">
@@ -297,6 +337,29 @@
     </div>
 
     <script>
+				document.addEventListener('DOMContentLoaded', () => {
+		    const btn = document.getElementById('switcher-button');
+		    const menu = document.getElementById('switcher-menu');
+		    const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+		
+		    // 1. Toggle Menu
+		    btn.addEventListener('click', (e) => {
+		        e.stopPropagation();
+		        menu.classList.toggle('hidden');
+		    });
+		
+		    // 2. Close menu when clicking outside
+		    document.addEventListener('click', () => menu.classList.add('hidden'));
+		
+		    // 3. Remove current page from switcher
+		    const links = menu.querySelectorAll('.switcher-item');
+		    links.forEach(link => {
+		        if (link.getAttribute('data-page') === currentPath) {
+		            link.remove();
+		        }
+		    });
+		});
+		
         document.addEventListener('DOMContentLoaded', () => {
             const leagueId = '1257056650255159296';
             const loader = document.getElementById('loader');
