@@ -136,7 +136,7 @@
 	<div class="switcher-container">
     <div class="relative inline-block text-left">
         <button id="switcher-button" class="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg border border-gray-600 shadow-xl transition-all">
-            <span>Switch Site</span>
+            <span>Leagues</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="9 5l7 7-7 7"></path></svg>
         </button>
         
@@ -208,7 +208,7 @@
                         </div>
                     </div>
                     <div class="card">
-                        <h2 class="text-xl font-bold mb-4 text-yellow-400">Trophy Case 🏆</h2>
+                        <h2 class="text-xl font-bold mb-4 text-yellow-400">🏆 Trophy Case 🏆</h2>
                         <div id="trophy-case" class="space-y-4">
                            </div>
                          <div id="runner-ups" class="mt-6 space-y-4">
@@ -1274,7 +1274,7 @@
                 // Runner Ups
                 const secondPlace = Object.values(managersData).filter(m => m.stats.runner_up_years.length > 0).sort((a, b) => b.stats.runner_up_years.length - a.stats.runner_up_years.length);
                 if (secondPlace.length > 0) {
-                     runnerUps.innerHTML += '<h3 class="text-lg font-semibold text-gray-400 mb-2 border-t border-gray-700 pt-4">Runner Ups 🥈</h3>'
+                     runnerUps.innerHTML += '<h3 class="text-lg font-semibold text-gray-400 mb-2 border-t border-gray-700 pt-4">🥈 Runner Ups 🥈</h3>'
                      secondPlace.forEach(m => {
                         const yearsHtml = m.stats.runner_up_years.map(y => `<p class="text-sm text-gray-300">😢 ${formatYear(y)}</p>`).join('');
                         runnerUps.innerHTML += `<div class="flex items-center gap-3"><img onclick="expandAvatar(this.src)" src="${m.avatar}" class="w-10 h-10 rounded-full object-cover border-2 border-gray-400 cursor-pointer hover:scale-110 transition-transform"><div><p class="font-semibold">${getDisplayNameWithCrown(m.userId)}</p>${yearsHtml}</div></div>`;
@@ -1293,7 +1293,7 @@
                 }, {});
 
                 if (Object.keys(toiletKingsByName).length > 0) {
-                    toiletKingsDiv.innerHTML += '<h3 class="text-lg font-semibold text-amber-800 mb-2 border-t border-gray-700 pt-4">Toilet King 🚽</h3>';
+                    toiletKingsDiv.innerHTML += '<h3 class="text-lg font-semibold text-amber-800 mb-2 border-t border-gray-700 pt-4">🚽 Toilet King 🚽</h3>';
                     Object.entries(toiletKingsByName).forEach(([managerName, years]) => {
                         const manager = Object.values(managersData).find(m => m.displayName === managerName);
                         if (manager) {
