@@ -1,0 +1,10 @@
+<div class="border-b border-border">
+  <nav class="container mx-auto px-4 md:px-8 max-w-7xl flex justify-center gap-x-2 sm:gap-x-6 flex-wrap" aria-label="Sections">
+    {% for tab in league.tabs %}
+      {% set tabHref = "/" + league.slug + "/" if tab.id == "dashboard" else "/" + league.slug + "/" + tab.id + "/" %}
+      <a href="{{ tabHref }}" class="tab-link" {% if tab.id == currentTab %}aria-current="page"{% endif %}>
+        {{ tab.label }}
+      </a>
+    {% endfor %}
+  </nav>
+</div>

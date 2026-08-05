@@ -1,0 +1,21 @@
+{
+  "name": "bev-fantasy",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "fetch-data": "node data-build/fetch-sleeper.js",
+    "build:css": "tailwindcss -i ./src/styles/main.css -o ./_site/assets/css/main.css --minify",
+    "build:js": "node data-build/bundle-js.js",
+    "build:site": "eleventy",
+    "build": "npm run fetch-data && npm run build:site && npm run build:css && npm run build:js",
+    "dev": "npm run fetch-data && eleventy --serve"
+  },
+  "devDependencies": {
+    "@11ty/eleventy": "^3.0.0",
+    "autoprefixer": "^10.4.20",
+    "esbuild": "^0.24.0",
+    "lucide-static": "^0.469.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17"
+  }
+}

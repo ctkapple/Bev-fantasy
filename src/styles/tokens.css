@@ -1,0 +1,31 @@
+/*
+ * Design tokens — single source of truth for color across the site.
+ * Read by tailwind.config.js (theme.extend.colors) so both raw CSS and
+ * Tailwind utility classes (bg-accent, border-border-hover, etc.) draw
+ * from these same values instead of hardcoded/duplicated hex codes.
+ */
+:root {
+  /* Core neutrals */
+  --color-bg: #101012;
+  --color-surface: #1a1a1d;
+  --color-surface-hover: #212124;
+  --color-border: #2e2e32;
+  --color-border-hover: #f97316;
+
+  /* Brand orange, with tonal steps for hover/pressed states */
+  --color-accent-400: #fb923c;
+  --color-accent-500: #f97316;
+  --color-accent-600: #ea580c;
+
+  /* Text */
+  --color-text-primary: #f5f5f4;
+  --color-text-secondary: #9ca3af;
+  --color-text-muted: #6b7280;
+
+  /* Semantic W/L */
+  --color-win: #22c55e;
+  --color-loss: #ef4444;
+
+  /* Spacing/shape */
+  --radius-card: 0.875rem;
+}

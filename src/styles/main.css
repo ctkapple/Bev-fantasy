@@ -1,0 +1,103 @@
+@import "./tokens.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-bg text-text-primary font-sans antialiased;
+  }
+  h1,
+  h2,
+  h3,
+  .font-display {
+    @apply font-display tracking-wide;
+  }
+}
+
+@layer components {
+  /* Restrained "Clean SaaS" card: subtle ring instead of a flat hard border,
+     gentle lift on hover rather than the old translateY(-5px) scale(1.02). */
+  .card {
+    @apply bg-surface ring-1 ring-white/5 border border-border rounded-xl p-4 md:p-6
+      transition-[transform,border-color,box-shadow] duration-200 ease-out;
+  }
+  .card:hover {
+    @apply border-border-hover -translate-y-0.5 shadow-lg shadow-black/20;
+  }
+
+  /* League-hub cards keep a slightly punchier lift - this is the front door, it can have more personality. */
+  .card-hub:hover {
+    @apply -translate-y-1 scale-[1.01];
+  }
+
+  .stat-table {
+    @apply w-full text-sm text-left tabular-nums;
+  }
+  .stat-table thead {
+    @apply text-xs text-text-secondary uppercase tracking-wider border-b border-border;
+  }
+  .stat-table tbody {
+    @apply divide-y divide-border/60;
+  }
+  .stat-table th[data-sort] {
+    @apply cursor-pointer select-none hover:text-text-primary transition-colors;
+  }
+
+  .tab-link {
+    @apply text-sm sm:text-base font-medium pt-4 pb-3 px-1 border-b-2 border-transparent
+      text-text-secondary transition-colors duration-200;
+  }
+  .tab-link:hover {
+    @apply text-text-primary;
+  }
+  .tab-link[aria-current="page"] {
+    @apply text-accent-500 border-accent-500;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-lg
+      border border-accent-500 text-accent-500 transition-colors duration-150
+      hover:bg-accent-500 hover:text-black;
+  }
+
+  .icon {
+    @apply w-4 h-4 inline-block align-[-2px];
+  }
+
+  .win {
+    @apply text-win;
+  }
+  .loss {
+    @apply text-loss;
+  }
+
+  .bouncing-loader {
+    @apply flex justify-center items-center;
+    height: 120px;
+  }
+  .bouncing-loader > div {
+    width: 14px;
+    height: 14px;
+    margin: 3px 6px;
+    border-radius: 50%;
+    background-color: var(--color-accent-500);
+    animation: bouncing-loader 0.6s infinite alternate;
+  }
+  .bouncing-loader > div:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+  .bouncing-loader > div:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+  @keyframes bouncing-loader {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0.15;
+      transform: translateY(-14px);
+    }
+  }
+}
