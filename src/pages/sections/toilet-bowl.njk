@@ -9,6 +9,8 @@ currentTab: toilet-bowl
 eleventyComputed:
   title: "{{ league.name }} — Toilet Bowl"
 ---
+{% from "partials/macros.njk" import gameSide, gameHeader %}
+{% set aggregate = leagueStats[league.slug].aggregates %}
 {% set historical = leagueStats[league.slug].historical %}
 
 <div class="card">
@@ -35,18 +37,50 @@ eleventyComputed:
 
   <hr class="border-border my-8">
 
-  {% if historical and historical.length > 0 %}
-  <div class="space-y-4">
-    {% for season in historical | reverse %}
-      {% if season.toiletBowl %}
+  {# Per-season game detail: full starting rosters and scores for both sides.
+     Sleeper-derived seasons first, then any hand-entered ones (e.g. 2021,
+     which predates the data this build fetches), all sorted newest-first. #}
+  {% set games = [] %}
+  {% for season in historical %}
+    {% if season.toiletBowl %}
       {% set punished = season.managers[season.toiletBowl.punishedId] %}
       {% set safe = season.managers[season.toiletBowl.safeId] %}
-      <div class="bg-bg/50 border border-border rounded-lg p-4">
-        <p class="font-semibold text-accent-500 mb-1">{{ season.season }} Toilet Bowl</p>
-        <p class="text-sm">{{ punished.displayName if punished else "Unknown" }} ({{ season.toiletBowl.punishedScore | decimal1 }}) lost to {{ safe.displayName if safe else "Unknown" }} ({{ season.toiletBowl.safeScore | decimal1 }})</p>
-      </div>
+      {% if punished and safe %}
+        {% set games = (games.push({
+          season: season.season, punished: punished, safe: safe,
+          punishedScore: season.toiletBowl.punishedScore, safeScore: season.toiletBowl.safeScore,
+          punishedRoster: season.toiletBowl.punishedRoster, safeRoster: season.toiletBowl.safeRoster
+        }), games) %}
       {% endif %}
-    {% endfor %}
+    {% endif %}
+  {% endfor %}
+  {% for manual in league.manualToiletBowls %}
+    {% set punished = aggregate.managers | managerByName(manual.punishedManager) if aggregate else null %}
+    {% set safe = aggregate.managers | managerByName(manual.safeManager) if aggregate else null %}
+    {% if punished and safe %}
+      {% set games = (games.push({
+        season: manual.season, punished: punished, safe: safe,
+        punishedScore: manual.punishedScore, safeScore: manual.safeScore,
+        punishedRoster: manual.punishedRoster, safeRoster: manual.safeRoster
+      }), games) %}
+    {% endif %}
+  {% endfor %}
+
+  {% if games.length == 0 %}
+  <p class="text-text-secondary text-center mt-6">No Toilet Bowl game data available yet.</p>
+  {% else %}
+  {% for game in games | sortBySeasonDesc %}
+  <div class="mb-10">
+    {{ gameHeader(game.season + " Toilet Bowl", "toilet-game-" + game.season, "text-amber-600") }}
+    <div id="toilet-game-{{ game.season }}" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {{ gameSide(game.punished, game.punishedScore, game.punishedRoster, {
+        borderClass: "border-amber-600/50", ringClass: "border-amber-700",
+        nameClass: "text-amber-600", emoji: "🚽", label: "💩 Roster" }) }}
+      {{ gameSide(game.safe, game.safeScore, game.safeRoster, {
+        borderClass: "border-border", ringClass: "border-gray-400",
+        nameClass: "text-text-primary", emoji: "😮‍💨", label: "Safe Roster" }) }}
+    </div>
   </div>
+  {% endfor %}
   {% endif %}
 </div>

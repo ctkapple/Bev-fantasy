@@ -28,6 +28,32 @@ export default function (eleventyConfig) {
 
   eleventyConfig.addFilter("limit", (arr, n) => (arr || []).slice(0, n));
 
+  // The original site rendered all scores to 2 decimal places.
+  eleventyConfig.addFilter("decimal2", (num) => (typeof num === "number" ? num.toFixed(2) : num));
+
+  // Look up a manager id by display name - lets hand-curated config data
+  // (Toilet Kings, manual toilet-bowl entries) reference people by name
+  // instead of opaque Sleeper user ids.
+  // Collapse the flat [{year, manager}] toiletKings config into one entry per
+  // manager with all their years, matching the original's grouping.
+  eleventyConfig.addFilter("groupToiletKings", (kings) => {
+    const byManager = new Map();
+    for (const k of kings || []) {
+      if (!byManager.has(k.manager)) byManager.set(k.manager, []);
+      byManager.get(k.manager).push(k.year);
+    }
+    return [...byManager.entries()].map(([manager, years]) => ({ manager, years: years.sort() }));
+  });
+
+  eleventyConfig.addFilter("sortBySeasonDesc", (arr) =>
+    [...(arr || [])].sort((a, b) => Number(b.season) - Number(a.season))
+  );
+
+  eleventyConfig.addFilter("managerByName", (managers, name) => {
+    if (!managers) return null;
+    return Object.values(managers).find((m) => m.displayName === name) || null;
+  });
+
   eleventyConfig.addFilter("decimal1", (num) =>
     typeof num === "number" ? num.toFixed(1) : num
   );

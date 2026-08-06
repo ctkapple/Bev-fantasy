@@ -2,6 +2,10 @@
 export default {
   content: ["./src/**/*.{njk,md,js}"],
   darkMode: "class",
+  // Position classes are built dynamically (`pos-pill-{{ p.position }}`), so
+  // Tailwind's content scanner never sees the literal class names and would
+  // otherwise purge the component rules in main.css.
+  safelist: [{ pattern: /^pos-(pill-)?(QB|RB|WR|TE|K|DEF|NA)$/ }],
   theme: {
     extend: {
       colors: {

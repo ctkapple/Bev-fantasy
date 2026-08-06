@@ -29,7 +29,7 @@ function renderStandings(aggregate) {
         </td>
         <td class="px-4 py-3"><span class="win">${m.wins}</span>-<span class="loss">${m.losses}</span>${m.ties ? "-" + m.ties : ""}</td>
         <td class="px-4 py-3">${(m.winPct * 100).toFixed(1)}%</td>
-        <td class="px-4 py-3"><span class="win">${m.pf.toFixed(1)}</span> / <span class="loss">${m.pa.toFixed(1)}</span></td>
+        <td class="px-4 py-3"><span class="win">${m.pf.toFixed(2)}</span> / <span class="loss">${m.pa.toFixed(2)}</span></td>
       </tr>`
     )
     .join("");

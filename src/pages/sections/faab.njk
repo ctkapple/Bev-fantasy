@@ -26,8 +26,8 @@ eleventyComputed:
         <tbody>
           {% for bid in topBids %}
           <tr>
-            <td class="px-4 py-2">{{ bid.position }}</td>
-            <td class="px-4 py-2">{{ bid.player }}</td>
+            <td class="px-4 py-2 pos-{{ bid.position or 'NA' }}">{{ bid.position }}</td>
+            <td class="px-4 py-2 font-semibold pos-{{ bid.position or 'NA' }}">{{ bid.player }}</td>
             <td class="px-4 py-2">{{ bid.managerName }}</td>
             <td class="px-4 py-2 font-semibold text-accent-500">${{ bid.amount }}</td>
             <td class="px-4 py-2 text-text-secondary">{{ bid.season }}</td>

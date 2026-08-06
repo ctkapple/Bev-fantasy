@@ -29,9 +29,9 @@ eleventyComputed:
               <ul class="text-sm space-y-0.5">
                 {% for piece in pieces %}
                 <li>
-                  {% if piece.type == "player" %}{{ piece.name }} <span class="text-text-muted">({{ piece.position }})</span>
-                  {% elif piece.type == "pick" %}{{ piece.season }} Round {{ piece.round }} pick
-                  {% elif piece.type == "faab" %}${{ piece.amount }} FAAB
+                  {% if piece.type == "player" %}<span class="font-semibold pos-{{ piece.position or 'NA' }}">{{ piece.name }}</span> <span class="text-xs text-text-secondary">({{ piece.position }})</span>
+                  {% elif piece.type == "pick" %}<span class="chip-pick">{{ piece.season }} Round {{ piece.round }} Pick</span>
+                  {% elif piece.type == "faab" %}<span class="chip-faab">${{ piece.amount }} FAAB</span>
                   {% endif %}
                 </li>
                 {% endfor %}

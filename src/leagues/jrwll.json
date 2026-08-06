@@ -38,6 +38,54 @@
     "2023": ["/assets/andyanchor.jpeg", "/assets/andyanchor2.jpeg"],
     "2024": ["/assets/johnanchor.jpeg", "/assets/johnanchor2.jpeg", "/assets/johnanchor3.jpeg"]
   },
+  "championshipOverrides": {
+    "2021": { "winnerScore": 282.55, "loserScore": 218.84 },
+    "2022": { "winnerScore": 171.76, "loserScore": 168.0 }
+  },
+  "championshipNotes": {
+    "2021": "*In 2021 the league had not yet added Sean Richardson or Pat Gavin, and was doing 2 week long championship matches.",
+    "2022": "*This was the Damar Hamlin championship, Brian was trailing by 6.55 with Diggs playing at the time of the game being cancelled. Brian and Kevin came to an agreement to split a portion of the pot and extend their match into Week 18."
+  },
+  "toiletKings": [
+    { "year": "2021", "manager": "Adam Ellis" },
+    { "year": "2022", "manager": "Adam Ellis" },
+    { "year": "2023", "manager": "Andrew Johnstone" },
+    { "year": "2024", "manager": "Johnny Jones" },
+    { "year": "2025", "manager": "Patrick Gavin" }
+  ],
+  "manualToiletBowls": [
+    {
+      "season": "2021",
+      "punishedManager": "Adam Ellis",
+      "punishedScore": 107.83,
+      "punishedRoster": [
+        { "name": "Justin Herbert", "position": "QB", "score": 21.68 },
+        { "name": "Nick Chubb", "position": "RB", "score": 5.8 },
+        { "name": "Damien Harris", "position": "RB", "score": 17.2 },
+        { "name": "Stefon Diggs", "position": "WR", "score": 7.7 },
+        { "name": "Marquez Valdes-Scantling", "position": "WR", "score": 0.8 },
+        { "name": "Russel Gage", "position": "WR", "score": 6.5 },
+        { "name": "Gerald Everett", "position": "TE", "score": 5.1 },
+        { "name": "Devin Singletary", "position": "RB", "score": 23 },
+        { "name": "Nick Folk", "position": "K", "score": 6.3 },
+        { "name": "Los Angeles Chargers", "position": "DEF", "score": 13.75 }
+      ],
+      "safeManager": "Matt Pitman",
+      "safeScore": 135.27,
+      "safeRoster": [
+        { "name": "Kyler Murray", "position": "QB", "score": 26.92 },
+        { "name": "Austin Ekeler", "position": "RB", "score": 18.7 },
+        { "name": "Darrel Williams", "position": "RB", "score": 24.2 },
+        { "name": "AJ Brown", "position": "WR", "score": 5.1 },
+        { "name": "Keenan Allen", "position": "WR", "score": 12.4 },
+        { "name": "Dionte Johnson", "position": "WR", "score": 13.1 },
+        { "name": "Foster Moreau", "position": "TE", "score": 1.4 },
+        { "name": "Michael Pittman", "position": "WR", "score": 7.7 },
+        { "name": "Tyler Bass", "position": "K", "score": 3 },
+        { "name": "Chicago Bears", "position": "DEF", "score": 22.75 }
+      ]
+    }
+  ],
   "toiletBowlLedger": [
     { "year": "2021", "name": "Adam", "detail": "11🍺 + 1🌿", "leftAt": "10:00 PM" },
     { "year": "2022", "name": "Adam", "detail": "14🍺", "leftAt": "9:30 PM" },

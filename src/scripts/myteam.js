@@ -29,19 +29,19 @@ function renderManager(managers, reigningChampId, userId) {
         <td class="px-2 py-2">${y.year}</td>
         <td class="px-2 py-2 text-center">${y.rank}/${y.totalTeams}</td>
         <td class="px-2 py-2 text-center">${stats.record ?? ""}</td>
-        <td class="px-2 py-2 text-right win">${(stats.pf ?? 0).toFixed(1)}</td>
-        <td class="px-2 py-2 text-right loss">${(stats.pa ?? 0).toFixed(1)}</td>
+        <td class="px-2 py-2 text-right win">${(stats.pf ?? 0).toFixed(2)}</td>
+        <td class="px-2 py-2 text-right loss">${(stats.pa ?? 0).toFixed(2)}</td>
         <td class="px-2 py-2 text-right">${stats.transactions ?? 0}</td>
       </tr>`;
     })
     .join("");
 
   const legendsRows = m.franchiseLegends
-    .map((c) => `<li class="text-sm flex justify-between"><span>${c.name || "Unknown"} <span class="text-text-muted">(${c.position || "?"})</span></span><span class="text-text-secondary">${c.weeks} wks</span></li>`)
+    .map((c) => `<li class="text-sm flex justify-between"><span class="pos-${c.position || "NA"}">${c.name || "Unknown"} <span class="text-text-muted">(${c.position || "?"})</span></span><span class="text-text-secondary">${c.weeks} wks</span></li>`)
     .join("");
 
   const nemesesRows = m.archNemeses
-    .map((n) => `<li class="text-sm flex justify-between"><span>${n.name || "Unknown"} <span class="text-text-muted">(${n.position || "?"})</span></span><span class="loss">${n.points.toFixed(1)} pts</span></li>`)
+    .map((n) => `<li class="text-sm flex justify-between"><span class="pos-${n.position || "NA"}">${n.name || "Unknown"} <span class="text-text-muted">(${n.position || "?"})</span></span><span class="loss">${n.points.toFixed(2)} pts</span></li>`)
     .join("");
 
   const nameHistory = m.teamNameHistory
@@ -56,9 +56,9 @@ function renderManager(managers, reigningChampId, userId) {
     .slice(0, 25)
     .map(
       (c) => `<tr>
-        <td class="px-4 py-2">${c.position || "N/A"}</td>
-        <td class="px-4 py-2">${c.name || "Unknown"}</td>
-        <td class="px-4 py-2 text-right">${c.points.toFixed(1)}</td>
+        <td class="px-4 py-2 pos-${c.position || "NA"}">${c.position || "N/A"}</td>
+        <td class="px-4 py-2 font-semibold pos-${c.position || "NA"}">${c.name || "Unknown"}</td>
+        <td class="px-4 py-2 text-right">${c.points.toFixed(2)}</td>
         <td class="px-4 py-2 text-right">${c.weeks}</td>
         <td class="px-4 py-2 text-right">${c.years.length}</td>
       </tr>`
@@ -78,8 +78,8 @@ function renderManager(managers, reigningChampId, userId) {
             <div><p class="text-text-secondary text-sm">Overall Record</p><p class="text-xl font-semibold">${m.wins}-${m.losses}${m.ties ? "-" + m.ties : ""}</p></div>
             <div><p class="text-text-secondary text-sm">Win %</p><p class="text-xl font-semibold">${fmtPct(m.winPct)}</p></div>
             <div><p class="text-text-secondary text-sm">Transactions</p><p class="text-xl font-semibold">${m.transactions}</p></div>
-            <div><p class="text-text-secondary text-sm">Points For</p><p class="text-xl font-semibold win">${m.pf.toFixed(1)}</p></div>
-            <div><p class="text-text-secondary text-sm">Points Against</p><p class="text-xl font-semibold loss">${m.pa.toFixed(1)}</p></div>
+            <div><p class="text-text-secondary text-sm">Points For</p><p class="text-xl font-semibold win">${m.pf.toFixed(2)}</p></div>
+            <div><p class="text-text-secondary text-sm">Points Against</p><p class="text-xl font-semibold loss">${m.pa.toFixed(2)}</p></div>
             <div><p class="text-text-secondary text-sm">Trades</p><p class="text-xl font-semibold">${m.trades}</p></div>
           </div>
         </div>

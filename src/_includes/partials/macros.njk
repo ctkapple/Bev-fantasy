@@ -1,0 +1,93 @@
+{# Shared render macros. Keeps the Championships / Toilet Bowl / Records /
+   Legends markup in one place instead of repeated per template. #}
+
+{# A starting-lineup list with position-colored pills (Championships, Toilet Bowl). #}
+{% macro rosterList(roster) %}
+<ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+  {% for p in roster %}
+  <li class="pos-pill pos-pill-{{ p.position or 'NA' }}" title="{{ p.name }} ({{ p.position }})">
+    <div>{{ p.name }} <span class="text-text-secondary text-xs">({{ p.position }})</span></div>
+    <span class="font-normal text-text-secondary">{{ p.score | decimal2 }}</span>
+  </li>
+  {% else %}
+  <li class="text-sm text-text-secondary">Roster data not available.</li>
+  {% endfor %}
+</ul>
+{% endmacro %}
+
+{# One side of a head-to-head game card (Championships winner/loser, Toilet Bowl punished/safe). #}
+{% macro gameSide(manager, score, roster, opts) %}
+<div class="bg-bg/50 p-4 rounded-lg border {{ opts.borderClass }}">
+  <div class="flex items-center gap-4 mb-3">
+    <img src="{{ manager.avatar }}" alt="{{ manager.displayName }}"
+      class="w-12 h-12 rounded-full object-cover border-4 {{ opts.ringClass }} cursor-pointer hover:scale-110 transition-transform"
+      onclick="window.expandAvatar && window.expandAvatar(this.src)">
+    <div>
+      <h3 class="text-lg font-bold {{ opts.nameClass }}">{{ opts.emoji }} {{ manager.displayName }}</h3>
+      <p class="text-sm text-text-secondary">{{ opts.label }} - {{ score | decimal2 }} points</p>
+    </div>
+  </div>
+  {{ rosterList(roster) }}
+</div>
+{% endmacro %}
+
+{# Collapsible game section header (click to expand/collapse). #}
+{% macro gameHeader(title, targetId, colorClass) %}
+<h2 class="game-toggle {{ colorClass }}" data-target="{{ targetId }}" aria-expanded="true" role="button" tabindex="0">
+  <span>{{ title }}</span>
+  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+</h2>
+{% endmacro %}
+
+{# A Records-tab row: avatar + name + context on the left, big value on the right. #}
+{% macro recordRow(manager, value, context, reigningId) %}
+<div class="record-row">
+  <div class="flex items-center gap-3 min-w-0">
+    <img src="{{ manager.avatar }}" alt="{{ manager.displayName }}"
+      class="w-9 h-9 rounded-full object-cover flex-shrink-0 border-2 border-accent-500 cursor-pointer hover:scale-110 transition-transform"
+      onclick="window.expandAvatar && window.expandAvatar(this.src)">
+    <div class="min-w-0">
+      <p class="text-sm font-semibold truncate">{{ manager.displayName }}{% if manager.userId == reigningId %} <span title="Reigning Champ">👑</span>{% endif %}</p>
+      <p class="text-xs text-text-secondary">{{ context }}</p>
+    </div>
+  </div>
+  <span class="font-bold text-lg ml-2">{{ value }}</span>
+</div>
+{% endmacro %}
+
+{# A Records-tab matchup row (blowouts / closest games / shootouts). #}
+{% macro matchupRow(m1, m2, match, label, value) %}
+<div class="py-2.5 border-b border-border last:border-b-0 hover:bg-surface-hover/60 -mx-4 px-4 rounded-md transition-colors">
+  <div class="flex items-center text-sm mb-1">
+    <div class="flex items-center gap-2 flex-1 min-w-0">
+      <img src="{{ m1.avatar }}" alt="" class="w-6 h-6 rounded-full object-cover border-2 border-accent-500 cursor-pointer hover:scale-110 transition-transform" onclick="window.expandAvatar && window.expandAvatar(this.src)">
+      <span class="font-semibold truncate">{{ m1.displayName }}</span>
+    </div>
+    <span class="text-xs text-text-secondary px-2">vs</span>
+    <div class="flex items-center gap-2 flex-1 min-w-0 justify-end">
+      <span class="font-semibold truncate text-right">{{ m2.displayName }}</span>
+      <img src="{{ m2.avatar }}" alt="" class="w-6 h-6 rounded-full object-cover border-2 border-accent-500 cursor-pointer hover:scale-110 transition-transform" onclick="window.expandAvatar && window.expandAvatar(this.src)">
+    </div>
+  </div>
+  <div class="text-center">
+    <p class="font-bold text-lg">{{ match.score1 | decimal2 }} – {{ match.score2 | decimal2 }}</p>
+    <p class="text-xs text-text-secondary">{{ match.season }}, Wk {{ match.week }} ({{ label }}: <span class="font-semibold text-text-primary">{{ value | decimal2 }}</span>)</p>
+  </div>
+</div>
+{% endmacro %}
+
+{# Legends-tab entry: big count + label, with the full per-season history. #}
+{% macro legacyCard(count, countLabel, player, historyLines) %}
+<div class="flex items-center bg-bg/50 p-4 rounded-lg border border-border mb-3">
+  <div class="flex flex-col items-center justify-center w-20 flex-shrink-0">
+    <span class="text-5xl font-extrabold text-accent-500">{{ count }}</span>
+    <span class="text-xs text-text-secondary -mt-1">{{ countLabel }}</span>
+  </div>
+  <div class="border-l border-border pl-4 ml-4 flex-grow min-w-0">
+    <h4 class="font-bold text-lg">{{ player.name }} <span class="text-base font-normal text-text-secondary">({{ player.position }})</span></h4>
+    <ul class="list-disc list-inside mt-1 space-y-1">
+      {% for line in historyLines %}<li class="text-xs text-text-secondary">{{ line }}</li>{% endfor %}
+    </ul>
+  </div>
+</div>
+{% endmacro %}
