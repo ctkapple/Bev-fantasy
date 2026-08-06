@@ -507,6 +507,7 @@ export function processSeason({
             managerId: canonicalId,
             year: season,
             week,
+            score: matchup.players_points[pId],
           });
         }
       }
