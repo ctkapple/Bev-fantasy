@@ -75,9 +75,10 @@ async function fetchLiveSeasonDraftData(league, seasonData) {
 }
 
 function keeperRoundLabel(profile) {
-  if (profile.keeperRound == null) return "—";
-  const flagged = profile.belowFirstRound || profile.beyondDraftRounds;
-  return `Round ${profile.keeperRound}${flagged ? "*" : ""}`;
+  // An ineligible player has no cost worth quoting - showing one just invites
+  // someone to plan around a keeper they can't actually have.
+  if (!profile.eligible || profile.keeperRound == null) return "—";
+  return `Round ${profile.keeperRound}${profile.beyondDraftRounds ? "*" : ""}`;
 }
 
 function originLabel(profile) {

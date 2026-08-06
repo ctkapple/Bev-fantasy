@@ -145,9 +145,9 @@ export function parseRostersByOwner(rosters, primaryUserIdMap = {}) {
  * @property {number|null} adpRound - Undrafted path only: the player's ADP expressed as a round.
  * @property {string|null} adpSeason
  * @property {number} streakCount - Consecutive keeper years ALREADY used under the current owner.
- * @property {boolean} eligible - streakCount < 2 (rule 8).
- * @property {number|null} keeperRound - Round this player would cost to keep, or null if undeterminable.
- * @property {boolean} belowFirstRound - Computed cost was above round 1; capped (rules 3-5 territory).
+ * @property {boolean} eligible - Rule 8 (streakCount < 2) AND a payable round exists.
+ * @property {number|null} keeperRound - Round this player would cost to keep, or null if undeterminable/unkeepable.
+ * @property {boolean} belowFirstRound - Cost lands above round 1, where no pick exists - the player is unkeepable.
  * @property {boolean} beyondDraftRounds - ADP sits outside the draftable pool; capped at the last round.
  * @property {string|null} note
  */
@@ -271,6 +271,9 @@ export function computeKeeperProfile(playerId, currentOwnerId, pickHistory, rost
 
   // Rule 2 + escalation: one round higher (earlier) per keeper year used.
   const raw = originPick.round - 1 - streakCount;
+  // No pick exists above round 1, so there's nothing to pay with - a
+  // first-rounder can't be kept at all, and neither can a second-rounder
+  // already kept once. Not a cap: it makes the player ineligible.
   const belowFirstRound = raw < 1;
 
   return {
@@ -280,12 +283,12 @@ export function computeKeeperProfile(playerId, currentOwnerId, pickHistory, rost
     adpRound: null,
     adpSeason: null,
     streakCount,
-    eligible: streakCount < 2, // Rule 8: max 2 consecutive keeper years.
-    keeperRound: belowFirstRound ? 1 : raw,
+    eligible: streakCount < 2 && !belowFirstRound, // Rule 8 + the round-1 floor.
+    keeperRound: belowFirstRound ? null : raw,
     belowFirstRound,
     beyondDraftRounds: false,
     note: belowFirstRound
-      ? "Cost works out above round 1, which doesn't exist - shown at round 1. Confirm with the commissioner."
+      ? `Keeping this player would cost a pick above round 1 (drafted round ${originPick.round}${streakCount ? `, kept ${streakCount}x` : ""}) - no such pick exists, so he can't be kept.`
       : null,
   };
 }
