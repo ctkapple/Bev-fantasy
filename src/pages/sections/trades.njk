@@ -10,19 +10,115 @@ eleventyComputed:
   title: "{{ league.name }} — Trade Log"
 ---
 {% set historical = leagueStats[league.slug].historical %}
+{% set aggregate = leagueStats[league.slug].aggregates %}
 
 <div class="card">
   {% if not historical or historical.length == 0 %}
   <p class="text-text-secondary text-sm">No completed seasons yet.</p>
   {% else %}
-  <div class="space-y-6">
+
+  <div id="trades-filter-bar" class="mb-6 space-y-3">
+    <div class="relative">
+      {% icon "search", "icon absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none" %}
+      <input id="trades-search" type="search" placeholder="Search players, managers, picks…" autocomplete="off"
+        class="w-full bg-bg border border-border rounded-lg py-2.5 pl-10 pr-3 text-sm text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-accent-500 focus:outline-none" />
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="relative">
+        <button type="button" id="chip-manager-btn" class="filter-chip" data-chip-trigger="chip-manager-panel" aria-haspopup="true" aria-expanded="false">
+          {% icon "users", "icon" %} <span id="chip-manager-label">Manager</span> {% icon "chevron-down", "icon" %}
+        </button>
+        <div id="chip-manager-panel" class="hidden filter-chip-panel" data-chip-panel>
+          <label class="filter-chip-panel-label" for="manager1-select">Involving</label>
+          <select id="manager1-select" class="filter-select">
+            <option value="">Any manager</option>
+            {% for id, m in aggregate.managers %}<option value="{{ id }}">{{ m.displayName }}</option>{% endfor %}
+          </select>
+          <label class="filter-chip-panel-label" for="manager2-select">And (optional) — trades between two managers</label>
+          <select id="manager2-select" class="filter-select">
+            <option value="">Anyone</option>
+            {% for id, m in aggregate.managers %}<option value="{{ id }}">{{ m.displayName }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="relative">
+        <button type="button" id="chip-season-btn" class="filter-chip" data-chip-trigger="chip-season-panel" aria-haspopup="true" aria-expanded="false">
+          {% icon "calendar", "icon" %} <span id="chip-season-label">Season</span> {% icon "chevron-down", "icon" %}
+        </button>
+        <div id="chip-season-panel" class="hidden filter-chip-panel" data-chip-panel>
+          <select id="season-select" class="filter-select">
+            <option value="">All seasons</option>
+            {% for season in historical | reverse %}<option value="{{ season.season }}">{{ season.season }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="relative">
+        <button type="button" id="chip-position-btn" class="filter-chip" data-chip-trigger="chip-position-panel" aria-haspopup="true" aria-expanded="false">
+          {% icon "user", "icon" %} <span id="chip-position-label">Position</span> {% icon "chevron-down", "icon" %}
+        </button>
+        <div id="chip-position-panel" class="hidden filter-chip-panel" data-chip-panel>
+          <select id="position-select" class="filter-select">
+            <option value="">Any position</option>
+            <option value="QB">QB</option>
+            <option value="RB">RB</option>
+            <option value="WR">WR</option>
+            <option value="TE">TE</option>
+            <option value="K">K</option>
+            <option value="DEF">DEF</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="relative">
+        <button type="button" id="chip-pick-btn" class="filter-chip" data-chip-trigger="chip-pick-panel" aria-haspopup="true" aria-expanded="false">
+          {% icon "ticket", "icon" %} <span id="chip-pick-label">Draft Pick</span> {% icon "chevron-down", "icon" %}
+        </button>
+        <div id="chip-pick-panel" class="hidden filter-chip-panel" data-chip-panel>
+          <label class="filter-chip-panel-label" for="pick-season-select">Pick's draft season</label>
+          <select id="pick-season-select" class="filter-select">
+            <option value="">Any season</option>
+          </select>
+          <label class="filter-chip-panel-label" for="pick-round-select">Round</label>
+          <select id="pick-round-select" class="filter-select">
+            <option value="">Any round</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="button" id="chip-faab-btn" class="filter-chip" data-chip-toggle aria-pressed="false">
+        {% icon "dollar-sign", "icon" %} FAAB only
+      </button>
+
+      <button type="button" id="clear-filters-btn" class="hidden text-xs text-text-secondary hover:text-text-primary underline underline-offset-2 ml-1">
+        Clear all
+      </button>
+    </div>
+
+    <p id="trades-result-count" class="text-xs text-text-secondary"></p>
+  </div>
+
+  <div id="trades-empty-state" class="hidden text-text-secondary text-sm py-8 text-center">
+    No trades match your filters.
+  </div>
+
+  <div class="space-y-6" id="trades-list">
     {% for season in historical | reverse %}
       {% if season.trades.length > 0 %}
-      <div>
+      <div data-season-block="{{ season.season }}">
         <h3 class="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">{{ season.season }} Season</h3>
         <div class="space-y-4">
           {% for trade in season.trades %}
-          <div class="bg-bg/50 border border-border rounded-lg p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          {% set idx = trade | tradeIndex %}
+          <div class="bg-bg/50 border border-border rounded-lg p-4 grid grid-cols-1 md:grid-cols-2 gap-4"
+            data-trade
+            data-season="{{ season.season }}"
+            data-managers="{{ idx.managers }}"
+            data-positions="{{ idx.positions }}"
+            data-picks="{{ idx.picks }}"
+            data-faab="{{ idx.hasFaab }}">
             {% for managerId, pieces in trade.pieces %}
             <div>
               <p class="font-semibold text-accent-500 mb-1">{{ season.managers[managerId].displayName if season.managers[managerId] else "Unknown" }} received:</p>
@@ -47,3 +143,5 @@ eleventyComputed:
   </div>
   {% endif %}
 </div>
+
+<script type="module" src="/assets/js/trades.js"></script>
