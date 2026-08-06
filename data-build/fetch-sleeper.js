@@ -25,6 +25,14 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { fetchWithRetry } from "./fetch-with-retry.js";
 import { processSeason, aggregateSeasons, buildPrimaryUserIdMap } from "../src/scripts/season-processor.mjs";
+import {
+  scoringFormatFromLeagueObj,
+  adpProjectionsUrl,
+  parseAdpRows,
+  adpToRound,
+  findCompletedDraft,
+  parseDraftPicks,
+} from "../src/scripts/keeper-engine.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const leaguesDir = path.join(__dirname, "..", "src", "leagues");
@@ -80,6 +88,93 @@ async function fetchHistoricalSeasonRaw(leagueObj) {
   return { users, rosters, matchupsByWeek, transactionsByWeek, winnersBracket, losersBracket };
 }
 
+/**
+ * Fetch one season's draft picks + end-of-season ADP for the Keeper Assistant
+ * tab. Returns null if that season's draft hasn't completed yet (expected
+ * for a pre-draft/mid-draft current season, not an error).
+ */
+async function fetchSeasonDraftData(leagueObj, primaryUserIdMap) {
+  const leagueId = String(leagueObj.league_id);
+  const [rosters, drafts] = await Promise.all([
+    fetchWithRetry(`${SLEEPER_BASE}/league/${leagueId}/rosters`),
+    fetchWithRetry(`${SLEEPER_BASE}/league/${leagueId}/drafts`),
+  ]);
+  const completed = findCompletedDraft(drafts);
+  if (!completed) return null;
+
+  const rosterIdToOwnerId = {};
+  for (const r of rosters) {
+    if (r.owner_id) rosterIdToOwnerId[r.roster_id] = r.owner_id;
+  }
+  const rawPicks = await fetchWithRetry(`${SLEEPER_BASE}/draft/${completed.draft_id}/picks`);
+  const picks = parseDraftPicks(rawPicks, rosterIdToOwnerId, primaryUserIdMap);
+
+  const format = scoringFormatFromLeagueObj(leagueObj);
+  const teamCount = leagueObj.total_rosters || rosters.length;
+  const adpByPlayerId = {};
+  try {
+    const rawAdpRows = await fetchWithRetry(adpProjectionsUrl(leagueObj.season));
+    const adpValues = parseAdpRows(rawAdpRows, format);
+    for (const [playerId, adp] of Object.entries(adpValues)) {
+      adpByPlayerId[playerId] = { adp, round: adpToRound(adp, teamCount) };
+    }
+  } catch (err) {
+    console.warn(
+      `  [keepers] ${leagueObj.season}: ADP fetch failed - undrafted-player keeper cost unavailable for this season: ${err.message}`
+    );
+  }
+
+  return {
+    season: String(leagueObj.season),
+    teamCount,
+    scoringFormat: format,
+    rounds: completed.settings?.rounds ?? null,
+    picks,
+    adpByPlayerId,
+  };
+}
+
+/**
+ * Build/update src/leagues/<slug>/data/drafts.json for a keeper league: one
+ * SeasonDraftData entry per season in `chain` (INCLUDING the current season -
+ * unlike historical.json, which deliberately excludes it, see file header).
+ * Append-only: a season already recorded is never re-fetched, so past
+ * seasons' keeper rounds stay stable across rebuilds regardless of whether
+ * the ADP endpoint is a frozen point-in-time snapshot (unconfirmed - spot
+ * check by diffing two builds' output for the same past season).
+ */
+async function buildKeeperDraftHistory(slug, chain, primaryUserIdMap) {
+  const outPath = path.join(leaguesDir, slug, "data", "drafts.json");
+  let existing = [];
+  try {
+    existing = JSON.parse(await readFile(outPath, "utf-8"));
+  } catch {
+    // No prior drafts.json for this league yet - first run.
+  }
+  const existingSeasons = new Set(existing.map((sd) => sd.season));
+
+  const results = [...existing];
+  for (const leagueObj of chain) {
+    const season = String(leagueObj.season);
+    if (existingSeasons.has(season)) continue;
+
+    const seasonDraftData = await fetchSeasonDraftData(leagueObj, primaryUserIdMap);
+    if (!seasonDraftData) {
+      console.log(`  [keepers] ${season}: no completed draft yet, skipping.`);
+      continue;
+    }
+    results.push(seasonDraftData);
+    console.log(
+      `  [keepers] ${season}: recorded ${seasonDraftData.picks.length} draft picks, ${Object.keys(seasonDraftData.adpByPlayerId).length} ADP entries.`
+    );
+  }
+
+  results.sort((a, b) => Number(a.season) - Number(b.season));
+  await mkdir(path.dirname(outPath), { recursive: true });
+  await writeFile(outPath, JSON.stringify(results));
+  console.log(`  [keepers] drafts.json: ${results.length} season(s) on file.`);
+}
+
 async function buildLeague(config) {
   console.log(`\n=== ${config.slug} (${config.name}) ===`);
   const chain = await walkSeasonChain(config.currentLeagueId);
@@ -102,16 +197,21 @@ async function buildLeague(config) {
       (historicalSeasons.includes(currentSeason) ? "" : ` Current season (${currentSeason.season}, status="${currentSeason.status}") excluded - fetched live client-side instead.`)
   );
 
+  // One /users call against the current season resolves co-owner primary ids
+  // for the whole history (Sleeper user_id is stable across seasons/leagues).
+  const currentUsers = await fetchWithRetry(`${SLEEPER_BASE}/league/${config.currentLeagueId}/users`);
+  const primaryUserIdMap = buildPrimaryUserIdMap(config.coOwnerConfig, currentUsers);
+
+  if (config.rulesContent?.keeperRules) {
+    console.log(`  Keeper league detected - fetching draft/ADP history for the Keeper Assistant tab...`);
+    await buildKeeperDraftHistory(config.slug, chain, primaryUserIdMap);
+  }
+
   if (historicalSeasons.length === 0) {
     console.log(`  No historical seasons yet - writing empty historical.json/aggregates.json.`);
     await writeLeagueData(config.slug, [], aggregateSeasons([]));
     return;
   }
-
-  // One /users call against the current season resolves co-owner primary ids
-  // for the whole history (Sleeper user_id is stable across seasons/leagues).
-  const currentUsers = await fetchWithRetry(`${SLEEPER_BASE}/league/${config.currentLeagueId}/users`);
-  const primaryUserIdMap = buildPrimaryUserIdMap(config.coOwnerConfig, currentUsers);
 
   console.log(`  Fetching NFL player database...`);
   const nflPlayers = await fetchWithRetry(`${SLEEPER_BASE}/players/nfl`);

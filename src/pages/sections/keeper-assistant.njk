@@ -1,0 +1,60 @@
+---
+pagination:
+  data: "leaguesByTab['keeper-assistant']"
+  size: 1
+  alias: league
+permalink: "/{{ league.slug }}/keepers/"
+layout: layouts/league-shell.njk
+currentTab: keepers
+eleventyComputed:
+  title: "{{ league.name }} — Keeper Assistant"
+---
+{% set aggregate = leagueStats[league.slug].aggregates %}
+
+{% if not league.rulesContent.keeperRules %}
+<p class="text-text-secondary text-sm">This league does not have keeper rules configured.</p>
+{% elif not aggregate or aggregate.seasons.length == 0 %}
+<p class="text-text-secondary text-sm">No completed seasons yet.</p>
+{% else %}
+<div class="card mb-6">
+  <h2 class="text-xl font-bold mb-3 text-accent-500">Keeper Rules</h2>
+  <ul class="list-disc list-inside space-y-1 text-sm text-text-secondary">
+    {% for rule in league.rulesContent.keeperRules %}<li>{{ rule }}</li>{% endfor %}
+  </ul>
+  <p class="text-xs text-text-muted mt-3">This assistant computes eligibility and cost using rules 1, 2, 6, 7, and 8 above. Trade-for-a-pick mechanics (rules 3–5) aren't modeled — verify manually if they apply to your situation.</p>
+</div>
+
+<div class="card mb-6">
+  <label for="keeper-assistant-select" class="block text-lg font-medium text-accent-500 mb-2">Please select your name</label>
+  <select id="keeper-assistant-select" disabled class="bg-bg border border-border rounded-md p-2 w-full max-w-md text-text-primary focus:ring-2 focus:ring-accent-500 focus:border-accent-500 disabled:opacity-50">
+    <option value="">-- Select a Manager --</option>
+    {% for id, m in aggregate.managers %}
+    <option value="{{ id }}">{{ m.displayName }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+<div class="card">
+  <div class="overflow-x-auto">
+    <table class="stat-table">
+      <thead>
+        <tr>
+          <th class="px-4 py-3">Player</th>
+          <th class="px-4 py-3" data-sort="position">Pos</th>
+          <th class="px-4 py-3">Original Draft</th>
+          <th class="px-4 py-3" data-sort="keeperRound">Keeper Round If Kept</th>
+          <th class="px-4 py-3" data-sort="streak">Streak</th>
+          <th class="px-4 py-3 text-center">Eligible</th>
+        </tr>
+      </thead>
+      <tbody id="keeper-assistant-body">
+        <tr><td colspan="6" class="text-center py-4 text-text-secondary">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script id="keeper-assistant-league-config" type="application/json">{{ league | dump | safe }}</script>
+<script id="keeper-assistant-overrides" type="application/json">{{ league.keeperOverrides | dump | safe }}</script>
+<script type="module" src="/assets/js/keeper-assistant.js"></script>
+{% endif %}
