@@ -33,7 +33,44 @@ function setupChipPopovers() {
   return closeAll;
 }
 
-// Fills the pick-season/pick-round <select>s from whatever "season:round"
+// A group of `[data-value]` buttons that behaves like a single-select radio
+// group: click a button to select it (deselecting any other in the group),
+// click the selected one again to clear it. Powers every dropdown-turned-
+// clickable-list in the filter bar (Season/Position pills, Manager and
+// Draft Pick option lists) with one shared implementation instead of one
+// per filter. Current value lives on the container's `data-selected`
+// attribute so callers can read it the same way they'd read `select.value`.
+function createOptionGroup(container, onChange) {
+  container.dataset.selected = "";
+
+  function setActive(value) {
+    container.dataset.selected = value;
+    for (const btn of container.querySelectorAll("[data-value]")) {
+      btn.dataset.active = String(btn.dataset.value === value);
+    }
+  }
+
+  container.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-value]");
+    if (!btn || !container.contains(btn)) return;
+    setActive(container.dataset.selected === btn.dataset.value ? "" : btn.dataset.value);
+    onChange();
+  });
+
+  return {
+    get value() {
+      return container.dataset.selected;
+    },
+    get label() {
+      return container.querySelector('[data-active="true"]')?.textContent ?? "";
+    },
+    clear() {
+      setActive("");
+    },
+  };
+}
+
+// Fills the pick-season/pick-round option lists from whatever "season:round"
 // tokens actually appear in data-picks across the page, so the options
 // always match real data instead of a hardcoded guess.
 function populatePickOptions(tradeCards) {
@@ -49,18 +86,14 @@ function populatePickOptions(tradeCards) {
     }
   }
 
-  const seasonSelect = document.getElementById("pick-season-select");
+  const seasonList = document.getElementById("pick-season-list");
   for (const season of [...seasons].sort((a, b) => b - a)) {
-    seasonSelect.append(new Option(season, season));
+    seasonList.insertAdjacentHTML("beforeend", `<button type="button" class="filter-list-item" data-value="${season}" data-active="false">${season}</button>`);
   }
-  const roundSelect = document.getElementById("pick-round-select");
+  const roundList = document.getElementById("pick-round-list");
   for (const round of [...rounds].sort((a, b) => a - b)) {
-    roundSelect.append(new Option(`Round ${round}`, String(round)));
+    roundList.insertAdjacentHTML("beforeend", `<button type="button" class="filter-list-item" data-value="${round}" data-active="false">Round ${round}</button>`);
   }
-}
-
-function selectedLabel(select) {
-  return select.value ? select.selectedOptions[0].textContent : "";
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -70,12 +103,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const seasonBlocks = [...document.querySelectorAll("[data-season-block]")];
   const search = document.getElementById("trades-search");
-  const manager1Select = document.getElementById("manager1-select");
-  const manager2Select = document.getElementById("manager2-select");
-  const seasonSelect = document.getElementById("season-select");
-  const positionSelect = document.getElementById("position-select");
-  const pickSeasonSelect = document.getElementById("pick-season-select");
-  const pickRoundSelect = document.getElementById("pick-round-select");
   const faabBtn = document.getElementById("chip-faab-btn");
   const clearBtn = document.getElementById("clear-filters-btn");
   const resultCount = document.getElementById("trades-result-count");
@@ -84,10 +111,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const managerChipBtn = document.getElementById("chip-manager-btn");
   const managerChipLabel = document.getElementById("chip-manager-label");
-  const seasonChipBtn = document.getElementById("chip-season-btn");
-  const seasonChipLabel = document.getElementById("chip-season-label");
-  const positionChipBtn = document.getElementById("chip-position-btn");
-  const positionChipLabel = document.getElementById("chip-position-label");
   const pickChipBtn = document.getElementById("chip-pick-btn");
   const pickChipLabel = document.getElementById("chip-pick-label");
 
@@ -95,6 +118,14 @@ document.addEventListener("DOMContentLoaded", () => {
   populatePickOptions(tradeCards);
 
   let faabOnly = false;
+  const applyFiltersRef = () => applyFilters();
+
+  const seasonGroup = createOptionGroup(document.getElementById("season-group"), applyFiltersRef);
+  const positionGroup = createOptionGroup(document.getElementById("position-group"), applyFiltersRef);
+  const manager1Group = createOptionGroup(document.getElementById("manager1-list"), applyFiltersRef);
+  const manager2Group = createOptionGroup(document.getElementById("manager2-list"), applyFiltersRef);
+  const pickSeasonGroup = createOptionGroup(document.getElementById("pick-season-list"), applyFiltersRef);
+  const pickRoundGroup = createOptionGroup(document.getElementById("pick-round-list"), applyFiltersRef);
 
   function pickMatches(card, pickSeason, pickRound) {
     if (!pickSeason && !pickRound) return true;
@@ -108,12 +139,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function applyFilters() {
     const query = search.value.trim().toLowerCase();
-    const manager1 = manager1Select.value;
-    const manager2 = manager2Select.value;
-    const season = seasonSelect.value;
-    const position = positionSelect.value;
-    const pickSeason = pickSeasonSelect.value;
-    const pickRound = pickRoundSelect.value;
+    const manager1 = manager1Group.value;
+    const manager2 = manager2Group.value;
+    const season = seasonGroup.value;
+    const position = positionGroup.value;
+    const pickSeason = pickSeasonGroup.value;
+    const pickRound = pickRoundGroup.value;
 
     let visibleCount = 0;
     for (const card of tradeCards) {
@@ -149,26 +180,17 @@ document.addEventListener("DOMContentLoaded", () => {
     clearBtn.classList.toggle("hidden", !anyFilterActive);
 
     const managerLabel = manager1 && manager2
-      ? `${selectedLabel(manager1Select)} ↔ ${selectedLabel(manager2Select)}`
-      : selectedLabel(manager1Select) || selectedLabel(manager2Select);
+      ? `${manager1Group.label} ↔ ${manager2Group.label}`
+      : manager1Group.label || manager2Group.label;
     managerChipLabel.textContent = managerLabel || "Manager";
     managerChipBtn.dataset.active = String(Boolean(manager1 || manager2));
-
-    seasonChipLabel.textContent = season || "Season";
-    seasonChipBtn.dataset.active = String(Boolean(season));
-
-    positionChipLabel.textContent = position || "Position";
-    positionChipBtn.dataset.active = String(Boolean(position));
 
     const pickLabel = [pickSeason, pickRound && `R${pickRound}`].filter(Boolean).join(" · ");
     pickChipLabel.textContent = pickLabel || "Draft Pick";
     pickChipBtn.dataset.active = String(Boolean(pickSeason || pickRound));
   }
 
-  [search].forEach((el) => el.addEventListener("input", applyFilters));
-  [manager1Select, manager2Select, seasonSelect, positionSelect, pickSeasonSelect, pickRoundSelect].forEach((el) =>
-    el.addEventListener("change", applyFilters)
-  );
+  search.addEventListener("input", applyFilters);
 
   faabBtn.addEventListener("click", () => {
     faabOnly = !faabOnly;
@@ -179,12 +201,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   clearBtn.addEventListener("click", () => {
     search.value = "";
-    manager1Select.value = "";
-    manager2Select.value = "";
-    seasonSelect.value = "";
-    positionSelect.value = "";
-    pickSeasonSelect.value = "";
-    pickRoundSelect.value = "";
+    seasonGroup.clear();
+    positionGroup.clear();
+    manager1Group.clear();
+    manager2Group.clear();
+    pickSeasonGroup.clear();
+    pickRoundGroup.clear();
     faabOnly = false;
     faabBtn.setAttribute("aria-pressed", "false");
     faabBtn.dataset.active = "false";
