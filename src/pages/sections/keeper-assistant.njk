@@ -17,15 +17,6 @@ eleventyComputed:
 <p class="text-text-secondary text-sm">No completed seasons yet.</p>
 {% else %}
 <div class="card mb-6">
-  <h2 class="text-xl font-bold mb-3 text-accent-500">Keeper Rules</h2>
-  <ul class="list-disc list-inside space-y-1 text-sm text-text-secondary">
-    {% for rule in league.rulesContent.keeperRules %}<li>{{ rule }}</li>{% endfor %}
-  </ul>
-  <p class="text-xs text-text-muted mt-3">This assistant computes eligibility and cost using rules 1, 2, 6, 7, and 8 above. Trade-for-a-pick mechanics (rules 3–5) aren't modeled — verify manually if they apply to your situation. A <span class="font-semibold">*</span> next to a round means the computed cost fell outside the draft and was capped.</p>
-  <p id="keeper-assistant-adp-note" class="text-xs text-text-muted mt-1"></p>
-</div>
-
-<div class="card mb-6">
   <label for="keeper-assistant-select" class="block text-lg font-medium text-accent-500 mb-2">Please select your name</label>
   <select id="keeper-assistant-select" disabled class="bg-bg border border-border rounded-md p-2 w-full max-w-md text-text-primary focus:ring-2 focus:ring-accent-500 focus:border-accent-500 disabled:opacity-50">
     <option value="">-- Select a Manager --</option>
@@ -35,7 +26,7 @@ eleventyComputed:
   </select>
 </div>
 
-<div class="card">
+<div class="card mb-6">
   <div class="overflow-x-auto">
     <table class="stat-table">
       <thead>
@@ -53,6 +44,15 @@ eleventyComputed:
       </tbody>
     </table>
   </div>
+</div>
+
+<div class="card">
+  <h2 class="text-xl font-bold mb-3 text-accent-500">Keeper Rules</h2>
+  <ul class="list-disc list-inside space-y-1 text-sm text-text-secondary">
+    {% for rule in league.rulesContent.keeperRules %}<li>{{ rule }}</li>{% endfor %}
+  </ul>
+  <p class="text-xs text-text-muted mt-3">This assistant computes eligibility and cost using rules 1, 2, 6, 7, and 8 above. Trade-for-a-pick mechanics (rules 3–5) aren't modeled — verify manually if they apply to your situation. A <span class="font-semibold">*</span> next to a round means the computed cost fell outside the draft and was capped.</p>
+  <p id="keeper-assistant-adp-note" class="text-xs text-text-muted mt-1"></p>
 </div>
 
 <script id="keeper-assistant-league-config" type="application/json">{{ league | dump | safe }}</script>
