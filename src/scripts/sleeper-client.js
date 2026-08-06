@@ -16,7 +16,11 @@ import { processSeason, buildPrimaryUserIdMap } from "./season-processor.mjs";
 
 const SLEEPER_BASE = "https://api.sleeper.app/v1";
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
-const CACHE_VERSION = "v1";
+// Bumped to v2: v1 payloads were cached with a playerInfoLookup built only
+// from matchup weeks, which is empty in the off-season (see season-processor.mjs
+// step 5b). Without a bump those stale entries keep resolving every player to
+// "Unknown Player" for up to CACHE_TTL_MS after this ships.
+const CACHE_VERSION = "v2";
 
 function cacheKey(slug) {
   return `bf:${slug}:current:${CACHE_VERSION}`;

@@ -556,14 +556,25 @@ export function processSeason({
   // to resolve names for Franchise Cornerstones/Arch-Nemeses entries, which are
   // keyed by playerId only in rosteredPlayerWeeks/startersPointsByPlayer/pointsAgainstByPlayer.
   const playerInfoLookup = {};
+  const addPlayerInfo = (playerId) => {
+    if (playerInfoLookup[playerId]) return;
+    const info = nflPlayers[playerId];
+    playerInfoLookup[playerId] = info
+      ? { name: playerFullName(info), position: info.position || "N/A" }
+      : { name: "Unknown Player", position: "N/A" };
+  };
   for (const m of Object.values(managers)) {
-    for (const playerId of m.players) {
-      if (playerInfoLookup[playerId]) continue;
-      const info = nflPlayers[playerId];
-      playerInfoLookup[playerId] = info
-        ? { name: playerFullName(info), position: info.position || "N/A" }
-        : { name: "Unknown Player", position: "N/A" };
-    }
+    for (const playerId of m.players) addPlayerInfo(playerId);
+  }
+  // Also cover everyone on the raw roster, not just players seen in a fetched
+  // matchup week. `managers[].players` is populated exclusively from the
+  // matchup loop above, and sleeper-client.js's completed-week cutoff is 0
+  // during the pre/off-season - so a live off-season fetch has NO matchup
+  // weeks and would otherwise leave this map empty, resolving every current
+  // roster player to "Unknown Player" (the Keeper Assistant tab reads roster
+  // ids straight off `rosterSnapshots`, which is always populated).
+  for (const r of rosterSnapshots) {
+    for (const playerId of r.players) addPlayerInfo(playerId);
   }
 
   // -- 6. Transactions: totals, trades (resolved), FAAB bids. -----------------

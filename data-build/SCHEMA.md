@@ -15,15 +15,21 @@ This is just an index: which UI tab reads which top-level field.
   (`SeasonData` shape, single season) and layered onto `aggregates.json` via
   `src/scripts/merge.js`'s `mergeAggregates()`.
 - `src/leagues/<slug>/data/drafts.json` — keeper-league-only (gated on config
-  `rulesContent.keeperRules`), `SeasonDraftData[]`, one per season INCLUDING
-  the current one (unlike `historical.json`, which deliberately excludes it -
-  the Keeper Assistant tab needs the most recently completed draft). Built
-  append-only by `data-build/fetch-sleeper.js`'s `buildKeeperDraftHistory()`;
-  a season already on file is never re-fetched. Fetched directly by the
-  browser (`fetch("/leagues/<slug>/data/drafts.json")`), not embedded via
-  `leagueStats`. If the current season's draft isn't in the file yet
+  `rulesContent.keeperRules`), `{ seasons: SeasonDraftData[], upcomingAdp:
+  UpcomingAdp|null }`. `seasons` holds one entry per season with a completed
+  draft, INCLUDING the current one (unlike `historical.json`, which
+  deliberately excludes it) — each carries that draft's `picks` plus
+  `playersByOwner`, the end-of-season rosters the engine uses to tell a keeper
+  apart from a re-draft. `upcomingAdp` is ADP for the NEXT draft (current
+  market value, which is what rule 6 needs) and is deliberately decoupled from
+  the season records, since the upcoming season has no draft to hang it off.
+  Recorded seasons are append-only; `upcomingAdp` is always re-fetched. Built
+  by `data-build/fetch-sleeper.js`'s `buildKeeperDraftHistory()`. Fetched
+  directly by the browser (`fetch("/leagues/<slug>/data/drafts.json")`), not
+  embedded via `leagueStats`. If the current season's draft isn't on file yet
   (season-rollover gap), `src/scripts/keeper-assistant.js` does a small live
-  top-up. See JSDoc typedefs in `src/scripts/keeper-engine.mjs`.
+  top-up. See JSDoc typedefs in `src/scripts/keeper-engine.mjs`, including the
+  ROUND DIRECTION note explaining why keeper cost counts *down*.
 
 ## Tab → data field map
 

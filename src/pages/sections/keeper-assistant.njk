@@ -21,7 +21,8 @@ eleventyComputed:
   <ul class="list-disc list-inside space-y-1 text-sm text-text-secondary">
     {% for rule in league.rulesContent.keeperRules %}<li>{{ rule }}</li>{% endfor %}
   </ul>
-  <p class="text-xs text-text-muted mt-3">This assistant computes eligibility and cost using rules 1, 2, 6, 7, and 8 above. Trade-for-a-pick mechanics (rules 3–5) aren't modeled — verify manually if they apply to your situation.</p>
+  <p class="text-xs text-text-muted mt-3">This assistant computes eligibility and cost using rules 1, 2, 6, 7, and 8 above. Trade-for-a-pick mechanics (rules 3–5) aren't modeled — verify manually if they apply to your situation. A <span class="font-semibold">*</span> next to a round means the computed cost fell outside the draft and was capped.</p>
+  <p id="keeper-assistant-adp-note" class="text-xs text-text-muted mt-1"></p>
 </div>
 
 <div class="card mb-6">
@@ -41,7 +42,7 @@ eleventyComputed:
         <tr>
           <th class="px-4 py-3">Player</th>
           <th class="px-4 py-3" data-sort="position">Pos</th>
-          <th class="px-4 py-3">Original Draft</th>
+          <th class="px-4 py-3">Cost Basis</th>
           <th class="px-4 py-3" data-sort="keeperRound">Keeper Round If Kept</th>
           <th class="px-4 py-3" data-sort="streak">Streak</th>
           <th class="px-4 py-3 text-center">Eligible</th>

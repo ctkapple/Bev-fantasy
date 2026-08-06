@@ -10,36 +10,38 @@
  * `SeasonData`) because it has an independent fetch path and lifecycle -
  * Sleeper `/drafts` + `/draft/{id}/picks` plus the undocumented
  * api.sleeper.com ADP-projections endpoint, not the matchups/transactions/
- * rosters triad `processSeason()` consumes - and it needs the CURRENT
- * season's draft, which `historical.json` deliberately excludes (see
- * data-build/fetch-sleeper.js). This mirrors the existing precedent for
- * Draft Odds (season-processor.mjs porting note #5).
+ * rosters triad `processSeason()` consumes. This mirrors the existing
+ * precedent for Draft Odds (season-processor.mjs porting note #5).
  *
  * The raw-fetch helpers below (`adpProjectionsUrl`, `parseAdpRows`,
  * `findCompletedDraft`, `parseDraftPicks`) are shared by both call sites:
- * data-build/fetch-sleeper.js (Node, build-time, writes drafts.json for
- * every completed historical + current-season draft) and
- * src/scripts/keeper-assistant.js (browser, live top-up for the rare case
- * the current season's draft isn't in drafts.json yet). Each call site does
- * its own I/O (fetchWithRetry + file writes vs. fetchWithRetry only); this
- * module only ever transforms already-fetched JSON.
+ * data-build/fetch-sleeper.js (Node, build-time) and
+ * src/scripts/keeper-assistant.js (browser). Each call site does its own I/O;
+ * this module only ever transforms already-fetched JSON.
  *
- * Implements jrwll's keeper rules (src/leagues/jrwll.json
- * rulesContent.keeperRules), specifically:
- *   1. Max 3 keepers, none required (display-only - not enforced here).
- *   2. Kept player costs one round higher than their original draft round;
- *      confirmed with the league owner to ESCALATE on a second consecutive
- *      keep (originalRound + 1 + streakCount).
- *   6. Undrafted-but-rostered players cost 2 rounds below end-of-season ADP.
- *   7. Original draft round persists across drops/trades.
- *   8. Max 2 consecutive keeper years.
- * Rules 3-5 (trading for a pick) are explicitly out of scope by product
- * decision - `exceedsDraftRounds` flags when they'd apply without modeling
- * the trade mechanics themselves.
+ * ---------------------------------------------------------------------------
+ * ROUND DIRECTION (confirmed with the league owner - do NOT "fix" this)
+ * ---------------------------------------------------------------------------
+ * Round numbers count UP as picks get cheaper (round 1 = most valuable). The
+ * league's rules text uses "higher" to mean MORE VALUABLE, i.e. a LOWER round
+ * number, and "below" to mean less valuable, i.e. a HIGHER round number:
+ *
+ *   Rule 2: kept "one round higher than where they were drafted"
+ *           -> drafted round 10, keeper cost = round 9 (round - 1).
+ *   Rule 3: "must use a higher-round pick" -> round 8, 7, ... (corroborates).
+ *   Rule 6: undrafted cost "two rounds below their ADP"
+ *           -> ADP round 5, keeper cost = round 7 (round + 2).
+ *
+ * Cost escalates by one more round for each consecutive year already kept
+ * (also confirmed): 1st keeper year = origin - 1, 2nd = origin - 2.
+ *
+ * Rules 3-5 (trading for a pick) are out of scope by product decision;
+ * `belowFirstRound` / `beyondDraftRounds` flag where they'd apply instead of
+ * modeling the trade mechanics.
  */
 
 // ---------------------------------------------------------------------------
-// Raw-Sleeper-response parsing (shared by build-time and live-top-up fetches)
+// Raw-Sleeper-response parsing (shared by build-time and browser fetches)
 // ---------------------------------------------------------------------------
 
 const ADP_POSITIONS = ["DEF", "K", "QB", "RB", "TE", "WR"];
@@ -65,7 +67,11 @@ export function parseAdpRows(rows, format) {
   const byPlayerId = {};
   for (const row of rows || []) {
     const adp = row?.stats?.[field];
-    if (typeof adp === "number" && Number.isFinite(adp)) byPlayerId[row.player_id] = adp;
+    // 999 is Sleeper's "not meaningfully ranked" sentinel - keep it out rather
+    // than converting it into an absurd round number downstream.
+    if (typeof adp === "number" && Number.isFinite(adp) && adp > 0 && adp < 999) {
+      byPlayerId[row.player_id] = adp;
+    }
   }
   return byPlayerId;
 }
@@ -94,8 +100,19 @@ export function parseDraftPicks(rawPicks, rosterIdToOwnerId, primaryUserIdMap = 
     });
 }
 
+/** Build {ownerId: playerId[]} end-of-season roster snapshot from a raw /rosters response. */
+export function parseRostersByOwner(rosters, primaryUserIdMap = {}) {
+  const byOwner = {};
+  for (const r of rosters || []) {
+    if (!r.owner_id) continue;
+    const ownerId = primaryUserIdMap[r.owner_id] || r.owner_id;
+    byOwner[ownerId] = (byOwner[ownerId] || []).concat(r.players || []);
+  }
+  return byOwner;
+}
+
 // ---------------------------------------------------------------------------
-// Keeper eligibility/round/streak algorithm
+// Keeper eligibility / cost / streak
 // ---------------------------------------------------------------------------
 
 /**
@@ -110,29 +127,34 @@ export function parseDraftPicks(rawPicks, rosterIdToOwnerId, primaryUserIdMap = 
  * @property {'ppr'|'half_ppr'|'std'} scoringFormat
  * @property {number|null} rounds - Total rounds in this season's draft.
  * @property {SeasonDraftPick[]} picks
- * @property {Object<string,{adp:number, round:number}>} adpByPlayerId
+ * @property {Object<string,string[]>} playersByOwner - End-of-season rosters, used to tell a keeper apart from a re-draft.
+ *
+ * @typedef {object} UpcomingAdp
+ * @property {string} season - Season the ADP is quoted for (the upcoming draft).
+ * @property {number} teamCount
+ * @property {number|null} rounds - Expected rounds in the upcoming draft (carried from the last real draft).
+ * @property {Object<string,number>} adpByPlayerId - Raw overall-pick ADP decimals.
  *
  * @typedef {object} KeeperProfile
  * @property {string} playerId
  * @property {string} name
  * @property {string} position
  * @property {'drafted'|'undrafted'|'unknown'} costBasis
- * @property {number|null} originalDraftRound
- * @property {string|null} originalDraftSeason
- * @property {number} streakCount - Consecutive prior keeper years already used, chained under the CURRENT owner only.
+ * @property {number|null} originRound - Round the current keeper chain started at.
+ * @property {string|null} originSeason
+ * @property {number|null} adpRound - Undrafted path only: the player's ADP expressed as a round.
+ * @property {string|null} adpSeason
+ * @property {number} streakCount - Consecutive keeper years ALREADY used under the current owner.
  * @property {boolean} eligible - streakCount < 2 (rule 8).
- * @property {number|null} keeperRound - Round this player would cost to keep this year, or null if unknown.
- * @property {boolean} exceedsDraftRounds - keeperRound is beyond the known draft's round count (rules 3-5 territory - flagged, not modeled).
- * @property {string|null} note - Human-readable caveat for the UI.
+ * @property {number|null} keeperRound - Round this player would cost to keep, or null if undeterminable.
+ * @property {boolean} belowFirstRound - Computed cost was above round 1; capped (rules 3-5 territory).
+ * @property {boolean} beyondDraftRounds - ADP sits outside the draftable pool; capped at the last round.
+ * @property {string|null} note
  */
 
-/**
- * Index every known pick per player across all recorded seasons, oldest first.
- * @param {SeasonDraftData[]} draftHistory
- * @returns {Map<string, Array<{season:number, round:number, ownerId:string|null}>>}
- */
-export function buildDraftPickIndex(draftHistory) {
-  const bySeason = [...(draftHistory || [])].sort((a, b) => Number(a.season) - Number(b.season));
+/** Index every known pick per player across all recorded seasons, oldest first. */
+export function buildDraftPickIndex(seasons) {
+  const bySeason = [...(seasons || [])].sort((a, b) => Number(a.season) - Number(b.season));
   const byPlayer = new Map();
   for (const sd of bySeason) {
     for (const pick of sd.picks || []) {
@@ -145,93 +167,148 @@ export function buildDraftPickIndex(draftHistory) {
 }
 
 /**
+ * Index who held each player at the END of each season.
+ * @returns {Map<string, Object<number,string>>} playerId -> {season: ownerId}
+ */
+export function buildRosterHistoryIndex(seasons) {
+  const byPlayer = new Map();
+  for (const sd of seasons || []) {
+    const season = Number(sd.season);
+    for (const [ownerId, playerIds] of Object.entries(sd.playersByOwner || {})) {
+      for (const playerId of playerIds) {
+        const bySeason = byPlayer.get(playerId) || {};
+        bySeason[season] = ownerId;
+        byPlayer.set(playerId, bySeason);
+      }
+    }
+  }
+  return byPlayer;
+}
+
+/**
+ * Walk the keeper chain backward from the most recent pick.
+ *
+ * A pick counts as a keeper year (rather than a fresh draft) when the same
+ * manager ALSO held that player at the end of the previous season - in a
+ * redraft-with-keepers league everyone else returns to the pool, so
+ * "on my roster in December, drafted by me in August" is a keep. This is
+ * deliberately NOT a round-delta test: rules 3 and 5 (use a higher pick when
+ * you lack the round; trade for a second pick in a round) mean a real keeper's
+ * round can move by more than one, which a strict delta check would miss.
+ *
+ * @returns {{streakCount: number, originPick: {season:number,round:number,ownerId:string|null}}}
+ */
+function walkKeeperChain(pickHistory, currentOwnerId, rosterSeasons) {
+  let idx = pickHistory.length - 1;
+  let streakCount = 0;
+
+  while (idx >= 0) {
+    const pick = pickHistory[idx];
+    if (pick.ownerId !== currentOwnerId) break;
+    if (rosterSeasons?.[pick.season - 1] !== currentOwnerId) break; // fresh draft, chain starts here
+    streakCount++;
+    if (idx === 0 || pickHistory[idx - 1].season !== pick.season - 1) break;
+    idx--;
+  }
+
+  return { streakCount, originPick: pickHistory[idx] };
+}
+
+/**
  * @param {string} playerId
  * @param {string} currentOwnerId - Canonical manager id of the roster being evaluated.
- * @param {Array<{season:number, round:number, ownerId:string|null}>|undefined} pickHistory - This player's known picks, season-ascending.
- * @param {SeasonDraftData|null} latestSeasonDraft - Most recent known SeasonDraftData (source of ADP + this draft's round count), or null.
- * @returns {Omit<KeeperProfile, 'playerId'|'name'|'position'>}
+ * @param {Array<{season:number,round:number,ownerId:string|null}>|undefined} pickHistory - Season-ascending.
+ * @param {Object<number,string>|undefined} rosterSeasons - {season: ownerId} for this player.
+ * @param {UpcomingAdp|null} upcomingAdp
+ * @returns {Omit<KeeperProfile,'playerId'|'name'|'position'>}
  */
-export function computeKeeperProfile(playerId, currentOwnerId, pickHistory, latestSeasonDraft) {
-  const rounds = latestSeasonDraft?.rounds ?? null;
+export function computeKeeperProfile(playerId, currentOwnerId, pickHistory, rosterSeasons, upcomingAdp) {
+  const lastRound = upcomingAdp?.rounds ?? null;
 
   if (!pickHistory || pickHistory.length === 0) {
-    // Never drafted in any known season - rule 6 branch.
-    const adpEntry = latestSeasonDraft?.adpByPlayerId?.[playerId];
-    if (!adpEntry) {
+    // Rule 6: never drafted in any recorded season - price off the upcoming
+    // draft's ADP (current market value), not a stale historical number.
+    const adp = upcomingAdp?.adpByPlayerId?.[playerId];
+    if (adp == null) {
       return {
         costBasis: "unknown",
-        originalDraftRound: null,
-        originalDraftSeason: null,
+        originRound: null,
+        originSeason: null,
+        adpRound: null,
+        adpSeason: null,
         streakCount: 0,
         eligible: true,
         keeperRound: null,
-        exceedsDraftRounds: false,
-        note: "No draft or ADP history available for this player.",
+        belowFirstRound: false,
+        beyondDraftRounds: false,
+        note: "Never drafted and no ADP on file - undraftable in this format, so there's no rule-6 cost to compute.",
       };
     }
-    const keeperRound = Math.max(1, adpEntry.round - 2);
+
+    const adpRound = adpToRound(adp, upcomingAdp.teamCount);
+    const raw = adpRound + 2; // "two rounds below their ADP" = two rounds later/cheaper
+    const beyondDraftRounds = lastRound != null && raw > lastRound;
     return {
       costBasis: "undrafted",
-      originalDraftRound: null,
-      originalDraftSeason: null,
+      originRound: null,
+      originSeason: null,
+      adpRound,
+      adpSeason: upcomingAdp.season,
       streakCount: 0,
       eligible: true,
-      keeperRound,
-      exceedsDraftRounds: rounds != null && keeperRound > rounds,
-      note: `ADP-based cost (${latestSeasonDraft.season} ADP round ${adpEntry.round}).`,
+      keeperRound: beyondDraftRounds ? lastRound : raw,
+      belowFirstRound: false,
+      beyondDraftRounds,
+      note: beyondDraftRounds
+        ? `${upcomingAdp.season} ADP is round ${adpRound}, past the last round of the draft - shown at the last round (round ${lastRound}).`
+        : `Undrafted: ${upcomingAdp.season} ADP round ${adpRound}, kept two rounds later.`,
     };
   }
 
-  // Rule 7: original draft round persists across drops/trades - always the earliest known pick, any owner.
-  const original = pickHistory[0];
-  const mostRecent = pickHistory[pickHistory.length - 1];
+  // Rule 7: a dropped/traded player keeps the draft position of record, so the
+  // chain origin is used even when someone else made that pick.
+  const { streakCount, originPick } = walkKeeperChain(pickHistory, currentOwnerId, rosterSeasons);
 
-  // Streak: consecutive round=prevRound+1, season=prevSeason+1 picks chained
-  // backward from the most recent one, only while the owner stays the
-  // CURRENT owner. A manager change anywhere breaks the chain - an inherited
-  // keeper streak is not modeled; a new owner (via trade/waiver) starts at 0.
-  let streakCount = 0;
-  if (mostRecent.ownerId === currentOwnerId) {
-    for (let i = pickHistory.length - 1; i > 0; i--) {
-      const cur = pickHistory[i];
-      const prev = pickHistory[i - 1];
-      if (cur.ownerId !== currentOwnerId || prev.ownerId !== currentOwnerId) break;
-      if (cur.season !== prev.season + 1 || cur.round !== prev.round + 1) break;
-      streakCount++;
-    }
-  }
-
-  // Rule 2 (escalating, confirmed with league owner): 1st keeper year costs
-  // originalRound + 1; each further consecutive keeper year adds one more round.
-  const keeperRound = original.round + 1 + streakCount;
+  // Rule 2 + escalation: one round higher (earlier) per keeper year used.
+  const raw = originPick.round - 1 - streakCount;
+  const belowFirstRound = raw < 1;
 
   return {
     costBasis: "drafted",
-    originalDraftRound: original.round,
-    originalDraftSeason: String(original.season),
+    originRound: originPick.round,
+    originSeason: String(originPick.season),
+    adpRound: null,
+    adpSeason: null,
     streakCount,
     eligible: streakCount < 2, // Rule 8: max 2 consecutive keeper years.
-    keeperRound,
-    exceedsDraftRounds: rounds != null && keeperRound > rounds,
-    note:
-      rounds != null && keeperRound > rounds
-        ? "Computed round exceeds this draft's round count - trading for a pick (not modeled here) would be required."
-        : null,
+    keeperRound: belowFirstRound ? 1 : raw,
+    belowFirstRound,
+    beyondDraftRounds: false,
+    note: belowFirstRound
+      ? "Cost works out above round 1, which doesn't exist - shown at round 1. Confirm with the commissioner."
+      : null,
   };
 }
 
 /**
  * @param {string[]} playerIds - Roster's current player_ids.
  * @param {string} currentOwnerId
- * @param {Map<string, Array<object>>} pickIndex - From buildDraftPickIndex().
- * @param {SeasonDraftData|null} latestSeasonDraft
+ * @param {object} indexes - { pickIndex, rosterIndex } from buildDraftPickIndex/buildRosterHistoryIndex.
+ * @param {UpcomingAdp|null} upcomingAdp
  * @param {Object<string,{name:string,position:string}>} playerInfoLookup
  * @returns {KeeperProfile[]}
  */
-export function computeRosterKeeperProfiles(playerIds, currentOwnerId, pickIndex, latestSeasonDraft, playerInfoLookup) {
+export function computeRosterKeeperProfiles(playerIds, currentOwnerId, indexes, upcomingAdp, playerInfoLookup) {
+  const { pickIndex, rosterIndex } = indexes;
   return (playerIds || []).map((playerId) => {
     const info = playerInfoLookup?.[playerId];
-    const profile = computeKeeperProfile(playerId, currentOwnerId, pickIndex.get(playerId), latestSeasonDraft);
+    const profile = computeKeeperProfile(
+      playerId,
+      currentOwnerId,
+      pickIndex.get(playerId),
+      rosterIndex.get(playerId),
+      upcomingAdp
+    );
     return {
       playerId,
       name: info?.name || "Unknown Player",
@@ -244,10 +321,7 @@ export function computeRosterKeeperProfiles(playerIds, currentOwnerId, pickIndex
 /**
  * Shallow-merge hand-entered corrections (league config `keeperOverrides`,
  * keyed by Sleeper player_id) over the inferred profiles - escape hatch for
- * the rare case the round-based streak inference gets a player wrong.
- * @param {KeeperProfile[]} profiles
- * @param {Object<string, Partial<KeeperProfile>>} overridesByPlayerId
- * @returns {KeeperProfile[]}
+ * the rare case the chain inference gets a player wrong.
  */
 export function applyKeeperOverrides(profiles, overridesByPlayerId) {
   if (!overridesByPlayerId || Object.keys(overridesByPlayerId).length === 0) return profiles;
