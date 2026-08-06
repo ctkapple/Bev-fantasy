@@ -132,6 +132,31 @@ function canonicalManagerId(userId, primaryUserIdMap) {
 }
 
 /**
+ * Resolve a league config's `coOwnerConfig` ({secondaryUsername: primaryUsername},
+ * lowercase Sleeper display_names) into a `primaryUserIdMap` ({secondaryUserId:
+ * primaryUserId}) using one season's raw `/users` response. Shared by
+ * data-build/fetch-sleeper.js (build time) and sleeper-client.js (browser) so
+ * co-owner resolution can't drift between the two.
+ * @param {Object<string,string>|undefined} coOwnerConfig
+ * @param {Array<object>} usersResponse - Raw Sleeper `/league/{id}/users` response.
+ * @returns {Object<string,string>}
+ */
+export function buildPrimaryUserIdMap(coOwnerConfig, usersResponse) {
+  if (!coOwnerConfig || Object.keys(coOwnerConfig).length === 0) return {};
+  const usernameToId = {};
+  for (const u of usersResponse) {
+    usernameToId[(u.display_name || "").toLowerCase()] = u.user_id;
+  }
+  const map = {};
+  for (const [secondaryUsername, primaryUsername] of Object.entries(coOwnerConfig)) {
+    const secondaryId = usernameToId[secondaryUsername.toLowerCase()];
+    const primaryId = usernameToId[primaryUsername.toLowerCase()];
+    if (secondaryId && primaryId) map[secondaryId] = primaryId;
+  }
+  return map;
+}
+
+/**
  * Build a `roster_id -> canonical manager user_id` lookup for one season.
  * @param {Array<object>} rosters - Raw Sleeper `/rosters` response.
  * @param {Object<string,string>} primaryUserIdMap
@@ -289,6 +314,9 @@ function newManagerSeasonEntry(userId, displayName, avatar) {
  *   From the losers bracket final. Null if unavailable (bracket missing, or league doesn't run one). jrwll-only concept; harmless empty value for other leagues.
  * @property {Array<{playerId:string,name:string,position:string,managerId:string}>} keptPlayers - Players present on the same manager's roster in both this season and the immediately preceding one (per `previousSeasonRosters` input). Empty if `previousSeasonRosters` wasn't provided (e.g. the very first season in a league's history, or a live current-season fetch that didn't supply it).
  * @property {SeasonDataRosterEntry[]} rosterSnapshots - Raw roster/standings snapshot, one per Sleeper roster.
+ * @property {Object<string,{name:string,position:string}>} playerInfoLookup - Name/position for every player rostered by
+ *   anyone this season (scoped, not the full nflPlayers db). Used by aggregateSeasons/mergeAggregates to resolve
+ *   Franchise Cornerstones / Arch-Nemeses display names from playerId-keyed accumulator maps.
  */
 
 /**
@@ -338,11 +366,10 @@ export function processSeason({
     const usernameLower = (user.display_name || "").toLowerCase();
     const customInfo = managerInfoMap[usernameLower];
     const displayName = customInfo ? customInfo.name : user.display_name;
-    const avatar = customInfo
-      ? customInfo.avatar
-      : user.avatar
-        ? `https://sleepercdn.com/avatars/${user.avatar}`
-        : PLACEHOLDER_AVATAR;
+    // customInfo.avatar is optional (a manager can override the name only) -
+    // fall through to the Sleeper CDN avatar / placeholder in that case too.
+    const avatar =
+      customInfo?.avatar || (user.avatar ? `https://sleepercdn.com/avatars/${user.avatar}` : PLACEHOLDER_AVATAR);
 
     if (!managers[canonicalId]) {
       managers[canonicalId] = newManagerSeasonEntry(canonicalId, displayName, avatar);
@@ -519,6 +546,22 @@ export function processSeason({
         playerPoints1: matchup.players_points,
         playerPoints2: opponent.players_points,
       });
+    }
+  }
+
+  // -- 5b. Player name/position lookup, scoped to players actually rostered this
+  // season (NOT the full ~5000-entry nflPlayers db - keeps SeasonData JSON small).
+  // Consumed by foldSeasonIntoAccumulator() in aggregateSeasons/mergeAggregates
+  // to resolve names for Franchise Cornerstones/Arch-Nemeses entries, which are
+  // keyed by playerId only in rosteredPlayerWeeks/startersPointsByPlayer/pointsAgainstByPlayer.
+  const playerInfoLookup = {};
+  for (const m of Object.values(managers)) {
+    for (const playerId of m.players) {
+      if (playerInfoLookup[playerId]) continue;
+      const info = nflPlayers[playerId];
+      playerInfoLookup[playerId] = info
+        ? { name: playerFullName(info), position: info.position || "N/A" }
+        : { name: "Unknown Player", position: "N/A" };
     }
   }
 
@@ -701,6 +744,7 @@ export function processSeason({
     toiletBowl,
     keptPlayers,
     rosterSnapshots,
+    playerInfoLookup,
   };
 }
 
@@ -805,13 +849,22 @@ function foldSeasonIntoAccumulator(acc, seasonData) {
     }
     for (const [playerId, points] of Object.entries(sm.startersPointsByPlayer)) {
       if (!cm.cornerstones[playerId]) {
-        cm.cornerstones[playerId] = { playerId, name: null, position: null, weeks: 0, points: 0, years: new Set([season]) };
+        const info = seasonData.playerInfoLookup?.[playerId];
+        cm.cornerstones[playerId] = {
+          playerId,
+          name: info?.name || null,
+          position: info?.position || null,
+          weeks: 0,
+          points: 0,
+          years: new Set([season]),
+        };
       }
       cm.cornerstones[playerId].points += points;
     }
     for (const [playerId, points] of Object.entries(sm.pointsAgainstByPlayer)) {
       if (!cm.nemeses[playerId]) {
-        cm.nemeses[playerId] = { playerId, name: null, position: null, points: 0 };
+        const info = seasonData.playerInfoLookup?.[playerId];
+        cm.nemeses[playerId] = { playerId, name: info?.name || null, position: info?.position || null, points: 0 };
       }
       cm.nemeses[playerId].points += points;
     }

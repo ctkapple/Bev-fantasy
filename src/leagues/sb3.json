@@ -1,0 +1,42 @@
+{
+  "slug": "sb3",
+  "name": "Super Beef 3-Way",
+  "tagline": "Dynasty",
+  "footerTagline": "SB3 Fantasy Stats • Established in 2025 • All Statistics Certified Accurate*",
+  "currentLeagueId": "1180197099396288512",
+  "coOwnerConfig": {
+    "cmcole17": "kpflats",
+    "seanrich3": "bigxp3te"
+  },
+  "tabs": [
+    { "id": "dashboard", "label": "Rankings", "template": "dashboard" },
+    { "id": "draftodds", "label": "Draft Odds", "template": "draft-odds" },
+    { "id": "myteam", "label": "My Team", "template": "myteam" },
+    { "id": "h2h", "label": "H2H", "template": "h2h" },
+    { "id": "rosters", "label": "Championships", "template": "championships" },
+    { "id": "records", "label": "Records", "template": "records" },
+    { "id": "legacies", "label": "Legends", "template": "legends" },
+    { "id": "tradelog", "label": "Trades", "template": "trades" },
+    { "id": "faab", "label": "FAAB", "template": "faab" }
+  ],
+  "managerInfoMap": {
+    "kpflats": { "name": "Kevin & Chris", "avatar": "/assets/kev-and-chris.png" },
+    "cmcole17": { "name": "Kevin & Chris", "avatar": "/assets/kev-and-chris.png" },
+    "bigxp3te": { "name": "Peter & Sean", "avatar": "/assets/pete-and-richy.png" },
+    "seanrich3": { "name": "Peter & Sean", "avatar": "/assets/pete-and-richy.png" },
+    "mzeroka": { "name": "Malcolm Zeroka", "avatar": "/assets/Malcolm.jpg" },
+    "loperz": { "name": "Matt Pitman", "avatar": "/assets/pitman.png" },
+    "brianharty": { "name": "Brian Harty", "avatar": "/assets/brian.png" },
+    "manzom": { "name": "Matt Manzo", "avatar": "/assets/Manzo.png" },
+    "wgd": { "name": "Will Dooling", "avatar": "/assets/will.png" },
+    "ajohnstone34": { "name": "Andrew Johnstone", "avatar": "/assets/andy.jpg" },
+    "archmaesterebrose": { "name": "Adam Ellis", "avatar": "/assets/adam.png" },
+    "cademarc": { "name": "Connor Cademartori", "avatar": "/assets/connor.jpg" },
+    "patgavin": { "name": "Patrick Gavin", "avatar": "/assets/pat.png" },
+    "jonesj83": { "name": "Johnny Jones", "avatar": "/assets/johhny.png" },
+    "jrbates3413": { "name": "Sam Abate", "avatar": "/assets/Sam.png" },
+    "kmore531196": { "name": "Kevin Morency", "avatar": "/assets/kevm.png" }
+  },
+  "punishmentGalleries": {},
+  "earnings": { "note": "This league has no Earnings tab in the original site.", "payoutsByYear": {} }
+}

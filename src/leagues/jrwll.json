@@ -1,0 +1,82 @@
+{
+  "slug": "jrwll",
+  "name": "JRWLL Memorial Cup",
+  "tagline": "#ForTheCure",
+  "footerTagline": "Beverly Fantasy Official Website • Established in 2025 • All Statistics Certified Accurate*",
+  "currentLeagueId": "1180633944818466816",
+  "coOwnerConfig": {},
+  "tabs": [
+    { "id": "dashboard", "label": "Rankings", "template": "dashboard" },
+    { "id": "myteam", "label": "My Team", "template": "myteam" },
+    { "id": "h2h", "label": "H2H", "template": "h2h" },
+    { "id": "rosters", "label": "Championships", "template": "championships" },
+    { "id": "toilet", "label": "Toilet Bowl", "template": "toilet-bowl" },
+    { "id": "records", "label": "Records", "template": "records" },
+    { "id": "earnings", "label": "Earnings", "template": "earnings" },
+    { "id": "legacies", "label": "Legends", "template": "legends" },
+    { "id": "tradelog", "label": "Trades", "template": "trades" },
+    { "id": "faab", "label": "FAAB", "template": "faab" },
+    { "id": "rules", "label": "Rules", "template": "rules" }
+  ],
+  "managerInfoMap": {
+    "seanrich3": { "name": "Sean Richardson", "avatar": "/assets/sean.jpg" },
+    "mzeroka": { "name": "Malcolm Zeroka", "avatar": "/assets/Malcolm.jpg" },
+    "loperz": { "name": "Matt Pitman", "avatar": "/assets/pitman.png" },
+    "kpflats": { "name": "Kevin Flaherty", "avatar": "/assets/kev.jpg" },
+    "brianharty": { "name": "Brian Harty", "avatar": "/assets/brian.png" },
+    "manzom": { "name": "Matt Manzo", "avatar": "/assets/Manzo.png" },
+    "wgd": { "name": "Will Dooling", "avatar": "/assets/will.png" },
+    "ajohnstone34": { "name": "Andrew Johnstone", "avatar": "/assets/andy.jpg" },
+    "archmaesterebrose": { "name": "Adam Ellis", "avatar": "/assets/adam.png" },
+    "cademarc": { "name": "Connor Cademartori", "avatar": "/assets/connor.jpg" },
+    "patgavin": { "name": "Patrick Gavin", "avatar": "/assets/pat.png" },
+    "jonesj83": { "name": "Johnny Jones", "avatar": "/assets/johhny.png" }
+  },
+  "punishmentGalleries": {
+    "2021": ["/assets/anchoradam1.jpeg", "/assets/anchoradam2.jpeg", "/assets/anchoradam3.jpeg"],
+    "2022": ["/assets/adam2anchor.jpeg"],
+    "2023": ["/assets/andyanchor.jpeg", "/assets/andyanchor2.jpeg"],
+    "2024": ["/assets/johnanchor.JPEG", "/assets/johnanchor2.JPEG", "/assets/johnanchor3.JPEG"]
+  },
+  "toiletBowlLedger": [
+    { "year": "2021", "name": "Adam", "detail": "11🍺 + 1🌿", "leftAt": "10:00 PM" },
+    { "year": "2022", "name": "Adam", "detail": "14🍺", "leftAt": "9:30 PM" },
+    { "year": "2023", "name": "Andrew", "detail": "17🍺", "leftAt": "8:45 PM" },
+    { "year": "2024", "name": "Johnny", "detail": "13🍺", "leftAt": "7:15pm" }
+  ],
+  "earnings": {
+    "note": "TODO(commissioner): the original site's Earnings tab (yearly payouts, prop-bet winners, highest-scorer-of-the-week winners) was entirely hand-entered per year and wasn't ported 1:1 in this rebuild pass — fill in payoutsByYear / propWinners / highScoreWinners below to restore it.",
+    "buyIn": 100,
+    "payoutStructure": { "champion": 650, "runnerUp": 150, "thirdPlace": 35, "weeklyHighScore": 10, "weeklyProp": 15 },
+    "payoutsByYear": {},
+    "propWinners": [],
+    "highScoreWinners": []
+  },
+  "rulesContent": {
+    "leagueRules": [
+      "No collusion or roster dumping.",
+      "Always field a full lineup; exceptions can be made when dealing with a significant number of injuries.",
+      "No rule changes will be made mid-season without a unanimous-minus-one vote.",
+      "Waivers use a Free Agent Acquisition Budget (FAAB) auction system with a yearly budget of $100. $0 bids are permitted.",
+      "$100 Buy-in. Payouts: League Champion $650, Runner-Up $150, 3rd Place $35, Highest Scorer of the Week (regular season) $10, Winner of the Weekly Prop $15.",
+      "The loser of the toilet bowl must choose their punishment from a list of options or similar concepts, such as: a tattoo chosen by the champion, a beer mile, stand-up comedy at an open mic, filming a music video, shaving off eyebrows, or staying at a designated location from 8 AM to 1 AM (each alcoholic drink consumed reduces the time by 15 or 30 minutes - loser's choice)."
+    ],
+    "keeperRules": [
+      "You may keep a maximum of three players but are not required to keep any.",
+      "Players are kept for one round higher than where they were drafted and replace your pick in that round.",
+      "If you do not have the required draft pick, you must use a higher-round pick to keep the player.",
+      "You may trade for a pick in the round you wish to keep a player in, but it must be done before the draft order has been finalized.",
+      "If you wish to keep two players in the same round, you may trade for an additional pick in that round. This can be done before or after the draft order is decided.",
+      "Undrafted players on a roster at the end of the year can be kept. Their keeper cost will be two rounds below their end-of-season ADP (based on the league platform).",
+      "Drafted players who are dropped or traded retain their original draft position for keeper purposes.",
+      "Players can only be kept for a maximum of two consecutive years after their initial draft."
+    ],
+    "tradeRules": [
+      "Trading of draft picks and FAAB budget is allowed.",
+      "Trade deadline for draft picks: End of Week 7.",
+      "Trade deadline for players: End of Week 10.",
+      "Trades are processed instantly upon acceptance by both parties.",
+      "No \"rental\" trades (i.e., trading a player with the agreement to trade them back later)."
+    ]
+  }
+}
