@@ -1,0 +1,28 @@
+---
+pagination:
+  data: "leaguesByTab['draft-odds']"
+  size: 1
+  alias: league
+permalink: "/{{ league.slug }}/draft-odds/"
+layout: layouts/league-shell.njk
+currentTab: draft-odds
+eleventyComputed:
+  title: "{{ league.name }} — Draft Odds"
+---
+<div class="card">
+  <h2 id="draft-odds-title" class="text-xl font-bold mb-4 text-accent-500">Projected Rookie Draft Order</h2>
+  <p class="text-xs text-text-secondary mb-4">Live projection based on the current in-progress season - fetched from Sleeper on this page load (~1hr cache).</p>
+  <div class="overflow-x-auto">
+    <table class="stat-table">
+      <thead>
+        <tr><th class="px-4 py-3">Pick</th><th class="px-4 py-3">Manager</th><th class="px-4 py-3">Record</th><th class="px-4 py-3">Max PF</th></tr>
+      </thead>
+      <tbody id="draft-odds-body">
+        <tr><td colspan="4" class="text-center py-4 text-text-secondary">Loading current standings…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script id="draft-odds-league-config" type="application/json">{{ league | dump | safe }}</script>
+<script type="module" src="/assets/js/draft-odds.js"></script>

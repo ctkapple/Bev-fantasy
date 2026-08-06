@@ -1,0 +1,130 @@
+{
+  "slug": "jrwll",
+  "name": "JRWLL Memorial Cup",
+  "tagline": "#ForTheCure",
+  "footerTagline": "Beverly Fantasy Official Website • Established in 2025 • All Statistics Certified Accurate*",
+  "currentLeagueId": "1180633944818466816",
+  "coOwnerConfig": {},
+  "tabs": [
+    { "id": "dashboard", "label": "Rankings", "template": "dashboard" },
+    { "id": "myteam", "label": "My Team", "template": "myteam" },
+    { "id": "h2h", "label": "H2H", "template": "h2h" },
+    { "id": "rosters", "label": "Championships", "template": "championships" },
+    { "id": "toilet-bowl", "label": "Toilet Bowl", "template": "toilet-bowl" },
+    { "id": "records", "label": "Records", "template": "records" },
+    { "id": "earnings", "label": "Earnings", "template": "earnings" },
+    { "id": "legacies", "label": "Legends", "template": "legends" },
+    { "id": "trades", "label": "Trades", "template": "trades" },
+    { "id": "faab", "label": "FAAB", "template": "faab" },
+    { "id": "rules", "label": "Rules", "template": "rules" }
+  ],
+  "managerInfoMap": {
+    "seanrich3": { "name": "Sean Richardson", "avatar": "/assets/sean.jpg" },
+    "mzeroka": { "name": "Malcolm Zeroka", "avatar": "/assets/Malcolm.jpg" },
+    "loperz": { "name": "Matt Pitman", "avatar": "/assets/pitman.png" },
+    "kpflats": { "name": "Kevin Flaherty", "avatar": "/assets/kev.jpg" },
+    "brianharty": { "name": "Brian Harty", "avatar": "/assets/brian.png" },
+    "manzom": { "name": "Matt Manzo", "avatar": "/assets/Manzo.png" },
+    "wgd": { "name": "Will Dooling", "avatar": "/assets/will.png" },
+    "ajohnstone34": { "name": "Andrew Johnstone", "avatar": "/assets/andy.jpg" },
+    "archmaesterebrose": { "name": "Adam Ellis", "avatar": "/assets/adam.png" },
+    "cademarc": { "name": "Connor Cademartori", "avatar": "/assets/connor.jpg" },
+    "patgavin": { "name": "Patrick Gavin", "avatar": "/assets/pat.png" },
+    "jonesj83": { "name": "Johnny Jones", "avatar": "/assets/johhny.png" }
+  },
+  "punishmentGalleries": {
+    "2021": ["/assets/anchoradam1.jpeg", "/assets/anchoradam2.jpeg", "/assets/anchoradam3.jpeg"],
+    "2022": ["/assets/adam2anchor.jpeg"],
+    "2023": ["/assets/andyanchor.jpeg", "/assets/andyanchor2.jpeg"],
+    "2024": ["/assets/johnanchor.jpeg", "/assets/johnanchor2.jpeg", "/assets/johnanchor3.jpeg"]
+  },
+  "championshipOverrides": {
+    "2021": { "winnerScore": 282.55, "loserScore": 218.84 },
+    "2022": { "winnerScore": 171.76, "loserScore": 168.0 }
+  },
+  "championshipNotes": {
+    "2021": "*In 2021 the league had not yet added Sean Richardson or Pat Gavin, and was doing 2 week long championship matches.",
+    "2022": "*This was the Damar Hamlin championship, Brian was trailing by 6.55 with Diggs playing at the time of the game being cancelled. Brian and Kevin came to an agreement to split a portion of the pot and extend their match into Week 18."
+  },
+  "toiletKings": [
+    { "year": "2021", "manager": "Adam Ellis" },
+    { "year": "2022", "manager": "Adam Ellis" },
+    { "year": "2023", "manager": "Andrew Johnstone" },
+    { "year": "2024", "manager": "Johnny Jones" },
+    { "year": "2025", "manager": "Patrick Gavin" }
+  ],
+  "manualToiletBowls": [
+    {
+      "season": "2021",
+      "punishedManager": "Adam Ellis",
+      "punishedScore": 107.83,
+      "punishedRoster": [
+        { "name": "Justin Herbert", "position": "QB", "score": 21.68 },
+        { "name": "Nick Chubb", "position": "RB", "score": 5.8 },
+        { "name": "Damien Harris", "position": "RB", "score": 17.2 },
+        { "name": "Stefon Diggs", "position": "WR", "score": 7.7 },
+        { "name": "Marquez Valdes-Scantling", "position": "WR", "score": 0.8 },
+        { "name": "Russel Gage", "position": "WR", "score": 6.5 },
+        { "name": "Gerald Everett", "position": "TE", "score": 5.1 },
+        { "name": "Devin Singletary", "position": "RB", "score": 23 },
+        { "name": "Nick Folk", "position": "K", "score": 6.3 },
+        { "name": "Los Angeles Chargers", "position": "DEF", "score": 13.75 }
+      ],
+      "safeManager": "Matt Pitman",
+      "safeScore": 135.27,
+      "safeRoster": [
+        { "name": "Kyler Murray", "position": "QB", "score": 26.92 },
+        { "name": "Austin Ekeler", "position": "RB", "score": 18.7 },
+        { "name": "Darrel Williams", "position": "RB", "score": 24.2 },
+        { "name": "AJ Brown", "position": "WR", "score": 5.1 },
+        { "name": "Keenan Allen", "position": "WR", "score": 12.4 },
+        { "name": "Dionte Johnson", "position": "WR", "score": 13.1 },
+        { "name": "Foster Moreau", "position": "TE", "score": 1.4 },
+        { "name": "Michael Pittman", "position": "WR", "score": 7.7 },
+        { "name": "Tyler Bass", "position": "K", "score": 3 },
+        { "name": "Chicago Bears", "position": "DEF", "score": 22.75 }
+      ]
+    }
+  ],
+  "toiletBowlLedger": [
+    { "year": "2021", "name": "Adam", "detail": "11🍺 + 1🌿", "leftAt": "10:00 PM" },
+    { "year": "2022", "name": "Adam", "detail": "14🍺", "leftAt": "9:30 PM" },
+    { "year": "2023", "name": "Andrew", "detail": "17🍺", "leftAt": "8:45 PM" },
+    { "year": "2024", "name": "Johnny", "detail": "13🍺", "leftAt": "7:15pm" }
+  ],
+  "earnings": {
+    "note": "TODO(commissioner): the original site's Earnings tab (yearly payouts, prop-bet winners, highest-scorer-of-the-week winners) was entirely hand-entered per year and wasn't ported 1:1 in this rebuild pass — fill in payoutsByYear / propWinners / highScoreWinners below to restore it.",
+    "buyIn": 100,
+    "payoutStructure": { "champion": 650, "runnerUp": 150, "thirdPlace": 35, "weeklyHighScore": 10, "weeklyProp": 15 },
+    "payoutsByYear": {},
+    "propWinners": [],
+    "highScoreWinners": []
+  },
+  "rulesContent": {
+    "leagueRules": [
+      "No collusion or roster dumping.",
+      "Always field a full lineup; exceptions can be made when dealing with a significant number of injuries.",
+      "No rule changes will be made mid-season without a unanimous-minus-one vote.",
+      "Waivers use a Free Agent Acquisition Budget (FAAB) auction system with a yearly budget of $100. $0 bids are permitted.",
+      "$100 Buy-in. Payouts: League Champion $650, Runner-Up $150, 3rd Place $35, Highest Scorer of the Week (regular season) $10, Winner of the Weekly Prop $15.",
+      "The loser of the toilet bowl must choose their punishment from a list of options or similar concepts, such as: a tattoo chosen by the champion, a beer mile, stand-up comedy at an open mic, filming a music video, shaving off eyebrows, or staying at a designated location from 8 AM to 1 AM (each alcoholic drink consumed reduces the time by 15 or 30 minutes - loser's choice)."
+    ],
+    "keeperRules": [
+      "You may keep a maximum of three players but are not required to keep any.",
+      "Players are kept for one round higher than where they were drafted and replace your pick in that round.",
+      "If you do not have the required draft pick, you must use a higher-round pick to keep the player.",
+      "You may trade for a pick in the round you wish to keep a player in, but it must be done before the draft order has been finalized.",
+      "If you wish to keep two players in the same round, you may trade for an additional pick in that round. This can be done before or after the draft order is decided.",
+      "Undrafted players on a roster at the end of the year can be kept. Their keeper cost will be two rounds below their end-of-season ADP (based on the league platform).",
+      "Drafted players who are dropped or traded retain their original draft position for keeper purposes.",
+      "Players can only be kept for a maximum of two consecutive years after their initial draft."
+    ],
+    "tradeRules": [
+      "Trading of draft picks and FAAB budget is allowed.",
+      "Trade deadline for draft picks: End of Week 7.",
+      "Trade deadline for players: End of Week 10.",
+      "Trades are processed instantly upon acceptance by both parties.",
+      "No \"rental\" trades (i.e., trading a player with the agreement to trade them back later)."
+    ]
+  }
+}

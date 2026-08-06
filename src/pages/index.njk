@@ -1,0 +1,31 @@
+---
+layout: layouts/base.njk
+title: Bev Fantasy League Hub
+description: Select a league to view all-time stats, records, and more.
+permalink: /index.html
+---
+<div class="container mx-auto max-w-2xl px-4 min-h-screen flex items-center justify-center">
+  <div class="w-full">
+    <header class="text-center mb-12">
+      <h1 class="text-4xl sm:text-5xl md:text-6xl font-display font-extrabold text-accent-500">
+        Bev Fantasy League Hub
+      </h1>
+      <p class="text-base sm:text-lg text-text-secondary mt-4">
+        Select a league to view all-time stats, records, and more.
+      </p>
+    </header>
+
+    <main class="space-y-6">
+      {% for lg in leagues %}
+      <a href="/{{ lg.slug }}/" class="card card-hub block text-center">
+        <p class="text-2xl font-display font-bold text-accent-500 mb-1">{{ lg.name }}</p>
+        <p class="text-sm text-text-secondary">{{ lg.tagline }}</p>
+      </a>
+      {% endfor %}
+    </main>
+
+    <footer class="text-center mt-12 py-6 border-t-2 border-accent-500 text-xs text-text-secondary">
+      <p>Fantasy Football League Hub • Engineered and Maintained by Commissioner Dooling</p>
+    </footer>
+  </div>
+</div>

@@ -1,0 +1,103 @@
+---
+pagination:
+  data: leaguesByTab.records
+  size: 1
+  alias: league
+permalink: "/{{ league.slug }}/records/"
+layout: layouts/league-shell.njk
+currentTab: records
+eleventyComputed:
+  title: "{{ league.name }} — Records"
+---
+{% from "partials/macros.njk" import recordRow, matchupRow %}
+{% set aggregate = leagueStats[league.slug].aggregates %}
+
+{% if not aggregate or aggregate.seasons.length == 0 %}
+<p class="text-text-secondary text-sm">No completed seasons yet — records will appear once the first season is frozen into history.</p>
+{% else %}
+{% set mgrs = aggregate.managers %}
+{% set champ = aggregate.reigningChampionId %}
+{% set empty = '<p class="text-sm text-text-muted text-center py-4">Not enough data yet.</p>' %}
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-accent-500 mb-3">🚀 Highest Scoring Seasons</h3>
+    {% for r in aggregate.records.topSeasonScores %}
+      {% if mgrs[r.managerId] %}{{ recordRow(mgrs[r.managerId], r.score | decimal2, r.year, champ) }}{% endif %}
+    {% else %}{{ empty | safe }}{% endfor %}
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-accent-500 mb-3">🥶 Lowest Scoring Seasons</h3>
+    {% for r in aggregate.records.lowestSeasonScores %}
+      {% if mgrs[r.managerId] %}{{ recordRow(mgrs[r.managerId], r.score | decimal2, r.year, champ) }}{% endif %}
+    {% else %}{{ empty | safe }}{% endfor %}
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-accent-500 mb-3">🔥 Highest Scoring Weeks</h3>
+    {% for r in aggregate.records.topWeeklyScores %}
+      {% if mgrs[r.managerId] %}{{ recordRow(mgrs[r.managerId], r.score | decimal2, r.year + ", Wk " + r.week, champ) }}{% endif %}
+    {% else %}{{ empty | safe }}{% endfor %}
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-accent-500 mb-3">🧊 Lowest Scoring Weeks</h3>
+    {% for r in aggregate.records.lowestWeeklyScores %}
+      {% if mgrs[r.managerId] %}{{ recordRow(mgrs[r.managerId], r.score | decimal2, r.year + ", Wk " + r.week, champ) }}{% endif %}
+    {% else %}{{ empty | safe }}{% endfor %}
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-accent-500 mb-3">🏆 Best Seasons</h3>
+    {% for r in aggregate.records.topSeasonRecords %}
+      {% if mgrs[r.managerId] %}{{ recordRow(mgrs[r.managerId], r.record, r.year, champ) }}{% endif %}
+    {% else %}{{ empty | safe }}{% endfor %}
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-accent-500 mb-3">🚽 Worst Seasons</h3>
+    {% for r in aggregate.records.bottomSeasonRecords %}
+      {% if mgrs[r.managerId] %}{{ recordRow(mgrs[r.managerId], r.record, r.year, champ) }}{% endif %}
+    {% else %}{{ empty | safe }}{% endfor %}
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-accent-500 mb-3">💥 Biggest Blowouts</h3>
+    {% for m in aggregate.records.biggestBlowouts %}
+      {% if mgrs[m.manager1Id] and mgrs[m.manager2Id] %}{{ matchupRow(mgrs[m.manager1Id], mgrs[m.manager2Id], m, "Margin", m.margin) }}{% endif %}
+    {% else %}{{ empty | safe }}{% endfor %}
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-accent-500 mb-3">🤏 Closest Games</h3>
+    {% for m in aggregate.records.closestGames %}
+      {% if mgrs[m.manager1Id] and mgrs[m.manager2Id] %}{{ matchupRow(mgrs[m.manager1Id], mgrs[m.manager2Id], m, "Margin", m.margin) }}{% endif %}
+    {% else %}{{ empty | safe }}{% endfor %}
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-accent-500 mb-3">🔫 Biggest Shootouts</h3>
+    {% for m in aggregate.records.biggestShootouts %}
+      {% if mgrs[m.manager1Id] and mgrs[m.manager2Id] %}{{ matchupRow(mgrs[m.manager1Id], mgrs[m.manager2Id], m, "Total", m.totalScore) }}{% endif %}
+    {% else %}{{ empty | safe }}{% endfor %}
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-accent-500 mb-3">⭐ Highest Scoring Players</h3>
+    {% for p in aggregate.records.topPlayerScores %}
+    <div class="py-2.5 border-b border-border last:border-b-0 hover:bg-surface-hover/60 -mx-4 px-4 rounded-md transition-colors">
+      <div class="flex items-center justify-between">
+        <div class="min-w-0">
+          <p class="font-semibold truncate pos-{{ p.position or 'NA' }}">{{ p.name }} <span class="text-sm font-normal text-text-secondary">({{ p.position }}, {{ p.team or 'FA' }})</span></p>
+          <p class="text-xs text-text-secondary truncate mt-1">for {{ mgrs[p.managerId].displayName if mgrs[p.managerId] else "Unknown" }} in {{ p.year }}, Wk {{ p.week }}</p>
+        </div>
+        <span class="font-bold text-lg ml-2">{{ p.score | decimal2 }}</span>
+      </div>
+    </div>
+    {% else %}{{ empty | safe }}{% endfor %}
+  </div>
+
+</div>
+{% endif %}

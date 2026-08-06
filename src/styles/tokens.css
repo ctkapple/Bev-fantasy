@@ -1,0 +1,35 @@
+/*
+ * Design tokens — single source of truth for color across the site.
+ * Read by tailwind.config.js (theme.extend.colors) so both raw CSS and
+ * Tailwind utility classes (bg-accent, border-border-hover, etc.) draw
+ * from these same values instead of hardcoded/duplicated hex codes.
+ *
+ * Values are "R G B" channel triples (not hex) so Tailwind's opacity
+ * modifiers work (bg-surface/50, divide-border/60, ...) via the standard
+ * `rgb(var(--x) / <alpha-value>)` pattern in tailwind.config.js.
+ */
+:root {
+  /* Core neutrals */
+  --color-bg: 16 16 18; /* #101012 */
+  --color-surface: 26 26 29; /* #1a1a1d */
+  --color-surface-hover: 33 33 36; /* #212124 */
+  --color-border: 46 46 50; /* #2e2e32 */
+  --color-border-hover: 249 115 22; /* #f97316 */
+
+  /* Brand orange, with tonal steps for hover/pressed states */
+  --color-accent-400: 251 146 60; /* #fb923c */
+  --color-accent-500: 249 115 22; /* #f97316 */
+  --color-accent-600: 234 88 12; /* #ea580c */
+
+  /* Text */
+  --color-text-primary: 245 245 244; /* #f5f5f4 */
+  --color-text-secondary: 156 163 175; /* #9ca3af */
+  --color-text-muted: 107 114 128; /* #6b7280 */
+
+  /* Semantic W/L */
+  --color-win: 34 197 94; /* #22c55e */
+  --color-loss: 239 68 68; /* #ef4444 */
+
+  /* Spacing/shape */
+  --radius-card: 0.875rem;
+}

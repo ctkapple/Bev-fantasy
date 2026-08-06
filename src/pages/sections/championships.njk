@@ -1,0 +1,48 @@
+---
+pagination:
+  data: leaguesByTab.championships
+  size: 1
+  alias: league
+permalink: "/{{ league.slug }}/rosters/"
+layout: layouts/league-shell.njk
+currentTab: rosters
+eleventyComputed:
+  title: "{{ league.name }} — Championships"
+---
+{% from "partials/macros.njk" import gameSide, gameHeader %}
+{% set aggregate = leagueStats[league.slug].aggregates %}
+{% set historical = leagueStats[league.slug].historical %}
+
+<div class="card">
+  {% if not historical or historical.length == 0 %}
+  <p class="text-text-secondary text-sm">No championship roster data available yet.</p>
+  {% else %}
+  {% for season in historical | reverse %}
+    {% if season.championship %}
+      {% set champ = season.managers[season.championship.winnerId] %}
+      {% set runnerUp = season.managers[season.championship.loserId] %}
+      {% if champ and runnerUp %}
+        {# Hand-entered score corrections for seasons Sleeper's data doesn't reflect
+           (2-week championship in 2021, the Damar Hamlin game in 2022). #}
+        {% set override = league.championshipOverrides[season.season] %}
+        {% set winnerScore = override.winnerScore if override else season.championship.winnerScore %}
+        {% set loserScore = override.loserScore if override else season.championship.loserScore %}
+      <div class="mb-10">
+        {{ gameHeader(season.season + " Championship Game", "championship-game-" + season.season, "text-yellow-400") }}
+        <div id="championship-game-{{ season.season }}" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {{ gameSide(champ, winnerScore, season.championship.winnerRoster, {
+            borderClass: "border-yellow-400/50", ringClass: "border-yellow-400",
+            nameClass: "text-yellow-400", emoji: "🏆", label: "Starting Roster" }) }}
+          {{ gameSide(runnerUp, loserScore, season.championship.loserRoster, {
+            borderClass: "border-border", ringClass: "border-gray-400",
+            nameClass: "text-text-primary", emoji: "🥈", label: "Starting Roster" }) }}
+          {% if league.championshipNotes[season.season] %}
+          <p class="text-xs text-text-muted mt-4 text-center col-span-1 md:col-span-2 italic">{{ league.championshipNotes[season.season] }}</p>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+  {% endif %}
+</div>

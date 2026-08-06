@@ -1,0 +1,37 @@
+---
+pagination:
+  data: leaguesByTab.h2h
+  size: 1
+  alias: league
+permalink: "/{{ league.slug }}/h2h/"
+layout: layouts/league-shell.njk
+currentTab: h2h
+eleventyComputed:
+  title: "{{ league.name }} — Head-to-Head"
+---
+{% set aggregate = leagueStats[league.slug].aggregates %}
+
+{% if not aggregate or aggregate.seasons.length == 0 %}
+<p class="text-text-secondary text-sm">No completed seasons yet.</p>
+{% else %}
+<div class="card">
+  <h2 class="text-xl font-bold mb-4 text-accent-500">Head-to-Head Comparison</h2>
+  <div class="flex flex-col sm:flex-row gap-4 items-center mb-6">
+    <select id="manager1-select" class="bg-bg border border-border rounded-md p-2 w-full sm:w-1/2 focus:ring-2 focus:ring-accent-500">
+      <option value="">-- Manager 1 --</option>
+      {% for id, m in aggregate.managers %}<option value="{{ id }}">{{ m.displayName }}</option>{% endfor %}
+    </select>
+    <span class="font-bold text-lg">VS</span>
+    <select id="manager2-select" class="bg-bg border border-border rounded-md p-2 w-full sm:w-1/2 focus:ring-2 focus:ring-accent-500">
+      <option value="">-- Manager 2 --</option>
+      {% for id, m in aggregate.managers %}<option value="{{ id }}">{{ m.displayName }}</option>{% endfor %}
+    </select>
+  </div>
+  <div id="h2h-result" class="text-center p-4">
+    <p class="text-text-secondary">Please select two managers to compare head-to-head</p>
+  </div>
+</div>
+
+<script id="h2h-aggregate" type="application/json">{{ aggregate | dump | safe }}</script>
+<script type="module" src="/assets/js/h2h.js"></script>
+{% endif %}

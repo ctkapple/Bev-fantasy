@@ -1,0 +1,19 @@
+---
+layout: layouts/base.njk
+---
+{% include "partials/header.njk" %}
+{% include "partials/tab-nav.njk" %}
+
+<main class="container mx-auto px-4 md:px-8 max-w-7xl pb-16">
+  {{ content | safe }}
+</main>
+
+{% include "partials/footer.njk" %}
+{% include "partials/avatar-modal.njk" %}
+{% include "partials/gallery-modal.njk" %}
+
+<!-- Shared behavior for every league page: league-switcher dropdown, avatar
+     expand modal, punishment gallery, and click-to-sort tables. -->
+<script type="module" src="/assets/js/modals.js"></script>
+<script type="module" src="/assets/js/table-sort.js"></script>
+<script type="module" src="/assets/js/collapsible.js"></script>

@@ -1,0 +1,45 @@
+---
+pagination:
+  data: leaguesByTab.earnings
+  size: 1
+  alias: league
+permalink: "/{{ league.slug }}/earnings/"
+layout: layouts/league-shell.njk
+currentTab: earnings
+eleventyComputed:
+  title: "{{ league.name }} — Earnings"
+---
+{% set aggregate = leagueStats[league.slug].aggregates %}
+
+{% if not aggregate or aggregate.seasons.length == 0 %}
+<p class="text-text-secondary text-sm">No completed seasons yet.</p>
+{% else %}
+<div class="card mb-6 max-w-3xl mx-auto">
+  <h2 class="text-xl font-bold mb-4 text-accent-500">Lifetime Winnings 💰</h2>
+  {% set earners = aggregate.managers | championshipEarnings(league.earnings.payoutsByYear) %}
+  {% if earners.length > 0 %}
+  <div class="space-y-3">
+    {% for e in earners %}
+    <div class="flex justify-between text-sm"><span>{{ e.displayName }}</span><span class="win font-semibold">${{ e.total }}</span></div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text-sm text-text-secondary">{{ league.earnings.note or "Earnings data hasn't been entered for this league yet." }}</p>
+  {% endif %}
+</div>
+
+{% if league.earnings.payoutStructure %}
+<div class="card max-w-3xl mx-auto">
+  <h2 class="text-xl font-bold mb-4 text-accent-500">Payout Structure</h2>
+  <ul class="text-sm space-y-1">
+    <li>Buy-in: ${{ league.earnings.buyIn }}</li>
+    <li>Champion: ${{ league.earnings.payoutStructure.champion }}</li>
+    <li>Runner-Up: ${{ league.earnings.payoutStructure.runnerUp }}</li>
+    <li>3rd Place: ${{ league.earnings.payoutStructure.thirdPlace }}</li>
+    <li>Weekly High Score: ${{ league.earnings.payoutStructure.weeklyHighScore }}</li>
+    <li>Weekly Prop: ${{ league.earnings.payoutStructure.weeklyProp }}</li>
+  </ul>
+  {% if league.earnings.note %}<p class="text-xs text-text-muted mt-4">{{ league.earnings.note }}</p>{% endif %}
+</div>
+{% endif %}
+{% endif %}

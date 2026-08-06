@@ -1,0 +1,44 @@
+# Data schema quick reference
+
+Full field-by-field detail lives as JSDoc in `src/scripts/season-processor.mjs`
+(`SeasonData`, `AggregateData` typedefs, and the file-header porting notes).
+This is just an index: which UI tab reads which top-level field.
+
+## Where the data comes from
+
+- `src/leagues/<slug>/data/historical.json` — `SeasonData[]`, one per completed
+  season, oldest first. Built by `data-build/fetch-sleeper.js`. Ships statically;
+  templates render it directly at build time (zero client fetch).
+- `src/leagues/<slug>/data/aggregates.json` — one `AggregateData`, "through"
+  the last completed season. Same build script.
+- Live current season — fetched client-side by `src/scripts/sleeper-client.js`
+  (`SeasonData` shape, single season) and layered onto `aggregates.json` via
+  `src/scripts/merge.js`'s `mergeAggregates()`.
+
+## Tab → data field map
+
+| Tab | Template | Reads |
+|---|---|---|
+| Rankings (Dashboard) | `dashboard.njk` | `AggregateData.standings`, `.trophyCase` |
+| Records | `records.njk` | `AggregateData.records.*` (10 lists, each pre-sorted/capped at 5) |
+| My Team | `myteam.njk` | `AggregateData.managers[userId]` (career stats, `yearlyStandings`, `teamNameHistory`, `rival`, `franchiseLegends`, `archNemeses`, `cornerstones`, `highlights`) |
+| H2H | `h2h.njk` | `AggregateData.matchupsByManagerPair[pairKey]` |
+| Championships | `championships.njk` | `SeasonData[].championship` across `historical.json` |
+| Legends (Legacies) | `legends.njk` | `AggregateData.legacies.ringChasers` / `.loyaltyClub` |
+| Trades | `trades.njk` | `SeasonData[].trades` across `historical.json` |
+| FAAB | `faab.njk` | `SeasonData[].faabBids` across `historical.json` |
+| Toilet Bowl (jrwll only) | `toilet-bowl.njk` | `SeasonData[].toiletBowl` + league config `toiletBowlLedger`/`punishmentGalleries` (hand-curated, not from Sleeper) |
+| Draft Odds (sb3 only) | `draft-odds.njk` | `SeasonData[].rosterSnapshots` (most recent season) |
+| Earnings | `earnings.njk` | League config `earnings` object (100% hand-curated $ figures, not derivable from Sleeper — see porting note #6 in season-processor.mjs) |
+| Rules (jrwll only) | `rules.njk` | League config `rulesContent` (static text) |
+
+## Known gaps / TODOs left for the commissioner to fill in
+
+- `src/leagues/jrwll.json` `.earnings` — yearly payout breakdown, prop-bet
+  winners, and weekly-high-score winners were hand-entered per year in the
+  original site and were not ported 1:1 (see the `"note"` field in the config).
+- `.earnings.payoutStructure` reflects the rules text; actual historical
+  `payoutsByYear` / `propWinners` / `highScoreWinners` need populating.
+- `mergeAggregates()` has one documented precision limitation for the Legends
+  tab when merging a live season (see the comment block atop `merge.js`) —
+  self-corrects on the next full rebuild.
