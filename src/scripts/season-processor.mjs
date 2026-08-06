@@ -1012,6 +1012,8 @@ function foldSeasonIntoAccumulator(acc, seasonData) {
     acc.reigningChampionId = seasonData.championship?.winnerId ?? acc.reigningChampionId;
   }
 
+  Object.assign(acc.playerInfo, seasonData.playerInfoLookup || {});
+
   return acc;
 }
 
@@ -1038,6 +1040,10 @@ function createEmptyAccumulator() {
     },
     lastSeasonRosterSnapshots: [],
     reigningChampionId: null,
+    // Union of every season's playerInfoLookup. Needed by views that read the
+    // raw playerId-keyed maps in matchupsByManagerPair (e.g. the H2H tab's
+    // "Certified Hater") and have to resolve display names client-side.
+    playerInfo: {},
   };
 }
 
@@ -1162,6 +1168,7 @@ function deriveAggregateData(acc, throughSeason) {
     matchupsByManagerPair: acc.matchupsByManagerPair,
     reigningChampionId: acc.reigningChampionId,
     lastSeasonRosterSnapshots: acc.lastSeasonRosterSnapshots,
+    playerInfo: acc.playerInfo,
   };
 }
 

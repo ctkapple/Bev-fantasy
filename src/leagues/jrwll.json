@@ -10,11 +10,11 @@
     { "id": "myteam", "label": "My Team", "template": "myteam" },
     { "id": "h2h", "label": "H2H", "template": "h2h" },
     { "id": "rosters", "label": "Championships", "template": "championships" },
-    { "id": "toilet", "label": "Toilet Bowl", "template": "toilet-bowl" },
+    { "id": "toilet-bowl", "label": "Toilet Bowl", "template": "toilet-bowl" },
     { "id": "records", "label": "Records", "template": "records" },
     { "id": "earnings", "label": "Earnings", "template": "earnings" },
     { "id": "legacies", "label": "Legends", "template": "legends" },
-    { "id": "tradelog", "label": "Trades", "template": "trades" },
+    { "id": "trades", "label": "Trades", "template": "trades" },
     { "id": "faab", "label": "FAAB", "template": "faab" },
     { "id": "rules", "label": "Rules", "template": "rules" }
   ],
@@ -36,7 +36,7 @@
     "2021": ["/assets/anchoradam1.jpeg", "/assets/anchoradam2.jpeg", "/assets/anchoradam3.jpeg"],
     "2022": ["/assets/adam2anchor.jpeg"],
     "2023": ["/assets/andyanchor.jpeg", "/assets/andyanchor2.jpeg"],
-    "2024": ["/assets/johnanchor.JPEG", "/assets/johnanchor2.JPEG", "/assets/johnanchor3.JPEG"]
+    "2024": ["/assets/johnanchor.jpeg", "/assets/johnanchor2.jpeg", "/assets/johnanchor3.jpeg"]
   },
   "toiletBowlLedger": [
     { "year": "2021", "name": "Adam", "detail": "11🍺 + 1🌿", "leftAt": "10:00 PM" },

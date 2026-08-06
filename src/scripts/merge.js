@@ -33,6 +33,7 @@ function reconstructAccumulator(aggregateData) {
     legacies: { playerAppearances: {}, keptPlayers: {} },
     lastSeasonRosterSnapshots: aggregateData.lastSeasonRosterSnapshots || [],
     reigningChampionId: aggregateData.reigningChampionId,
+    playerInfo: { ...(aggregateData.playerInfo || {}) },
   };
 
   for (const [userId, m] of Object.entries(aggregateData.managers)) {

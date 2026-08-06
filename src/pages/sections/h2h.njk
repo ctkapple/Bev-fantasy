@@ -32,7 +32,6 @@ eleventyComputed:
   </div>
 </div>
 
-<script id="h2h-managers" type="application/json">{{ aggregate.managers | dump | safe }}</script>
-<script id="h2h-matchups" type="application/json">{{ aggregate.matchupsByManagerPair | dump | safe }}</script>
+<script id="h2h-aggregate" type="application/json">{{ aggregate | dump | safe }}</script>
 <script type="module" src="/assets/js/h2h.js"></script>
 {% endif %}

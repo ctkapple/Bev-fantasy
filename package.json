@@ -7,9 +7,10 @@
     "build:css": "tailwindcss -i ./src/styles/main.css -o ./_site/assets/css/main.css --minify",
     "build:js": "node data-build/bundle-js.js",
     "build:site": "eleventy",
-    "build": "npm run fetch-data && npm run build:site && npm run build:css && npm run build:js",
-    "preview": "npm run build:site && npm run build:css && npm run build:js && npx http-server _site -p 8080",
-    "dev": "npm run fetch-data && npm run build:site && npm run build:css && npm run build:js && eleventy --serve"
+    "validate": "node data-build/validate-build.js",
+    "build": "npm run fetch-data && npm run build:site && npm run build:css && npm run build:js && npm run validate",
+    "preview": "npm run build:site && npm run build:css && npm run build:js && npm run validate && npx http-server _site -p 8080",
+    "dev": "npm run fetch-data && npm run build:site && npm run build:css && npm run build:js && npm run validate && eleventy --serve"
   },
   "devDependencies": {
     "@11ty/eleventy": "^3.0.0",
