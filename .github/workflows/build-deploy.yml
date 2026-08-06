@@ -49,6 +49,10 @@ jobs:
 
   deploy:
     needs: build
+    # Only main ever publishes. This makes it safe to run the workflow manually
+    # on a feature branch to validate the Sleeper fetch and the build end to end
+    # without touching the live site.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

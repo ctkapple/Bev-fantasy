@@ -68,6 +68,33 @@ for (const page of requiredPages) {
   if (!existsSync(path.join(siteDir, page))) errors.push(`Missing required page: _site/${page}`);
 }
 
+// --- 4. Data sanity: don't ship a live site full of empty states -------------
+// The historical/current split keys off Sleeper's `league.status === 'complete'`,
+// which has never been verified against real API responses. If that assumption
+// is wrong, every league silently produces zero frozen seasons and the whole
+// site deploys as "No completed seasons yet". Fail loudly instead.
+// Set ALLOW_EMPTY_LEAGUE_DATA=1 to bypass (e.g. a genuinely brand-new league,
+// or a structure-only preview build with no fetch step).
+if (!process.env.ALLOW_EMPTY_LEAGUE_DATA) {
+  for (const league of configs) {
+    const histPath = path.join(leaguesDir, league.slug, "data", "historical.json");
+    if (!existsSync(histPath)) {
+      errors.push(
+        `No data fetched for "${league.slug}" (${histPath} missing). Did the fetch-data step run?`
+      );
+      continue;
+    }
+    const seasons = JSON.parse(readFileSync(histPath, "utf-8"));
+    if (seasons.length === 0) {
+      errors.push(
+        `"${league.slug}" froze 0 historical seasons - the site would deploy with empty standings/records. ` +
+          `Most likely the 'league.status === "complete"' freeze condition in data-build/fetch-sleeper.js ` +
+          `doesn't match what Sleeper actually returns; check the fetch step's logs for the per-season status values.`
+      );
+    }
+  }
+}
+
 if (errors.length > 0) {
   console.error(`\n[validate-build] FAILED with ${errors.length} problem(s):\n`);
   for (const e of errors) console.error(`  - ${e}`);
@@ -75,7 +102,16 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
+const seasonCounts = configs
+  .map((l) => {
+    const p = path.join(leaguesDir, l.slug, "data", "historical.json");
+    const n = existsSync(p) ? JSON.parse(readFileSync(p, "utf-8")).length : 0;
+    return `${l.slug}=${n}`;
+  })
+  .join(" ");
+
 console.log(
   `[validate-build] OK - ${configs.length} league(s), ` +
-    `${configs.reduce((n, l) => n + l.tabs.length, 0)} nav links, all assets resolve.`
+    `${configs.reduce((n, l) => n + l.tabs.length, 0)} nav links, all assets resolve. ` +
+    `Frozen seasons: ${seasonCounts}`
 );
