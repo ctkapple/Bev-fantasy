@@ -16,8 +16,10 @@
     { "id": "legacies", "label": "Legends", "template": "legends" },
     { "id": "trades", "label": "Trades", "template": "trades" },
     { "id": "faab", "label": "FAAB", "template": "faab" },
-    { "id": "rules", "label": "Rules", "template": "rules" }
+    { "id": "rules", "label": "Rules", "template": "rules" },
+    { "id": "keepers", "label": "Keeper Assistant", "template": "keeper-assistant" }
   ],
+  "keeperOverrides": {},
   "managerInfoMap": {
     "seanrich3": { "name": "Sean Richardson", "avatar": "/assets/sean.jpg" },
     "mzeroka": { "name": "Malcolm Zeroka", "avatar": "/assets/Malcolm.jpg" },

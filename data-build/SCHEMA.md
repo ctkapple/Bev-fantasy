@@ -14,6 +14,16 @@ This is just an index: which UI tab reads which top-level field.
 - Live current season — fetched client-side by `src/scripts/sleeper-client.js`
   (`SeasonData` shape, single season) and layered onto `aggregates.json` via
   `src/scripts/merge.js`'s `mergeAggregates()`.
+- `src/leagues/<slug>/data/drafts.json` — keeper-league-only (gated on config
+  `rulesContent.keeperRules`), `SeasonDraftData[]`, one per season INCLUDING
+  the current one (unlike `historical.json`, which deliberately excludes it -
+  the Keeper Assistant tab needs the most recently completed draft). Built
+  append-only by `data-build/fetch-sleeper.js`'s `buildKeeperDraftHistory()`;
+  a season already on file is never re-fetched. Fetched directly by the
+  browser (`fetch("/leagues/<slug>/data/drafts.json")`), not embedded via
+  `leagueStats`. If the current season's draft isn't in the file yet
+  (season-rollover gap), `src/scripts/keeper-assistant.js` does a small live
+  top-up. See JSDoc typedefs in `src/scripts/keeper-engine.mjs`.
 
 ## Tab → data field map
 
@@ -31,6 +41,7 @@ This is just an index: which UI tab reads which top-level field.
 | Draft Odds (sb3 only) | `draft-odds.njk` | `SeasonData[].rosterSnapshots` (most recent season) |
 | Earnings | `earnings.njk` | League config `earnings` object (100% hand-curated $ figures, not derivable from Sleeper — see porting note #6 in season-processor.mjs) |
 | Rules (jrwll only) | `rules.njk` | League config `rulesContent` (static text) |
+| Keeper Assistant (jrwll only) | `keeper-assistant.njk` | `drafts.json` (build-time, per-season draft picks + ADP) + live `SeasonData.rosterSnapshots`/`.playerInfoLookup` (client-time) + league config `keeperOverrides`, run through `src/scripts/keeper-engine.mjs` |
 
 ## Known gaps / TODOs left for the commissioner to fill in
 
