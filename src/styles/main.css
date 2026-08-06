@@ -120,9 +120,19 @@
   .filter-chip-panel-label {
     @apply block text-xs text-text-secondary mt-2 first:mt-0;
   }
-  .filter-select {
-    @apply w-full bg-bg border border-border rounded-md p-2 text-sm text-text-primary
-      focus:ring-2 focus:ring-accent-500 focus:outline-none;
+
+  /* Clickable option list inside a filter-chip-panel (Manager, Draft Pick) -
+     replaces a native <select> so picking a value is a single click instead
+     of "open the select, then pick". */
+  .filter-option-list {
+    @apply max-h-40 overflow-y-auto rounded-md border border-border/60 divide-y divide-border/40;
+  }
+  .filter-list-item {
+    @apply block w-full text-left px-2.5 py-1.5 text-sm text-text-secondary transition-colors
+      hover:bg-surface-hover hover:text-text-primary;
+  }
+  .filter-list-item[data-active="true"] {
+    @apply bg-accent-500/15 text-accent-400 font-semibold hover:bg-accent-500/15 hover:text-accent-400;
   }
 
   /* Records list rows. */
