@@ -5,20 +5,21 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: "var(--color-bg)",
-        surface: "var(--color-surface)",
-        "surface-hover": "var(--color-surface-hover)",
-        border: "var(--color-border)",
-        "border-hover": "var(--color-border-hover)",
+        bg: "rgb(var(--color-bg) / <alpha-value>)",
+        surface: "rgb(var(--color-surface) / <alpha-value>)",
+        "surface-hover": "rgb(var(--color-surface-hover) / <alpha-value>)",
+        border: "rgb(var(--color-border) / <alpha-value>)",
+        "border-hover": "rgb(var(--color-border-hover) / <alpha-value>)",
         accent: {
-          400: "var(--color-accent-400)",
-          500: "var(--color-accent-500)",
-          600: "var(--color-accent-600)",
+          400: "rgb(var(--color-accent-400) / <alpha-value>)",
+          500: "rgb(var(--color-accent-500) / <alpha-value>)",
+          600: "rgb(var(--color-accent-600) / <alpha-value>)",
         },
-        win: "var(--color-win)",
-        loss: "var(--color-loss)",
-        "text-primary": "var(--color-text-primary)",
-        "text-secondary": "var(--color-text-secondary)",
+        win: "rgb(var(--color-win) / <alpha-value>)",
+        loss: "rgb(var(--color-loss) / <alpha-value>)",
+        "text-primary": "rgb(var(--color-text-primary) / <alpha-value>)",
+        "text-secondary": "rgb(var(--color-text-secondary) / <alpha-value>)",
+        "text-muted": "rgb(var(--color-text-muted) / <alpha-value>)",
       },
       fontFamily: {
         sans: ["Manrope", "Inter", "sans-serif"],

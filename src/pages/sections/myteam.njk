@@ -1,0 +1,32 @@
+---
+pagination:
+  data: leaguesByTab.myteam
+  size: 1
+  alias: league
+permalink: "/{{ league.slug }}/myteam/"
+layout: layouts/league-shell.njk
+currentTab: myteam
+eleventyComputed:
+  title: "{{ league.name }} — My Team"
+---
+{% set aggregate = leagueStats[league.slug].aggregates %}
+
+{% if not aggregate or aggregate.seasons.length == 0 %}
+<p class="text-text-secondary text-sm">No completed seasons yet.</p>
+{% else %}
+<div class="card mb-6">
+  <label for="my-team-select" class="block text-lg font-medium text-accent-500 mb-2">Please select your name</label>
+  <select id="my-team-select" class="bg-bg border border-border rounded-md p-2 w-full max-w-md text-text-primary focus:ring-2 focus:ring-accent-500 focus:border-accent-500">
+    <option value="">-- Select a Manager --</option>
+    {% for id, m in aggregate.managers %}
+    <option value="{{ id }}">{{ m.displayName }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+<div id="my-team-data" class="hidden"></div>
+
+<script id="myteam-data" type="application/json">{{ aggregate.managers | dump | safe }}</script>
+<script id="myteam-reigning-champ" type="application/json">{{ aggregate.reigningChampionId | dump | safe }}</script>
+<script type="module" src="/assets/js/myteam.js"></script>
+{% endif %}

@@ -1,0 +1,59 @@
+---
+pagination:
+  data: leaguesByTab.faab
+  size: 1
+  alias: league
+permalink: "/{{ league.slug }}/faab/"
+layout: layouts/league-shell.njk
+currentTab: faab
+eleventyComputed:
+  title: "{{ league.name }} — FAAB History"
+---
+{% set aggregate = leagueStats[league.slug].aggregates %}
+{% set historical = leagueStats[league.slug].historical %}
+{% set topBids = historical | topFaabBids(15) %}
+{% set totals = historical | faabTotalsByManager(aggregate.managers if aggregate else {}) %}
+
+{% if not historical or historical.length == 0 %}
+<p class="text-text-secondary text-sm">No completed seasons yet.</p>
+{% else %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div class="card lg:col-span-2">
+    <h2 class="text-xl font-bold mb-4 text-accent-500">Most Expensive Acquisitions</h2>
+    <div class="overflow-x-auto">
+      <table class="stat-table">
+        <thead><tr><th class="px-4 py-3">Pos</th><th class="px-4 py-3">Player</th><th class="px-4 py-3">Manager</th><th class="px-4 py-3">Amount</th><th class="px-4 py-3">Season</th></tr></thead>
+        <tbody>
+          {% for bid in topBids %}
+          <tr>
+            <td class="px-4 py-2">{{ bid.position }}</td>
+            <td class="px-4 py-2">{{ bid.player }}</td>
+            <td class="px-4 py-2">{{ bid.managerName }}</td>
+            <td class="px-4 py-2 font-semibold text-accent-500">${{ bid.amount }}</td>
+            <td class="px-4 py-2 text-text-secondary">{{ bid.season }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="space-y-6">
+    <div class="card">
+      <h2 class="text-xl font-bold mb-4 text-accent-500">Biggest Ballers 🤑</h2>
+      <div class="space-y-2 text-sm">
+        {% for t in totals | limit(5) %}
+        <div class="flex justify-between"><span>{{ t.displayName }}</span><span class="font-semibold">${{ t.total }}</span></div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="card">
+      <h2 class="text-xl font-bold mb-4 text-accent-500">Frugal Heroes 📉</h2>
+      <div class="space-y-2 text-sm">
+        {% for t in totals | reverse | limit(5) %}
+        <div class="flex justify-between"><span>{{ t.displayName }}</span><span class="font-semibold">${{ t.total }}</span></div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}

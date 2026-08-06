@@ -1,0 +1,47 @@
+---
+pagination:
+  data: leaguesByTab.legends
+  size: 1
+  alias: league
+permalink: "/{{ league.slug }}/legacies/"
+layout: layouts/league-shell.njk
+currentTab: legacies
+eleventyComputed:
+  title: "{{ league.name }} — Legends"
+---
+{% set aggregate = leagueStats[league.slug].aggregates %}
+
+{% if not aggregate or aggregate.seasons.length == 0 %}
+<p class="text-text-secondary text-sm">No completed seasons yet.</p>
+{% else %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div class="card">
+    <h2 class="text-xl font-bold mb-1 text-accent-500">Ring Chasers</h2>
+    <p class="text-sm text-text-secondary mb-6">Players with the most appearances in the championship.</p>
+    <div class="space-y-4">
+      {% for p in aggregate.legacies.ringChasers %}
+      <div class="flex justify-between items-center text-sm">
+        <span>{{ p.name }} <span class="text-text-muted">({{ p.position }})</span></span>
+        <span class="font-semibold text-accent-500">{{ p.appearances }}×</span>
+      </div>
+      {% else %}
+      <p class="text-sm text-text-secondary">None yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <h2 class="text-xl font-bold mb-1 text-accent-500">Loyalty Club</h2>
+    <p class="text-sm text-text-secondary mb-6">Players we just can't quit. (Kept or drafted twice in a row)</p>
+    <div class="space-y-4">
+      {% for p in aggregate.legacies.loyaltyClub %}
+      <div class="flex justify-between items-center text-sm">
+        <span>{{ p.name }} <span class="text-text-muted">({{ p.position }})</span></span>
+        <span class="font-semibold text-accent-500">{{ p.count }}×</span>
+      </div>
+      {% else %}
+      <p class="text-sm text-text-secondary">None yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}

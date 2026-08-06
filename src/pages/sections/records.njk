@@ -1,0 +1,111 @@
+---
+pagination:
+  data: leaguesByTab.records
+  size: 1
+  alias: league
+permalink: "/{{ league.slug }}/records/"
+layout: layouts/league-shell.njk
+currentTab: records
+eleventyComputed:
+  title: "{{ league.name }} — Records"
+---
+{% set aggregate = leagueStats[league.slug].aggregates %}
+{% macro mgr(id) %}{{ aggregate.managers[id].displayName if aggregate.managers[id] else "Unknown" }}{% endmacro %}
+
+{% if not aggregate or aggregate.seasons.length == 0 %}
+<p class="text-text-secondary text-sm">No completed seasons yet — records will appear once the first season is frozen into history.</p>
+{% else %}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-accent-500 mb-3">🚀 Highest Scoring Seasons</h3>
+    <div class="space-y-1 text-sm">
+      {% for r in aggregate.records.topSeasonScores %}
+      <div class="flex justify-between"><span>{{ mgr(r.managerId) }} <span class="text-text-muted">'{{ r.year }}</span></span><span class="win font-semibold">{{ r.score | decimal1 }}</span></div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-accent-500 mb-3">🥶 Lowest Scoring Seasons</h3>
+    <div class="space-y-1 text-sm">
+      {% for r in aggregate.records.lowestSeasonScores %}
+      <div class="flex justify-between"><span>{{ mgr(r.managerId) }} <span class="text-text-muted">'{{ r.year }}</span></span><span class="loss font-semibold">{{ r.score | decimal1 }}</span></div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-accent-500 mb-3">🔥 Highest Scoring Weeks</h3>
+    <div class="space-y-1 text-sm">
+      {% for r in aggregate.records.topWeeklyScores %}
+      <div class="flex justify-between"><span>{{ mgr(r.managerId) }} <span class="text-text-muted">'{{ r.year }} Wk{{ r.week }}</span></span><span class="win font-semibold">{{ r.score | decimal1 }}</span></div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-accent-500 mb-3">🧊 Lowest Scoring Weeks</h3>
+    <div class="space-y-1 text-sm">
+      {% for r in aggregate.records.lowestWeeklyScores %}
+      <div class="flex justify-between"><span>{{ mgr(r.managerId) }} <span class="text-text-muted">'{{ r.year }} Wk{{ r.week }}</span></span><span class="loss font-semibold">{{ r.score | decimal1 }}</span></div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-accent-500 mb-3">🏆 Best Seasons</h3>
+    <div class="space-y-1 text-sm">
+      {% for r in aggregate.records.topSeasonRecords %}
+      <div class="flex justify-between"><span>{{ mgr(r.managerId) }} <span class="text-text-muted">'{{ r.year }}</span></span><span class="font-semibold">{{ r.record }}</span></div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-accent-500 mb-3">🚽 Worst Seasons</h3>
+    <div class="space-y-1 text-sm">
+      {% for r in aggregate.records.bottomSeasonRecords %}
+      <div class="flex justify-between"><span>{{ mgr(r.managerId) }} <span class="text-text-muted">'{{ r.year }}</span></span><span class="font-semibold">{{ r.record }}</span></div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-accent-500 mb-3">💥 Biggest Blowouts</h3>
+    <div class="space-y-1 text-sm">
+      {% for r in aggregate.records.biggestBlowouts %}
+      <div class="flex justify-between"><span>{{ mgr(r.manager1Id) }} vs {{ mgr(r.manager2Id) }} <span class="text-text-muted">'{{ r.season }} Wk{{ r.week }}</span></span><span class="font-semibold">+{{ r.margin | decimal1 }}</span></div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-accent-500 mb-3">🤏 Closest Games</h3>
+    <div class="space-y-1 text-sm">
+      {% for r in aggregate.records.closestGames %}
+      <div class="flex justify-between"><span>{{ mgr(r.manager1Id) }} vs {{ mgr(r.manager2Id) }} <span class="text-text-muted">'{{ r.season }} Wk{{ r.week }}</span></span><span class="font-semibold">{{ r.margin | decimal1 }}</span></div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-accent-500 mb-3">🔫 Biggest Shootouts</h3>
+    <div class="space-y-1 text-sm">
+      {% for r in aggregate.records.biggestShootouts %}
+      <div class="flex justify-between"><span>{{ mgr(r.manager1Id) }} vs {{ mgr(r.manager2Id) }} <span class="text-text-muted">'{{ r.season }} Wk{{ r.week }}</span></span><span class="font-semibold">{{ r.totalScore | decimal1 }}</span></div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-accent-500 mb-3">⭐ Highest Scoring Players</h3>
+    <div class="space-y-1 text-sm">
+      {% for r in aggregate.records.topPlayerScores %}
+      <div class="flex justify-between"><span>{{ r.name }} <span class="text-text-muted">({{ r.position }}) '{{ r.year }} Wk{{ r.week }} — {{ mgr(r.managerId) }}</span></span><span class="win font-semibold">{{ r.score | decimal1 }}</span></div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+{% endif %}

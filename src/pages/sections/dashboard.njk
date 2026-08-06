@@ -1,0 +1,83 @@
+---
+pagination:
+  data: leaguesByTab.dashboard
+  size: 1
+  alias: league
+permalink: "/{{ league.slug }}/"
+layout: layouts/league-shell.njk
+currentTab: dashboard
+eleventyComputed:
+  title: "{{ league.name }} — Rankings"
+---
+{% set aggregate = leagueStats[league.slug].aggregates %}
+
+<div id="dashboard-root" data-league="{{ league.slug }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
+  <div class="card lg:col-span-2">
+    <h2 class="text-xl font-bold mb-4 text-accent-500">All-Time Standings</h2>
+    {% if aggregate and aggregate.standings.length > 0 %}
+    <div class="overflow-x-auto">
+      <table class="stat-table">
+        <thead>
+          <tr>
+            <th class="px-4 py-3">Rank</th>
+            <th class="px-4 py-3">Manager</th>
+            <th class="px-4 py-3">Record (<span class="win">W</span>-<span class="loss">L</span>)</th>
+            <th class="px-4 py-3">Win %</th>
+            <th class="px-4 py-3"><span class="win">PF</span> / <span class="loss">PA</span></th>
+          </tr>
+        </thead>
+        <tbody id="power-rankings-body">
+          {% for m in aggregate.standings %}
+          <tr>
+            <td class="px-4 py-3 font-semibold">{{ m.rank }}</td>
+            <td class="px-4 py-3 flex items-center gap-2">
+              <img src="{{ m.avatar }}" alt="" class="w-7 h-7 rounded-full cursor-pointer" onclick="window.expandAvatar && window.expandAvatar(this.src)">
+              {{ m.displayName }}{% if m.userId == aggregate.reigningChampionId %} <span title="Reigning Champ">👑</span>{% endif %}
+            </td>
+            <td class="px-4 py-3"><span class="win">{{ m.wins }}</span>-<span class="loss">{{ m.losses }}</span>{% if m.ties %}-{{ m.ties }}{% endif %}</td>
+            <td class="px-4 py-3">{{ (m.winPct * 100) | decimal1 }}%</td>
+            <td class="px-4 py-3"><span class="win">{{ m.pf | decimal1 }}</span> / <span class="loss">{{ m.pa | decimal1 }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-text-secondary text-sm">No completed seasons yet — standings will appear once the first season is frozen into history.</p>
+    {% endif %}
+  </div>
+
+  <div class="card" id="trophy-case-card">
+    <h2 class="text-xl font-bold mb-4 text-yellow-400">🏆 Trophy Case 🏆</h2>
+    {% if aggregate and aggregate.trophyCase.champions.length > 0 %}
+    <div class="space-y-3">
+      <p class="text-xs uppercase tracking-wider text-text-secondary">Champions</p>
+      {% for c in aggregate.trophyCase.champions %}
+      <div class="flex items-center justify-between gap-2 text-sm">
+        <span class="flex items-center gap-2"><img src="{{ c.avatar }}" alt="" class="w-6 h-6 rounded-full">{{ c.displayName }}</span>
+        <span class="text-text-secondary">{{ c.years | join(", ") }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% if aggregate and aggregate.trophyCase.runnerUps.length > 0 %}
+    <div class="space-y-3 mt-6">
+      <p class="text-xs uppercase tracking-wider text-text-secondary">Runner-Ups</p>
+      {% for r in aggregate.trophyCase.runnerUps %}
+      <div class="flex items-center justify-between gap-2 text-sm">
+        <span class="flex items-center gap-2"><img src="{{ r.avatar }}" alt="" class="w-6 h-6 rounded-full">{{ r.displayName }}</span>
+        <span class="text-text-secondary">{{ r.years | join(", ") }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% if not aggregate or aggregate.trophyCase.champions.length == 0 %}
+    <p class="text-text-secondary text-sm">No champions crowned yet.</p>
+    {% endif %}
+  </div>
+</div>
+
+<p id="live-season-note" class="text-xs text-text-muted mt-6 hidden">Standings above include the live current season (updates ~hourly per visitor).</p>
+
+<script id="dashboard-league-config" type="application/json">{{ league | dump | safe }}</script>
+<script type="module" src="/assets/js/dashboard.js"></script>

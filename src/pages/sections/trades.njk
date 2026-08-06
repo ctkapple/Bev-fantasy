@@ -1,0 +1,49 @@
+---
+pagination:
+  data: leaguesByTab.trades
+  size: 1
+  alias: league
+permalink: "/{{ league.slug }}/trades/"
+layout: layouts/league-shell.njk
+currentTab: tradelog
+eleventyComputed:
+  title: "{{ league.name }} — Trade Log"
+---
+{% set historical = leagueStats[league.slug].historical %}
+
+<div class="card">
+  {% if not historical or historical.length == 0 %}
+  <p class="text-text-secondary text-sm">No completed seasons yet.</p>
+  {% else %}
+  <div class="space-y-6">
+    {% for season in historical | reverse %}
+      {% if season.trades.length > 0 %}
+      <div>
+        <h3 class="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">{{ season.season }} Season</h3>
+        <div class="space-y-4">
+          {% for trade in season.trades %}
+          <div class="bg-bg/50 border border-border rounded-lg p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% for managerId, pieces in trade.pieces %}
+            <div>
+              <p class="font-semibold text-accent-500 mb-1">{{ season.managers[managerId].displayName if season.managers[managerId] else "Unknown" }} received:</p>
+              <ul class="text-sm space-y-0.5">
+                {% for piece in pieces %}
+                <li>
+                  {% if piece.type == "player" %}{{ piece.name }} <span class="text-text-muted">({{ piece.position }})</span>
+                  {% elif piece.type == "pick" %}{{ piece.season }} Round {{ piece.round }} pick
+                  {% elif piece.type == "faab" %}${{ piece.amount }} FAAB
+                  {% endif %}
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% endfor %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
