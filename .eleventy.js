@@ -45,6 +45,14 @@ export default function (eleventyConfig) {
     return [...byManager.entries()].map(([manager, years]) => ({ manager, years: years.sort() }));
   });
 
+  // Drop hand-entered entries for any season the Sleeper fetch already covered.
+  // The build reaches back further than the original site did, so manual
+  // fallbacks (e.g. jrwll's 2021 toilet bowl) can now collide with real data.
+  eleventyConfig.addFilter("excludeSeasonsIn", (manualList, existing) => {
+    const covered = new Set((existing || []).map((g) => String(g.season)));
+    return (manualList || []).filter((m) => !covered.has(String(m.season)));
+  });
+
   eleventyConfig.addFilter("sortBySeasonDesc", (arr) =>
     [...(arr || [])].sort((a, b) => Number(b.season) - Number(a.season))
   );
