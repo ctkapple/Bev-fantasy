@@ -54,7 +54,10 @@ eleventyComputed:
       {% endif %}
     {% endif %}
   {% endfor %}
-  {% for manual in league.manualToiletBowls %}
+  {# Manual entries only fill gaps. The build now reaches back further than the
+     original site did (which is why 2021 was hand-entered there), so skip any
+     manual season Sleeper already provided rather than rendering it twice. #}
+  {% for manual in league.manualToiletBowls | excludeSeasonsIn(games) %}
     {% set punished = aggregate.managers | managerByName(manual.punishedManager) if aggregate else null %}
     {% set safe = aggregate.managers | managerByName(manual.safeManager) if aggregate else null %}
     {% if punished and safe %}
