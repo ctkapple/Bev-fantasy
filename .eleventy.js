@@ -96,6 +96,44 @@ export default function (eleventyConfig) {
       .sort((a, b) => b.total - a.total);
   });
 
+  // Earnings tab: fully hand-curated ledger model, e.g. jrwll.json's model
+  // (each manager's total is a hand-entered $ per year, not derived from
+  // championshipYears — winnings also come from runner-up/3rd/weekly-high-
+  // score/weekly-prop money, not just first place). Joins the ledger (keyed
+  // by display name, since that's how it was hand-entered) against `managers`
+  // (keyed by userId) for avatar/userId, then produces every view the
+  // Earnings tab needs.
+  eleventyConfig.addFilter("earningsLedger", (managers, ledger) => {
+    if (!managers || !ledger) return null;
+    const byName = {};
+    Object.values(managers).forEach((m) => {
+      byName[m.displayName] = m;
+    });
+
+    const years = [
+      ...new Set(Object.values(ledger).flatMap((e) => Object.keys(e.byYear || {}))),
+    ].sort();
+
+    const rows = Object.entries(ledger)
+      .map(([name, e]) => ({
+        manager: byName[name],
+        name,
+        byYear: e.byYear || {},
+        props: e.props || 0,
+        highs: e.highs || 0,
+        total: Object.values(e.byYear || {}).reduce((sum, v) => sum + v, 0),
+      }))
+      .filter((r) => r.manager);
+
+    return {
+      years,
+      lifetime: [...rows].sort((a, b) => b.total - a.total),
+      breakdown: [...rows].sort((a, b) => a.name.localeCompare(b.name)),
+      props: [...rows].filter((r) => r.props > 0).sort((a, b) => b.props - a.props),
+      highs: [...rows].filter((r) => r.highs > 0).sort((a, b) => b.highs - a.highs),
+    };
+  });
+
   eleventyConfig.addFilter("faabTotalsByManager", (historical, managers) => {
     const totals = {};
     for (const season of historical || []) {

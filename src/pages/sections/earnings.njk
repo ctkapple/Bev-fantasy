@@ -9,10 +9,67 @@ currentTab: earnings
 eleventyComputed:
   title: "{{ league.name }} — Earnings"
 ---
+{% from "partials/macros.njk" import recordRow %}
 {% set aggregate = leagueStats[league.slug].aggregates %}
 
 {% if not aggregate or aggregate.seasons.length == 0 %}
 <p class="text-text-secondary text-sm">No completed seasons yet.</p>
+{% else %}
+
+{% if league.earnings.ledger %}
+{% set ledger = aggregate.managers | earningsLedger(league.earnings.ledger) %}
+{% set champ = aggregate.reigningChampionId %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+  <div class="card lg:col-span-1">
+    <h2 class="text-xl font-bold mb-4 text-accent-500">Lifetime Winnings 💰</h2>
+    <div class="space-y-1">
+      {% for r in ledger.lifetime %}
+      {{ recordRow(r.manager, "$" + (r.total | decimal2), "Lifetime", champ) }}
+      {% endfor %}
+    </div>
+  </div>
+  <div class="card lg:col-span-1">
+    <h2 class="text-xl font-bold mb-4 text-accent-500">Weekly Prop Wins 🎯</h2>
+    <div class="space-y-1">
+      {% for r in ledger.props %}
+      {{ recordRow(r.manager, r.props, "Prop bets won", champ) }}
+      {% endfor %}
+    </div>
+  </div>
+  <div class="card lg:col-span-1">
+    <h2 class="text-xl font-bold mb-4 text-accent-500">Weekly High Scores 🔥</h2>
+    <div class="space-y-1">
+      {% for r in ledger.highs %}
+      {{ recordRow(r.manager, r.highs, "Weeks with the high score", champ) }}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="card max-w-4xl mx-auto mb-6">
+  <h2 class="text-xl font-bold mb-4 text-accent-500">Yearly Breakdown</h2>
+  <div class="overflow-x-auto">
+    <table class="stat-table">
+      <thead>
+        <tr>
+          <th class="px-4 py-3">Manager</th>
+          {% for y in ledger.years %}<th class="px-4 py-3 text-right">{{ y }}</th>{% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in ledger.breakdown %}
+        <tr>
+          <td class="px-4 py-2 font-semibold whitespace-nowrap">{{ r.manager.displayName }}</td>
+          {% for y in ledger.years %}<td class="px-4 py-2 text-right">${{ r.byYear[y] | default(0) | decimal2 }}</td>{% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if league.earnings.note %}<p class="text-xs text-text-muted max-w-4xl mx-auto mb-6">{{ league.earnings.note }}</p>{% endif %}
+
 {% else %}
 <div class="card mb-6 max-w-3xl mx-auto">
   <h2 class="text-xl font-bold mb-4 text-accent-500">Lifetime Winnings 💰</h2>
@@ -27,6 +84,7 @@ eleventyComputed:
   <p class="text-sm text-text-secondary">{{ league.earnings.note or "Earnings data hasn't been entered for this league yet." }}</p>
   {% endif %}
 </div>
+{% endif %}
 
 {% if league.earnings.payoutStructure %}
 <div class="card max-w-3xl mx-auto">
@@ -39,7 +97,7 @@ eleventyComputed:
     <li>Weekly High Score: ${{ league.earnings.payoutStructure.weeklyHighScore }}</li>
     <li>Weekly Prop: ${{ league.earnings.payoutStructure.weeklyProp }}</li>
   </ul>
-  {% if league.earnings.note %}<p class="text-xs text-text-muted mt-4">{{ league.earnings.note }}</p>{% endif %}
+  {% if not league.earnings.ledger and league.earnings.note %}<p class="text-xs text-text-muted mt-4">{{ league.earnings.note }}</p>{% endif %}
 </div>
 {% endif %}
 {% endif %}

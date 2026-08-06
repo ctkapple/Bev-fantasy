@@ -93,12 +93,23 @@
     { "year": "2024", "name": "Johnny", "detail": "13🍺", "leftAt": "7:15pm" }
   ],
   "earnings": {
-    "note": "TODO(commissioner): the original site's Earnings tab (yearly payouts, prop-bet winners, highest-scorer-of-the-week winners) was entirely hand-entered per year and wasn't ported 1:1 in this rebuild pass — fill in payoutsByYear / propWinners / highScoreWinners below to restore it.",
+    "note": "2025's weekly-prop pool is $15 short of a full $1,200 payout — one prop bet had no winner and that $15 rolls over into 2026's prop pool.",
     "buyIn": 100,
     "payoutStructure": { "champion": 650, "runnerUp": 150, "thirdPlace": 35, "weeklyHighScore": 10, "weeklyProp": 15 },
-    "payoutsByYear": {},
-    "propWinners": [],
-    "highScoreWinners": []
+    "ledger": {
+      "Will Dooling": { "byYear": { "2021": 50, "2022": 35, "2023": 740, "2024": 57.5, "2025": 705 }, "props": 11.5, "highs": 7 },
+      "Connor Cademartori": { "byYear": { "2021": 35, "2022": 35, "2023": 17.5, "2024": 30, "2025": 25 }, "props": 4.5, "highs": 7 },
+      "Sean Richardson": { "byYear": { "2021": 0, "2022": 45, "2023": 0, "2024": 175, "2025": 17.5 }, "props": 2.5, "highs": 4 },
+      "Malcolm Zeroka": { "byYear": { "2021": 0, "2022": 0, "2023": 27.5, "2024": 732.5, "2025": 35 }, "props": 5, "highs": 7 },
+      "Andrew Johnstone": { "byYear": { "2021": 10, "2022": 65, "2023": 45, "2024": 25, "2025": 67.5 }, "props": 7.5, "highs": 6 },
+      "Patrick Gavin": { "byYear": { "2021": 0, "2022": 50, "2023": 10, "2024": 15, "2025": 15 }, "props": 4, "highs": 1 },
+      "Matt Pitman": { "byYear": { "2021": 40, "2022": 110, "2023": 105, "2024": 25, "2025": 35 }, "props": 12, "highs": 9 },
+      "Matt Manzo": { "byYear": { "2021": 50, "2022": 87.5, "2023": 15, "2024": 120, "2025": 55 }, "props": 13.5, "highs": 6 },
+      "Kevin Flaherty": { "byYear": { "2021": 505, "2022": 495, "2023": 0, "2024": 10, "2025": 150 }, "props": 4, "highs": 6 },
+      "Johnny Jones": { "byYear": { "2021": 85, "2022": 10, "2023": 10, "2024": 0, "2025": 15 }, "props": 3, "highs": 3 },
+      "Adam Ellis": { "byYear": { "2021": 0, "2022": 10, "2023": 45, "2024": 10, "2025": 55 }, "props": 1, "highs": 7 },
+      "Brian Harty": { "byYear": { "2021": 225, "2022": 257.5, "2023": 185, "2024": 0, "2025": 10 }, "props": 5.5, "highs": 7 }
+    }
   },
   "rulesContent": {
     "leagueRules": [
