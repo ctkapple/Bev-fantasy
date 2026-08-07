@@ -16,7 +16,13 @@ This is just an index: which UI tab reads which top-level field.
   `src/scripts/merge.js`'s `mergeAggregates()`.
 - `src/leagues/<slug>/data/drafts.json` — keeper-league-only (gated on config
   `rulesContent.keeperRules`), `{ seasons: SeasonDraftData[], upcomingAdp:
-  UpcomingAdp|null }`. `seasons` holds one entry per season with a completed
+  UpcomingAdp|null, upcomingPicks: {season, rounds, byOwner}|null }`.
+  `upcomingPicks.byOwner` is `ownerId -> {round: pickCount}` for the next
+  draft, derived from `/traded_picks` (baseline of one pick per round, then
+  trades applied) so the tab can warn when a keeper's round is one the manager
+  no longer holds. NB: in `/traded_picks` both `roster_id` and `owner_id` are
+  ROSTER ids, unlike `/rosters` where `owner_id` is a user id.
+  `seasons` holds one entry per season with a completed
   draft, INCLUDING the current one (unlike `historical.json`, which
   deliberately excludes it) — each carries that draft's `picks` plus
   `playersByOwner`, the end-of-season rosters the engine uses to tell a keeper

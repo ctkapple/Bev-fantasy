@@ -51,7 +51,7 @@ eleventyComputed:
   <ul class="list-disc list-inside space-y-1 text-sm text-text-secondary">
     {% for rule in league.rulesContent.keeperRules %}<li>{{ rule }}</li>{% endfor %}
   </ul>
-  <p class="text-xs text-text-muted mt-3">This assistant computes eligibility and cost using rules 1, 2, 6, 7, and 8 above. Trade-for-a-pick mechanics (rules 3–5) aren't modeled — verify manually if they apply to your situation. A <span class="font-semibold">*</span> next to a round means the computed cost fell outside the draft and was capped.</p>
+  <p class="text-xs text-text-muted mt-3">This assistant computes eligibility and cost using rules 1, 2, 6, 7, and 8 above. Trade-for-a-pick mechanics (rules 3–5) aren't modeled — verify manually if they apply to your situation. A <span class="font-semibold">*</span> next to a round means the computed cost fell outside the draft and was capped. A <span class="chip-warn">no pick</span> tag means you don't currently hold a pick in that round — you can still keep the player, but rule 3 or 4 would apply.</p>
   <p id="keeper-assistant-adp-note" class="text-xs text-text-muted mt-1"></p>
 </div>
 

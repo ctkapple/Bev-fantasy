@@ -100,6 +100,55 @@ export function parseDraftPicks(rawPicks, rosterIdToOwnerId, primaryUserIdMap = 
     });
 }
 
+/**
+ * Who owns which picks in an upcoming draft, from GET /v1/league/{id}/traded_picks.
+ *
+ * Nothing stores "picks I own" - it's derived: every team starts with one pick
+ * per round, then trades move them. The endpoint is a CURRENT-STATE ledger
+ * (one row per traded pick, `previous_owner_id` being just the latest hop), so
+ * a single pass applies cleanly with no event replay.
+ *
+ * CAREFUL: unlike /rosters, where `owner_id` is a Sleeper *user* id, both
+ * `roster_id` and `owner_id` here are ROSTER ids - the caller's
+ * `rosterIdToOwnerId` map has to be applied to both.
+ *
+ * @param {Array<object>} tradedPicks - Raw /traded_picks response.
+ * @param {Object<number,string>} rosterIdToOwnerId - roster_id -> canonical manager id.
+ * @param {string} season - Season to build the inventory for, e.g. "2026".
+ * @param {number} rounds - Rounds in that draft.
+ * @returns {Object<string,Object<number,number>>} ownerId -> {round: pickCount}
+ */
+export function buildPickInventory(tradedPicks, rosterIdToOwnerId, season, rounds) {
+  const byOwner = {};
+  const inventoryFor = (ownerId) => {
+    if (!byOwner[ownerId]) {
+      byOwner[ownerId] = {};
+      for (let r = 1; r <= rounds; r++) byOwner[ownerId][r] = 0;
+    }
+    return byOwner[ownerId];
+  };
+
+  // Baseline: one pick per round for every roster in the league.
+  for (const ownerId of Object.values(rosterIdToOwnerId)) {
+    const inventory = inventoryFor(ownerId);
+    for (let r = 1; r <= rounds; r++) inventory[r] += 1;
+  }
+
+  for (const pick of tradedPicks || []) {
+    if (String(pick.season) !== String(season)) continue;
+    // Picks can reference a round the draft no longer has - jrwll traded a
+    // 2025 round 17 pick back when the draft ran 17 rounds, then cut it to 16.
+    if (pick.round < 1 || pick.round > rounds) continue;
+    const from = rosterIdToOwnerId[pick.roster_id];
+    const to = rosterIdToOwnerId[pick.owner_id];
+    if (!from || !to || from === to) continue; // unknown roster, or traded away and back
+    inventoryFor(from)[pick.round] -= 1;
+    inventoryFor(to)[pick.round] += 1;
+  }
+
+  return byOwner;
+}
+
 /** Build {ownerId: playerId[]} end-of-season roster snapshot from a raw /rosters response. */
 export function parseRostersByOwner(rosters, primaryUserIdMap = {}) {
   const byOwner = {};
@@ -149,6 +198,8 @@ export function parseRostersByOwner(rosters, primaryUserIdMap = {}) {
  * @property {number|null} keeperRound - Round this player would cost to keep, or null if undeterminable/unkeepable.
  * @property {boolean} belowFirstRound - Cost lands above round 1, where no pick exists - the player is unkeepable.
  * @property {boolean} beyondDraftRounds - ADP sits outside the draftable pool; capped at the last round.
+ * @property {number|null} picksInKeeperRound - How many picks the manager holds in the keeper round (null if unknown/not applicable).
+ * @property {boolean} missingPick - Manager holds no pick in the keeper round. Advisory only - see attachPickAvailability.
  * @property {string|null} note
  */
 
@@ -294,15 +345,48 @@ export function computeKeeperProfile(playerId, currentOwnerId, pickHistory, rost
 }
 
 /**
+ * Flag keepers the manager has no pick for. NOT a blocker: rule 3 covers it
+ * ("must use a higher-round pick") and rule 4 lets you trade for the round.
+ * It's a heads-up, so eligibility is deliberately left alone.
+ */
+function attachPickAvailability(profile, inventory, picksSeason) {
+  if (!inventory || !profile.eligible || profile.keeperRound == null) {
+    return { ...profile, picksInKeeperRound: null, missingPick: false };
+  }
+  const count = inventory[profile.keeperRound] ?? 0;
+  if (count > 0) return { ...profile, picksInKeeperRound: count, missingPick: false };
+  return {
+    ...profile,
+    picksInKeeperRound: 0,
+    missingPick: true,
+    note: [
+      profile.note,
+      `No ${picksSeason} round ${profile.keeperRound} pick - you'd have to spend an earlier pick (rule 3) or trade for one (rule 4).`,
+    ]
+      .filter(Boolean)
+      .join(" "),
+  };
+}
+
+/**
  * @param {string[]} playerIds - Roster's current player_ids.
  * @param {string} currentOwnerId
  * @param {object} indexes - { pickIndex, rosterIndex } from buildDraftPickIndex/buildRosterHistoryIndex.
  * @param {UpcomingAdp|null} upcomingAdp
  * @param {Object<string,{name:string,position:string}>} playerInfoLookup
+ * @param {{season:string, rounds:number, byOwner:Object<string,Object<number,number>>}|null} [upcomingPicks]
  * @returns {KeeperProfile[]}
  */
-export function computeRosterKeeperProfiles(playerIds, currentOwnerId, indexes, upcomingAdp, playerInfoLookup) {
+export function computeRosterKeeperProfiles(
+  playerIds,
+  currentOwnerId,
+  indexes,
+  upcomingAdp,
+  playerInfoLookup,
+  upcomingPicks = null
+) {
   const { pickIndex, rosterIndex } = indexes;
+  const inventory = upcomingPicks?.byOwner?.[currentOwnerId] || null;
   return (playerIds || []).map((playerId) => {
     const info = playerInfoLookup?.[playerId];
     const profile = computeKeeperProfile(
@@ -312,12 +396,16 @@ export function computeRosterKeeperProfiles(playerIds, currentOwnerId, indexes, 
       rosterIndex.get(playerId),
       upcomingAdp
     );
-    return {
-      playerId,
-      name: info?.name || "Unknown Player",
-      position: info?.position || "N/A",
-      ...profile,
-    };
+    return attachPickAvailability(
+      {
+        playerId,
+        name: info?.name || "Unknown Player",
+        position: info?.position || "N/A",
+        ...profile,
+      },
+      inventory,
+      upcomingPicks?.season
+    );
   });
 }
 

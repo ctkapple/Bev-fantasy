@@ -78,7 +78,8 @@ function keeperRoundLabel(profile) {
   // An ineligible player has no cost worth quoting - showing one just invites
   // someone to plan around a keeper they can't actually have.
   if (!profile.eligible || profile.keeperRound == null) return "—";
-  return `Round ${profile.keeperRound}${profile.beyondDraftRounds ? "*" : ""}`;
+  const round = `Round ${profile.keeperRound}${profile.beyondDraftRounds ? "*" : ""}`;
+  return profile.missingPick ? `${round} <span class="chip-warn">no pick</span>` : round;
 }
 
 function originLabel(profile) {
@@ -154,9 +155,13 @@ async function render() {
     rosterIndex: buildRosterHistoryIndex(seasons),
   };
   const upcomingAdp = draftData.upcomingAdp || null;
+  const upcomingPicks = draftData.upcomingPicks || null;
 
   if (adpNote && upcomingAdp) {
-    adpNote.textContent = `Undrafted-player costs use ${upcomingAdp.season} ADP (${upcomingAdp.teamCount}-team, ${upcomingAdp.rounds} rounds).`;
+    const picksNote = upcomingPicks
+      ? ` Pick availability is checked against your ${upcomingPicks.season} picks, trades included.`
+      : "";
+    adpNote.textContent = `Undrafted-player costs use ${upcomingAdp.season} ADP (${upcomingAdp.teamCount}-team, ${upcomingAdp.rounds} rounds).${picksNote}`;
   }
 
   select.disabled = false;
@@ -177,7 +182,8 @@ async function render() {
       select.value,
       indexes,
       upcomingAdp,
-      seasonData.playerInfoLookup
+      seasonData.playerInfoLookup,
+      upcomingPicks
     );
     renderRoster(tbody, applyKeeperOverrides(profiles, overrides));
   });

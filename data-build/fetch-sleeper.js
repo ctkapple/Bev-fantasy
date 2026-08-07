@@ -32,6 +32,7 @@ import {
   findCompletedDraft,
   parseDraftPicks,
   parseRostersByOwner,
+  buildPickInventory,
 } from "../src/scripts/keeper-engine.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -168,6 +169,46 @@ async function fetchUpcomingAdp(latestSeason) {
 }
 
 /**
+ * Who holds which picks in the UPCOMING draft, so the tab can warn when a
+ * keeper's round is one the manager doesn't own. Read off the most recent
+ * league: Sleeper records next-season pick trades against the league they were
+ * made in, which is the only one that exists until the season rolls over.
+ */
+async function fetchUpcomingPicks(latestLeagueObj, latestSeason, primaryUserIdMap) {
+  if (!latestSeason?.rounds) return null;
+  const season = String(Number(latestSeason.season) + 1);
+  const leagueId = String(latestLeagueObj.league_id);
+
+  try {
+    const [rosters, tradedPicks] = await Promise.all([
+      fetchWithRetry(`${SLEEPER_BASE}/league/${leagueId}/rosters`),
+      fetchWithRetry(`${SLEEPER_BASE}/league/${leagueId}/traded_picks`),
+    ]);
+
+    const rosterIdToOwnerId = {};
+    for (const r of rosters) {
+      if (r.owner_id) rosterIdToOwnerId[r.roster_id] = primaryUserIdMap[r.owner_id] || r.owner_id;
+    }
+
+    const applied = (tradedPicks || []).filter(
+      (p) => String(p.season) === season && p.round >= 1 && p.round <= latestSeason.rounds
+    ).length;
+    console.log(
+      `  [keepers] upcoming picks: ${season}, ${latestSeason.rounds} rounds, ${applied} traded pick(s) applied.`
+    );
+
+    return {
+      season,
+      rounds: latestSeason.rounds,
+      byOwner: buildPickInventory(tradedPicks, rosterIdToOwnerId, season, latestSeason.rounds),
+    };
+  } catch (err) {
+    console.warn(`  [keepers] Traded-picks fetch failed - no pick warnings this build: ${err.message}`);
+    return null;
+  }
+}
+
+/**
  * Build src/leagues/<slug>/data/drafts.json for a keeper league:
  * `{ seasons: SeasonDraftData[], upcomingAdp: UpcomingAdp|null }`, covering
  * every season in `chain` with a completed draft (INCLUDING the current one -
@@ -206,10 +247,14 @@ async function buildKeeperDraftHistory(slug, chain, primaryUserIdMap) {
   }
 
   seasons.sort((a, b) => Number(a.season) - Number(b.season));
-  const upcomingAdp = await fetchUpcomingAdp(seasons[seasons.length - 1] || null);
+  const latestSeason = seasons[seasons.length - 1] || null;
+  const [upcomingAdp, upcomingPicks] = await Promise.all([
+    fetchUpcomingAdp(latestSeason),
+    fetchUpcomingPicks(chain[chain.length - 1], latestSeason, primaryUserIdMap),
+  ]);
 
   await mkdir(path.dirname(outPath), { recursive: true });
-  await writeFile(outPath, JSON.stringify({ seasons, upcomingAdp }));
+  await writeFile(outPath, JSON.stringify({ seasons, upcomingAdp, upcomingPicks }));
   console.log(`  [keepers] drafts.json: ${seasons.length} season(s) on file.`);
 }
 
