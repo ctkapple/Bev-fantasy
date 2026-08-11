@@ -840,7 +840,7 @@
     @apply px-5 py-10 text-center text-sm text-text-secondary;
   }
   .poll-history-layout {
-    @apply grid grid-cols-1 gap-4 p-4 pt-3 md:p-6 md:pt-4 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start;
+    @apply grid grid-cols-1 gap-4 p-4 pt-3 md:p-6 md:pt-4;
   }
   .poll-history-chart-wrap {
     @apply min-w-0 rounded-xl border border-border/70 bg-bg/35 px-1 py-2 md:px-3;
@@ -903,7 +903,7 @@
     r: 7;
   }
   .poll-history-legend {
-    @apply grid grid-cols-2 gap-2 lg:grid-cols-1;
+    @apply grid grid-cols-2 gap-2 sm:grid-cols-3;
   }
   .poll-history-team {
     @apply min-w-0 flex items-center gap-2 rounded-lg border border-border/70 bg-bg/40 px-2 py-2 text-left transition-[border-color,background-color,opacity,box-shadow] duration-150 hover:border-border-hover hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400;
@@ -933,6 +933,7 @@
   }
   .poll-history-team strong {
     @apply text-xs leading-tight;
+    color: var(--poll-history-team-color);
   }
   .poll-history-team small {
     @apply mt-0.5 text-[0.65rem] text-text-secondary;
@@ -958,6 +959,7 @@
   }
   .poll-history-focus-team strong {
     @apply text-sm;
+    color: var(--poll-history-team-color);
   }
   .poll-history-focus-team small,
   .poll-history-focus-metric small {
@@ -983,13 +985,6 @@
     }
     .poll-history-x-axis text:last-child {
       font-size: 13px;
-    }
-    .poll-history-legend {
-      @apply flex gap-2 overflow-x-auto pb-1;
-      scrollbar-width: thin;
-    }
-    .poll-history-team {
-      @apply min-w-44 shrink-0;
     }
     .poll-history-focus {
       @apply mx-3 mb-3 gap-2 px-2.5;

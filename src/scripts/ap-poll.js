@@ -37,10 +37,23 @@ if (root) {
   const POINTER_EDGE_SCROLL_ZONE = 72;
   const POINTER_MAX_SCROLL_SPEED = 12;
   const SNAPSHOT_STALE_MS = 72 * 60 * 60 * 1000;
-  const HISTORY_COLORS = [
-    "#f97316", "#38bdf8", "#a3e635", "#f472b6", "#facc15", "#c084fc", "#2dd4bf",
-    "#fb7185", "#60a5fa", "#bef264", "#fda4af", "#67e8f9", "#e879f9", "#fde047",
-  ];
+  const HISTORY_COLOR_BY_OWNER = {
+    "Will Dooling": "#facc15",
+    "Andrew Johnstone": "#a855f7",
+    "Matt Manzo": "#2563eb",
+    "Kevin & Chris": "#f8fafc",
+    "Patrick Gavin": "#ec4899",
+    "Matt Pitman": "#991b1b",
+    "Johnny Jones": "#c2410c",
+    "Malcolm Zeroka": "#2dd4bf",
+    "Adam Ellis": "#38bdf8",
+    "Brian Harty": "#eab308",
+    "Connor Cademartori": "#16a34a",
+    "Peter & Sean": "#a78bfa",
+    "Sam Abate": "#166534",
+    "Kevin Morency": "#f472b6",
+  };
+  const HISTORY_FALLBACK_COLORS = ["#f97316", "#38bdf8", "#a3e635", "#f472b6", "#facc15", "#c084fc"];
 
   function readManagerInfo() {
     const configNode = document.querySelector("#ap-poll-manager-info");
@@ -730,7 +743,8 @@ if (root) {
 
     return [...teamsById.values()].map((team, index) => ({
       ...team,
-      color: HISTORY_COLORS[index % HISTORY_COLORS.length],
+      color: HISTORY_COLOR_BY_OWNER[team.owner_label]
+        || HISTORY_FALLBACK_COLORS[index % HISTORY_FALLBACK_COLORS.length],
     }));
   }
 
@@ -755,7 +769,7 @@ if (root) {
         ? "No AP-point change"
         : `${pointChange > 0 ? "+" : ""}${pointChange} from ${escapeHtml(previousPoll.label)}`;
 
-    return `<span class="poll-history-focus-team">
+    return `<span class="poll-history-focus-team" style="--poll-history-team-color: ${team.color}">
       ${portraitMarkup(team.owner_label, "poll-history-focus-avatar")}
       <span><strong>${escapeHtml(team.display_name)}</strong><small>${escapeHtml(team.owner_label)}</small></span>
     </span>
