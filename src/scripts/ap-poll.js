@@ -7,6 +7,10 @@ if (root) {
   const leagueSlug = root.dataset.league || "sb3";
 
   let pollState = null;
+  let pollHistoryState = { status: "idle", data: null };
+  let pollHistoryPromise = null;
+  let selectedHistoryTeamId = null;
+  let hoveredHistoryTeamId = null;
   let selectedVoterId = null;
   let ranking = [];
   let championshipTeamId = "";
@@ -33,6 +37,10 @@ if (root) {
   const POINTER_EDGE_SCROLL_ZONE = 72;
   const POINTER_MAX_SCROLL_SPEED = 12;
   const SNAPSHOT_STALE_MS = 72 * 60 * 60 * 1000;
+  const HISTORY_COLORS = [
+    "#f97316", "#38bdf8", "#a3e635", "#f472b6", "#facc15", "#c084fc", "#2dd4bf",
+    "#fb7185", "#60a5fa", "#bef264", "#fda4af", "#67e8f9", "#e879f9", "#fde047",
+  ];
 
   function readManagerInfo() {
     const configNode = document.querySelector("#ap-poll-manager-info");
@@ -463,6 +471,7 @@ if (root) {
 
   function renderNoPoll() {
     root.innerHTML = `${renderNotice()}
+      ${historyDashboardMarkup()}
       <section class="card poll-state-card" aria-labelledby="no-poll-title">
         <p class="poll-eyebrow">Super Beef 3-Way</p>
         <h1 id="no-poll-title">No current AP Poll</h1>
@@ -620,6 +629,7 @@ if (root) {
   function renderClosed() {
     root.innerHTML = `${renderNotice()}
       ${pollHeaderMarkup(pollState, "Closed")}
+      ${historyDashboardMarkup()}
       <div class="poll-two-column">
         <section class="card poll-state-card" aria-labelledby="poll-closed-title">
           <h2 id="poll-closed-title">Voting is closed</h2>
@@ -697,6 +707,150 @@ if (root) {
     </article>`;
   }
 
+  function historyPolls() {
+    return Array.isArray(pollHistoryState.data?.polls) ? pollHistoryState.data.polls : [];
+  }
+
+  function historyTeams(polls) {
+    const teamsById = new Map();
+
+    polls.forEach((poll) => {
+      (poll.results || []).forEach((result) => {
+        if (!teamsById.has(result.team_id)) {
+          teamsById.set(result.team_id, {
+            id: result.team_id,
+            display_name: result.display_name,
+            owner_label: result.owner_label,
+            resultsByPoll: new Map(),
+          });
+        }
+        teamsById.get(result.team_id).resultsByPoll.set(poll.id, result);
+      });
+    });
+
+    return [...teamsById.values()].map((team, index) => ({
+      ...team,
+      color: HISTORY_COLORS[index % HISTORY_COLORS.length],
+    }));
+  }
+
+  function activeHistoryTeamId() {
+    return hoveredHistoryTeamId || selectedHistoryTeamId;
+  }
+
+  function historyFocusMarkup(team, polls) {
+    if (!team) {
+      return '<p class="poll-history-focus-copy">Hover or tap a team to bring its AP-points path forward.</p>';
+    }
+
+    const currentPoll = polls.at(-1);
+    const currentResult = team.resultsByPoll.get(currentPoll?.id);
+    const previousPoll = polls.at(-2);
+    const previousResult = team.resultsByPoll.get(previousPoll?.id);
+    const currentPoints = Number(currentResult?.ap_points) || 0;
+    const pointChange = previousResult ? currentPoints - (Number(previousResult.ap_points) || 0) : null;
+    const changeLabel = pointChange === null
+      ? "First published result"
+      : pointChange === 0
+        ? "No AP-point change"
+        : `${pointChange > 0 ? "+" : ""}${pointChange} from ${escapeHtml(previousPoll.label)}`;
+
+    return `<span class="poll-history-focus-team">
+      ${portraitMarkup(team.owner_label, "poll-history-focus-avatar")}
+      <span><strong>${escapeHtml(team.display_name)}</strong><small>${escapeHtml(team.owner_label)}</small></span>
+    </span>
+    <span class="poll-history-focus-metric"><strong>${currentPoints} AP</strong><small>${escapeHtml(currentPoll?.label || "Latest poll")} &middot; ${changeLabel}</small></span>`;
+  }
+
+  function historyDashboardMarkup() {
+    if (pollHistoryState.status === "idle" || pollHistoryState.status === "loading") {
+      return `<section class="card poll-history-card" aria-labelledby="poll-history-title">
+        <div class="poll-section-heading"><div><p class="poll-step">AP Poll history</p><h2 id="poll-history-title">AP points over time</h2></div></div>
+        <p class="poll-history-empty" role="status">Loading published AP Poll history&hellip;</p>
+      </section>`;
+    }
+
+    if (pollHistoryState.status !== "ready") {
+      return "";
+    }
+
+    const polls = historyPolls();
+    if (polls.length === 0) {
+      return `<section class="card poll-history-card" aria-labelledby="poll-history-title">
+        <div class="poll-section-heading"><div><p class="poll-step">AP Poll history</p><h2 id="poll-history-title">AP points over time</h2></div></div>
+        <p class="poll-history-empty">Published AP Poll results will appear here once the league has history to compare.</p>
+      </section>`;
+    }
+
+    const teams = historyTeams(polls);
+    const activeTeam = teams.find((team) => team.id === activeHistoryTeamId()) || null;
+    const maxPoints = Math.max(1, ...teams.flatMap((team) => polls.map((poll) => Number(team.resultsByPoll.get(poll.id)?.ap_points) || 0)));
+    const yMax = Math.max(10, Math.ceil(maxPoints / 10) * 10);
+    const viewBox = { width: 920, height: 460, left: 62, right: 24, top: 30, bottom: 62 };
+    const plotWidth = viewBox.width - viewBox.left - viewBox.right;
+    const plotHeight = viewBox.height - viewBox.top - viewBox.bottom;
+    const xForIndex = (index) => viewBox.left + (polls.length === 1 ? plotWidth / 2 : (plotWidth * index) / (polls.length - 1));
+    const yForValue = (value) => viewBox.top + plotHeight - ((Number(value) || 0) / yMax) * plotHeight;
+    const yTicks = Array.from({ length: 5 }, (_, index) => Math.round((yMax * index) / 4));
+    const historyPath = (team) => polls.reduce((path, poll, index) => {
+      const result = team.resultsByPoll.get(poll.id);
+      if (!result) return path;
+      const command = path ? "L" : "M";
+      return `${path}${command}${xForIndex(index).toFixed(2)} ${yForValue(result.ap_points).toFixed(2)} `;
+    }, "");
+
+    return `<section class="card poll-history-card" data-poll-history aria-labelledby="poll-history-title">
+      <div class="poll-section-heading">
+        <div><p class="poll-step">AP Poll history</p><h2 id="poll-history-title">AP points over time</h2></div>
+        <p>${polls.length === 1 ? "1 published poll" : `${polls.length} published polls`}</p>
+      </div>
+      <div class="poll-history-layout">
+        <div class="poll-history-chart-wrap">
+          <svg class="poll-history-chart" viewBox="0 0 ${viewBox.width} ${viewBox.height}" role="img" aria-label="AP points for all teams across published polls">
+            ${yTicks.map((value) => `<g class="poll-history-gridline"><line x1="${viewBox.left}" x2="${viewBox.width - viewBox.right}" y1="${yForValue(value)}" y2="${yForValue(value)}"></line><text x="${viewBox.left - 12}" y="${yForValue(value) + 4}" text-anchor="end">${value}</text></g>`).join("")}
+            <text class="poll-history-axis-label" x="18" y="${viewBox.top + plotHeight / 2}" transform="rotate(-90 18 ${viewBox.top + plotHeight / 2})" text-anchor="middle">AP points</text>
+            ${polls.map((poll, index) => `<g class="poll-history-x-axis"><line x1="${xForIndex(index)}" x2="${xForIndex(index)}" y1="${viewBox.top + plotHeight}" y2="${viewBox.top + plotHeight + 6}"></line><text x="${xForIndex(index)}" y="${viewBox.top + plotHeight + 26}" text-anchor="middle">${escapeHtml(poll.label)}</text><text x="${xForIndex(index)}" y="${viewBox.top + plotHeight + 43}" text-anchor="middle">${Number(poll.ballot_count) || 0} ballots</text></g>`).join("")}
+            ${teams.map((team) => `<g class="poll-history-series" data-history-team-id="${escapeHtml(team.id)}" tabindex="0" role="button" aria-label="Focus ${escapeHtml(team.display_name)} AP-points history" style="--poll-history-team-color: ${team.color}">
+              <path class="poll-history-line" d="${historyPath(team)}"></path>
+              ${polls.map((poll, index) => {
+                const result = team.resultsByPoll.get(poll.id);
+                if (!result) return "";
+                return `<circle class="poll-history-point" cx="${xForIndex(index)}" cy="${yForValue(result.ap_points)}" r="4.5"><title>${escapeHtml(team.display_name)}: ${escapeHtml(poll.label)}, ${escapeHtml(result.ap_points)} AP, rank ${escapeHtml(result.rank)}</title></circle>`;
+              }).join("")}
+            </g>`).join("")}
+          </svg>
+        </div>
+        <div class="poll-history-legend" aria-label="Teams">
+          ${teams.map((team) => `<button type="button" class="poll-history-team" data-action="select-history-team" data-history-team-id="${escapeHtml(team.id)}" style="--poll-history-team-color: ${team.color}" aria-pressed="${team.id === selectedHistoryTeamId}">
+            <span class="poll-history-swatch" aria-hidden="true"></span>${portraitMarkup(team.owner_label, "poll-history-avatar")}<span><strong>${escapeHtml(team.display_name)}</strong><small>${escapeHtml(team.owner_label)}</small></span>
+          </button>`).join("")}
+        </div>
+      </div>
+      <div class="poll-history-focus" data-history-focus-detail>${historyFocusMarkup(activeTeam, polls)}</div>
+    </section>`;
+  }
+
+  function updateHistoryFocus() {
+    const history = root.querySelector("[data-poll-history]");
+    if (!history) return;
+    const activeId = activeHistoryTeamId();
+    history.classList.toggle("has-history-focus", Boolean(activeId));
+    history.querySelectorAll("[data-history-team-id]").forEach((element) => {
+      const isActive = Boolean(activeId) && element.dataset.historyTeamId === activeId;
+      element.classList.toggle("is-history-active", isActive);
+      element.classList.toggle("is-history-muted", Boolean(activeId) && !isActive);
+      if (element.matches("button")) element.setAttribute("aria-pressed", String(element.dataset.historyTeamId === selectedHistoryTeamId));
+    });
+    const detail = history.querySelector("[data-history-focus-detail]");
+    if (detail) detail.innerHTML = historyFocusMarkup(historyTeams(historyPolls()).find((team) => team.id === activeId) || null, historyPolls());
+  }
+
+  function selectHistoryTeam(teamId) {
+    hoveredHistoryTeamId = null;
+    selectedHistoryTeamId = selectedHistoryTeamId === teamId ? null : teamId;
+    updateHistoryFocus();
+  }
+
   function renderPublished() {
     const results = Array.isArray(pollState.results) ? pollState.results : [];
     const topResults = results.slice(0, 10);
@@ -707,6 +861,7 @@ if (root) {
 
     root.innerHTML = `${renderNotice()}
       ${pollHeaderMarkup(pollState, "Published")}
+      ${historyDashboardMarkup()}
       ${pollState.poll.is_demo ? `<div class="poll-demo-banner" role="note">
         <strong>Demo / sample data</strong>
         <span>These results come from deterministic sample ballots, not real league votes.</span>
@@ -767,7 +922,15 @@ if (root) {
     try {
       const previousPollId = pollState?.poll?.id || null;
       const previousSeason = pollState?.poll?.season || null;
+      const previousPollStatus = pollState?.poll?.status || null;
       pollState = await callRpc("ap_poll_get_state", { p_league_slug: leagueSlug });
+      if (!pollHistoryPromise
+        && (previousPollId !== (pollState?.poll?.id || null)
+          || previousPollStatus !== (pollState?.poll?.status || null))) {
+        pollHistoryState = { status: "idle", data: null };
+        selectedHistoryTeamId = null;
+        hoveredHistoryTeamId = null;
+      }
       if (previousPollId && previousPollId !== pollState?.poll?.id) {
         deliberateSnapshotTeamId = null;
         hoveredSnapshotTeamId = null;
@@ -778,9 +941,31 @@ if (root) {
       }
       renderState();
       if (pollState?.poll?.status === "open") void loadPollSnapshot();
+      else void loadPollHistory();
     } catch (error) {
       renderLoadError(error);
     }
+  }
+
+  async function loadPollHistory() {
+    if (pollHistoryPromise || pollHistoryState.status === "ready") return pollHistoryPromise;
+    pollHistoryState = { status: "loading", data: null };
+    renderState();
+    pollHistoryPromise = callRpc("ap_poll_get_history", { p_league_slug: leagueSlug })
+      .then((data) => {
+        if (!Array.isArray(data?.polls)) throw new Error("invalid AP Poll history response");
+        pollHistoryState = { status: "ready", data };
+        return data;
+      })
+      .catch(() => {
+        pollHistoryState = { status: "unavailable", data: null };
+        return null;
+      })
+      .finally(() => {
+        pollHistoryPromise = null;
+        renderState();
+      });
+    return pollHistoryPromise;
   }
 
   function selectVoter(voterId) {
@@ -931,6 +1116,11 @@ if (root) {
   root.addEventListener("click", (event) => {
     const button = event.target.closest("button[data-action]");
     if (!button) {
+      const historyItem = event.target.closest("[data-history-team-id]");
+      if (historyItem) {
+        selectHistoryTeam(historyItem.dataset.historyTeamId);
+        return;
+      }
       const item = event.target.closest("[data-rank-item]");
       if (item) {
         if (desktopSnapshotQuery.matches) {
@@ -974,12 +1164,20 @@ if (root) {
     } else if (action === "toggle-mobile-snapshot-players") {
       mobileSnapshotShowAll = !mobileSnapshotShowAll;
       updateTeamSnapshotPanel({ focusMobileSelector: "[data-action='toggle-mobile-snapshot-players']" });
+    } else if (action === "select-history-team") {
+      selectHistoryTeam(button.dataset.historyTeamId);
     } else if (action === "select-final-pick") {
       selectFinalPick(button.dataset.pickQuestion, button.dataset.teamId);
     }
   });
 
   root.addEventListener("keydown", (event) => {
+    const historyItem = event.target.closest("[data-history-team-id]");
+    if (historyItem && (event.key === "Enter" || event.key === " ")) {
+      event.preventDefault();
+      selectHistoryTeam(historyItem.dataset.historyTeamId);
+      return;
+    }
     if (event.key !== "Escape" || mobileSnapshotState !== "open") return;
     event.preventDefault();
     collapseMobileSnapshot({ focusPeek: true });
@@ -992,12 +1190,35 @@ if (root) {
   });
 
   root.addEventListener("focusin", (event) => {
+    const historyItem = event.target.closest("[data-history-team-id]");
+    if (historyItem) {
+      hoveredHistoryTeamId = historyItem.dataset.historyTeamId;
+      updateHistoryFocus();
+      return;
+    }
     const item = event.target.closest("[data-rank-item]");
     if (item) selectSnapshotTeam(item.dataset.teamId);
   });
 
+  root.addEventListener("focusout", (event) => {
+    const historyItem = event.target.closest("[data-history-team-id]");
+    if (!historyItem) return;
+    const nextHistoryItem = event.relatedTarget?.closest?.("[data-history-team-id]");
+    if (nextHistoryItem?.dataset.historyTeamId === historyItem.dataset.historyTeamId) return;
+    hoveredHistoryTeamId = null;
+    updateHistoryFocus();
+  });
+
   root.addEventListener("pointerover", (event) => {
     if (event.pointerType !== "mouse" || draggedTeamId || pointerDrag?.active) return;
+    const historyItem = event.target.closest("[data-history-team-id]");
+    if (historyItem) {
+      const previousHistoryItem = event.relatedTarget?.closest?.("[data-history-team-id]");
+      if (previousHistoryItem?.dataset.historyTeamId === historyItem.dataset.historyTeamId) return;
+      hoveredHistoryTeamId = historyItem.dataset.historyTeamId;
+      updateHistoryFocus();
+      return;
+    }
     const item = event.target.closest("[data-rank-item]");
     if (!item) return;
     const previousItem = event.relatedTarget?.closest?.("[data-rank-item]");
@@ -1007,6 +1228,14 @@ if (root) {
 
   root.addEventListener("pointerout", (event) => {
     if (event.pointerType !== "mouse" || draggedTeamId || pointerDrag?.active) return;
+    const historyItem = event.target.closest("[data-history-team-id]");
+    if (historyItem) {
+      const nextHistoryItem = event.relatedTarget?.closest?.("[data-history-team-id]");
+      if (nextHistoryItem?.dataset.historyTeamId === historyItem.dataset.historyTeamId) return;
+      hoveredHistoryTeamId = nextHistoryItem?.dataset.historyTeamId || null;
+      updateHistoryFocus();
+      return;
+    }
     const item = event.target.closest("[data-rank-item]");
     if (!item) return;
     const nextItem = event.relatedTarget?.closest?.("[data-rank-item]");
