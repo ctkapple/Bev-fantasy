@@ -918,14 +918,22 @@
   .poll-award-empty {
     @apply px-5 py-8 text-center text-sm text-text-secondary;
   }
-  .poll-awards-section {
+  .poll-awards-section,
+  .poll-movement-section,
+  .poll-dispersion-section {
     @apply space-y-4;
   }
-  .poll-awards-section > .poll-section-heading {
+  .poll-awards-section > .poll-section-heading,
+  .poll-movement-section > .poll-section-heading,
+  .poll-dispersion-section > .poll-section-heading {
     @apply mb-0;
   }
   .poll-awards-grid {
     @apply grid grid-cols-1 items-start gap-4 lg:grid-cols-3;
+  }
+  .poll-movement-grid,
+  .poll-dispersion-grid {
+    @apply grid grid-cols-1 items-start gap-4 lg:grid-cols-2;
   }
   .poll-award-card {
     @apply card relative overflow-hidden p-0;
@@ -955,6 +963,12 @@
   }
   .poll-award-total small {
     @apply text-xs text-text-secondary;
+  }
+  .poll-movement-total.is-up strong {
+    @apply text-win;
+  }
+  .poll-movement-total.is-down strong {
+    @apply text-loss;
   }
 
   @media (max-width: 639px) {
