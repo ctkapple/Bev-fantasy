@@ -271,6 +271,81 @@
   .poll-team-snapshot-card h2 {
     @apply border-b border-accent-500/40 pb-3;
   }
+  .poll-mobile-team-snapshot {
+    @apply fixed inset-x-0 bottom-0 z-50 lg:hidden border-t-2 border-accent-500 bg-surface shadow-2xl shadow-black/60;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .poll-mobile-team-snapshot[hidden],
+  .poll-mobile-team-snapshot.is-drag-hidden {
+    @apply hidden;
+  }
+  .poll-mobile-snapshot-peek {
+    @apply w-full min-h-[3.875rem] px-4 py-2.5 flex items-center justify-between gap-3 text-left
+      bg-surface text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent-400;
+    animation: poll-mobile-snapshot-in 200ms ease-out both;
+  }
+  .poll-mobile-snapshot-peek-copy {
+    @apply min-w-0 flex flex-col;
+  }
+  .poll-mobile-snapshot-peek-copy small,
+  .poll-mobile-snapshot-header small {
+    @apply text-[0.62rem] font-bold uppercase tracking-[0.16em] text-accent-400;
+  }
+  .poll-mobile-snapshot-peek-copy strong {
+    @apply truncate text-sm;
+  }
+  .poll-mobile-snapshot-peek-action {
+    @apply shrink-0 text-xs font-bold text-accent-400;
+  }
+  .poll-mobile-snapshot-drawer {
+    @apply bg-surface;
+    animation: poll-mobile-snapshot-in 200ms ease-out both;
+  }
+  .poll-mobile-snapshot-grabber {
+    @apply w-10 h-1 mx-auto mt-2 mb-1 rounded-full bg-border-hover;
+  }
+  .poll-mobile-snapshot-header {
+    @apply px-4 pb-2 flex items-start justify-between gap-3;
+  }
+  .poll-mobile-snapshot-header > div {
+    @apply min-w-0;
+  }
+  .poll-mobile-snapshot-header h2 {
+    @apply mt-0.5 truncate text-lg font-bold;
+  }
+  .poll-mobile-snapshot-header p {
+    @apply truncate text-xs text-text-secondary;
+  }
+  .poll-mobile-snapshot-close {
+    @apply w-11 h-11 shrink-0 inline-flex items-center justify-center rounded-lg border border-border bg-bg/40
+      text-2xl text-text-secondary hover:text-text-primary hover:border-border-hover focus-visible:outline-none
+      focus-visible:ring-2 focus-visible:ring-accent-400 active:scale-[0.94];
+  }
+  .poll-mobile-snapshot-body {
+    @apply px-4 pb-3 overflow-y-auto;
+    max-height: min(70vh, 34rem);
+    overscroll-behavior: contain;
+  }
+  .poll-mobile-snapshot-body .poll-snapshot-empty {
+    @apply min-h-28;
+  }
+  .poll-mobile-snapshot-body .poll-snapshot-label {
+    @apply mt-1;
+  }
+  .poll-mobile-snapshot-more {
+    @apply w-full min-h-11 mt-2 inline-flex items-center justify-center rounded-lg border border-accent-500/50
+      bg-accent-500/10 text-xs font-bold text-accent-400 hover:bg-accent-500/15 focus-visible:outline-none
+      focus-visible:ring-2 focus-visible:ring-accent-400 active:scale-[0.98];
+  }
+  .poll-mobile-snapshot-body .poll-snapshot-footer {
+    @apply mt-3;
+  }
+  @media (min-width: 640px) and (max-width: 1023px) {
+    .poll-mobile-team-snapshot {
+      @apply left-1/2 right-auto -translate-x-1/2 rounded-t-2xl overflow-hidden;
+      width: min(32rem, calc(100% - 2rem));
+    }
+  }
   .poll-snapshot-content {
     @apply flex-1 min-h-0;
     animation: poll-snapshot-content-in 180ms ease-out both;
@@ -464,6 +539,12 @@
     .poll-rank-item.is-snapshot-viewed {
       @apply border-accent-400;
       box-shadow: inset 3px 0 0 rgb(var(--color-accent-400)), 0 0 0 1px rgb(var(--color-accent-500) / 0.22), 0 8px 22px rgb(var(--color-accent-500) / 0.1);
+    }
+  }
+  @media (max-width: 1023px) {
+    .poll-rank-item.is-snapshot-viewed {
+      @apply border-accent-400;
+      box-shadow: inset 3px 0 0 rgb(var(--color-accent-400)), 0 0 0 1px rgb(var(--color-accent-500) / 0.2);
     }
   }
   .poll-rank-item.is-dragging-up {
@@ -764,6 +845,10 @@
   }
   @keyframes poll-snapshot-content-in {
     from { opacity: 0.25; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes poll-mobile-snapshot-in {
+    from { opacity: 0.35; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }
   }
 

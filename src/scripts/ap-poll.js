@@ -23,6 +23,9 @@ if (root) {
   let pollSnapshotPromise = null;
   let deliberateSnapshotTeamId = null;
   let hoveredSnapshotTeamId = null;
+  let mobileSnapshotState = "hidden";
+  let mobileSnapshotShowAll = false;
+  let suppressMobileSnapshotClickUntil = 0;
 
   const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
   const desktopSnapshotQuery = window.matchMedia("(min-width: 1024px)");
@@ -62,8 +65,7 @@ if (root) {
       .replaceAll("'", "&#039;");
 
   function snapshotInteractionsEnabled() {
-    return desktopSnapshotQuery.matches
-      && pollState?.poll?.status === "open"
+    return pollState?.poll?.status === "open"
       && Boolean(selectedVoterId);
   }
 
@@ -106,11 +108,15 @@ if (root) {
     </li>`;
   }
 
-  function teamSnapshotMarkup() {
-    const teamId = displayedSnapshotTeamId();
+  function snapshotPanelContent(teamId, {
+    playerLimit = 5,
+    includeTeamHeading = true,
+    label = `Top ${playerLimit} projected players`,
+  } = {}) {
     const team = pollTeamById(teamId);
     let content = '<p class="poll-snapshot-empty">Select a team to preview its projected core.</p>';
     let footer = "";
+    let hasPlayers = false;
 
     if (team) {
       if (pollSnapshotState.status === "idle" || pollSnapshotState.status === "loading") {
@@ -133,21 +139,77 @@ if (root) {
           } else if (snapshotTeam.status !== "ready" || snapshotTeam.players?.length !== 5) {
             content = '<p class="poll-snapshot-empty">Projections are unavailable right now. Rankings are unaffected.</p>';
           } else {
-            content = `<div class="poll-snapshot-team-heading">
+            hasPlayers = true;
+            const teamHeading = includeTeamHeading ? `<div class="poll-snapshot-team-heading">
               <strong>${escapeHtml(team.display_name)}</strong>
               <span>${escapeHtml(team.owner_label)}</span>
-            </div>
-            <p class="poll-snapshot-label">Top 5 projected players</p>
-            <ol class="poll-snapshot-players">${snapshotTeam.players.map(snapshotPlayerMarkup).join("")}</ol>`;
+            </div>` : "";
+            content = `${teamHeading}
+            <p class="poll-snapshot-label">${escapeHtml(label)}</p>
+            <ol class="poll-snapshot-players">${snapshotTeam.players.slice(0, playerLimit).map(snapshotPlayerMarkup).join("")}</ol>`;
           }
         }
       }
     }
 
+    return { team, content, footer, hasPlayers };
+  }
+
+  function teamSnapshotMarkup() {
+    const { content, footer } = snapshotPanelContent(displayedSnapshotTeamId());
+
     return `<section class="poll-team-snapshot-card" data-team-snapshot aria-labelledby="team-snapshot-heading">
       <h2 id="team-snapshot-heading">Team Snapshot</h2>
       <div class="poll-snapshot-content">${content}</div>
       ${footer}
+    </section>`;
+  }
+
+  function mobileTeamSnapshotMarkup() {
+    const team = pollTeamById(deliberateSnapshotTeamId);
+    if (!team || mobileSnapshotState === "hidden") {
+      return '<section class="poll-mobile-team-snapshot" data-mobile-team-snapshot hidden></section>';
+    }
+
+    if (mobileSnapshotState === "peek") {
+      return `<section class="poll-mobile-team-snapshot" data-mobile-team-snapshot id="poll-mobile-snapshot-content" aria-label="Team Snapshot">
+        <button type="button" class="poll-mobile-snapshot-peek" data-action="open-mobile-snapshot" aria-expanded="false" aria-controls="poll-mobile-snapshot-content">
+          <span class="poll-mobile-snapshot-peek-copy">
+            <small>Team Snapshot</small>
+            <strong>${escapeHtml(team.owner_label)}</strong>
+          </span>
+          <span class="poll-mobile-snapshot-peek-action">View players <span aria-hidden="true">⌃</span></span>
+        </button>
+      </section>`;
+    }
+
+    const playerLimit = mobileSnapshotShowAll ? 5 : 3;
+    const { content, footer, hasPlayers } = snapshotPanelContent(team.id, {
+      playerLimit,
+      includeTeamHeading: false,
+      label: "Top projected players",
+    });
+    const playerToggle = hasPlayers ? `<button type="button" class="poll-mobile-snapshot-more" data-action="toggle-mobile-snapshot-players" aria-expanded="${mobileSnapshotShowAll}">
+      ${mobileSnapshotShowAll ? "Show top 3" : "Show all 5"}
+    </button>` : "";
+
+    return `<section class="poll-mobile-team-snapshot is-open" data-mobile-team-snapshot id="poll-mobile-snapshot-content" aria-labelledby="mobile-team-snapshot-heading">
+      <div class="poll-mobile-snapshot-drawer">
+        <div class="poll-mobile-snapshot-grabber" aria-hidden="true"></div>
+        <header class="poll-mobile-snapshot-header">
+          <div>
+            <small>Team Snapshot</small>
+            <h2 id="mobile-team-snapshot-heading" aria-live="polite">${escapeHtml(team.owner_label)}</h2>
+            <p>${escapeHtml(team.display_name)}</p>
+          </div>
+          <button type="button" class="poll-mobile-snapshot-close" data-action="collapse-mobile-snapshot" aria-label="Collapse Team Snapshot">&times;</button>
+        </header>
+        <div class="poll-mobile-snapshot-body">
+          <div class="poll-snapshot-content">${content}</div>
+          ${playerToggle}
+          ${footer}
+        </div>
+      </div>
     </section>`;
   }
 
@@ -158,21 +220,62 @@ if (root) {
     });
   }
 
-  function updateTeamSnapshotPanel() {
+  function updateTeamSnapshotPanel({ focusMobileSelector = null } = {}) {
     const panel = root.querySelector("[data-team-snapshot]");
     if (panel) panel.outerHTML = teamSnapshotMarkup();
+    const mobilePanel = root.querySelector("[data-mobile-team-snapshot]");
+    if (mobilePanel) mobilePanel.outerHTML = mobileTeamSnapshotMarkup();
     updateRankingSnapshotState();
+    if (focusMobileSelector) {
+      root.querySelector(focusMobileSelector)?.focus({ preventScroll: true });
+    }
   }
 
   function selectSnapshotTeam(teamId) {
     if (!snapshotInteractionsEnabled() || !pollTeamById(teamId)) return;
+    const changedTeam = deliberateSnapshotTeamId !== teamId;
     deliberateSnapshotTeamId = teamId;
     hoveredSnapshotTeamId = null;
+    if (!desktopSnapshotQuery.matches) {
+      if (mobileSnapshotState !== "open") mobileSnapshotState = "peek";
+      if (changedTeam) mobileSnapshotShowAll = false;
+    }
     updateTeamSnapshotPanel();
   }
 
+  function toggleMobileSnapshotTeam(teamId) {
+    if (desktopSnapshotQuery.matches || !snapshotInteractionsEnabled() || !pollTeamById(teamId)) return;
+    const sameOpenTeam = deliberateSnapshotTeamId === teamId && mobileSnapshotState === "open";
+    deliberateSnapshotTeamId = teamId;
+    hoveredSnapshotTeamId = null;
+    mobileSnapshotState = sameOpenTeam ? "peek" : "open";
+    mobileSnapshotShowAll = false;
+    updateTeamSnapshotPanel();
+  }
+
+  function collapseMobileSnapshot({ focusPeek = false } = {}) {
+    if (desktopSnapshotQuery.matches || mobileSnapshotState !== "open") return;
+    mobileSnapshotState = deliberateSnapshotTeamId ? "peek" : "hidden";
+    mobileSnapshotShowAll = false;
+    updateTeamSnapshotPanel({
+      focusMobileSelector: focusPeek ? "[data-action='open-mobile-snapshot']" : null,
+    });
+  }
+
+  function hideMobileSnapshotForDrag() {
+    if (desktopSnapshotQuery.matches) return;
+    root.querySelector("[data-mobile-team-snapshot]")?.classList.add("is-drag-hidden");
+  }
+
+  function restoreMobileSnapshotAfterDrag({ updatePanel = true } = {}) {
+    if (desktopSnapshotQuery.matches) return;
+    mobileSnapshotState = deliberateSnapshotTeamId ? "peek" : "hidden";
+    mobileSnapshotShowAll = false;
+    if (updatePanel) updateTeamSnapshotPanel();
+  }
+
   function previewSnapshotTeam(teamId) {
-    if (!snapshotInteractionsEnabled() || !pollTeamById(teamId)) return;
+    if (!desktopSnapshotQuery.matches || !snapshotInteractionsEnabled() || !pollTeamById(teamId)) return;
     if (hoveredSnapshotTeamId === teamId) return;
     hoveredSnapshotTeamId = teamId;
     updateTeamSnapshotPanel();
@@ -510,7 +613,8 @@ if (root) {
           ${submittedVotersMarkup(pollState.voters)}
           ${teamSnapshotMarkup()}
         </aside>
-      </div>`;
+      </div>
+      ${mobileTeamSnapshotMarkup()}`;
   }
 
   function renderClosed() {
@@ -758,6 +862,8 @@ if (root) {
       overratedTeamId = "";
       deliberateSnapshotTeamId = null;
       hoveredSnapshotTeamId = null;
+      mobileSnapshotState = "hidden";
+      mobileSnapshotShowAll = false;
       submissionPending = false;
       await loadPoll({ showLoading: false });
       focusSuccessNotice();
@@ -772,8 +878,24 @@ if (root) {
     const button = event.target.closest("button[data-action]");
     if (!button) {
       const item = event.target.closest("[data-rank-item]");
-      if (item) selectSnapshotTeam(item.dataset.teamId);
+      if (item) {
+        if (desktopSnapshotQuery.matches) {
+          selectSnapshotTeam(item.dataset.teamId);
+        } else if (Date.now() < suppressMobileSnapshotClickUntil) {
+          suppressMobileSnapshotClickUntil = 0;
+        } else {
+          toggleMobileSnapshotTeam(item.dataset.teamId);
+        }
+      } else if (!event.target.closest("[data-mobile-team-snapshot]")) {
+        collapseMobileSnapshot();
+      }
       return;
+    }
+    if (!desktopSnapshotQuery.matches
+      && mobileSnapshotState === "open"
+      && !button.closest("[data-mobile-team-snapshot]")
+      && !button.closest("[data-rank-item]")) {
+      collapseMobileSnapshot();
     }
     const action = button.dataset.action;
     if (action === "retry-load") {
@@ -787,9 +909,26 @@ if (root) {
         selectSnapshotTeam(item.dataset.teamId);
         moveRank(item.dataset.teamId, action === "move-up" ? -1 : 1);
       }
+    } else if (action === "open-mobile-snapshot") {
+      mobileSnapshotState = deliberateSnapshotTeamId ? "open" : "hidden";
+      mobileSnapshotShowAll = false;
+      updateTeamSnapshotPanel({
+        focusMobileSelector: event.detail === 0 ? "[data-action='collapse-mobile-snapshot']" : null,
+      });
+    } else if (action === "collapse-mobile-snapshot") {
+      collapseMobileSnapshot({ focusPeek: event.detail === 0 });
+    } else if (action === "toggle-mobile-snapshot-players") {
+      mobileSnapshotShowAll = !mobileSnapshotShowAll;
+      updateTeamSnapshotPanel({ focusMobileSelector: "[data-action='toggle-mobile-snapshot-players']" });
     } else if (action === "select-final-pick") {
       selectFinalPick(button.dataset.pickQuestion, button.dataset.teamId);
     }
+  });
+
+  root.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || mobileSnapshotState !== "open") return;
+    event.preventDefault();
+    collapseMobileSnapshot({ focusPeek: true });
   });
 
   root.addEventListener("submit", (event) => {
@@ -832,6 +971,7 @@ if (root) {
     if (!item || submissionPending) return;
     draggedTeamId = item.dataset.teamId;
     selectSnapshotTeam(draggedTeamId);
+    hideMobileSnapshotForDrag();
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData("text/plain", draggedTeamId);
     requestAnimationFrame(() => item.classList.add("is-dragging"));
@@ -876,12 +1016,14 @@ if (root) {
     ranking = reordered;
     setRankMotion(draggedTeamId, targetIndex < previousIndex ? -1 : 1);
     draggedTeamId = null;
+    restoreMobileSnapshotAfterDrag({ updatePanel: false });
     renderOpen();
   });
 
   root.addEventListener("dragend", () => {
     draggedTeamId = null;
     clearDragClasses();
+    restoreMobileSnapshotAfterDrag();
   });
 
   function clearDropIndicators() {
@@ -1021,7 +1163,13 @@ if (root) {
       pointerAutoScrollFrame = null;
     }
     clearDragClasses();
-    if (cancelled || !completedDrag.active || !completedDrag.targetId) return;
+    if (!completedDrag.active) return completedDrag;
+
+    restoreMobileSnapshotAfterDrag({ updatePanel: false });
+    if (cancelled || !completedDrag.targetId) {
+      updateTeamSnapshotPanel();
+      return completedDrag;
+    }
 
     const previousIndex = ranking.indexOf(completedDrag.teamId);
     const reordered = proposedRanking(
@@ -1029,18 +1177,25 @@ if (root) {
       completedDrag.targetId,
       completedDrag.insertBefore
     );
-    if (!reordered) return;
+    if (!reordered) {
+      updateTeamSnapshotPanel();
+      return completedDrag;
+    }
     const targetIndex = reordered.indexOf(completedDrag.teamId);
-    if (targetIndex === previousIndex) return;
+    if (targetIndex === previousIndex) {
+      updateTeamSnapshotPanel();
+      return completedDrag;
+    }
     ranking = reordered;
     setRankMotion(completedDrag.teamId, targetIndex < previousIndex ? -1 : 1);
     renderOpen();
+    return completedDrag;
   }
 
   root.addEventListener("pointerdown", (event) => {
     const item = event.target.closest("[data-rank-item]");
-    if (item) selectSnapshotTeam(item.dataset.teamId);
     if (event.pointerType === "mouse") {
+      if (item && desktopSnapshotQuery.matches) selectSnapshotTeam(item.dataset.teamId);
       if (item && event.target.closest(".poll-rank-actions button")) item.draggable = false;
       return;
     }
@@ -1070,6 +1225,7 @@ if (root) {
       if (distance < POINTER_DRAG_THRESHOLD) return;
       pointerDrag.active = true;
       root.classList.add("is-touch-reordering");
+      hideMobileSnapshotForDrag();
       root.querySelector(`[data-rank-item][data-team-id="${CSS.escape(pointerDrag.teamId)}"]`)?.classList.add("is-pointer-dragging");
     }
     event.preventDefault();
@@ -1085,7 +1241,9 @@ if (root) {
       return;
     }
     if (!pointerDrag || event.pointerId !== pointerDrag.pointerId) return;
-    finishPointerDrag();
+    const completedDrag = finishPointerDrag();
+    suppressMobileSnapshotClickUntil = Date.now() + 500;
+    if (completedDrag && !completedDrag.active) toggleMobileSnapshotTeam(completedDrag.teamId);
   });
 
   root.addEventListener("pointercancel", (event) => {
