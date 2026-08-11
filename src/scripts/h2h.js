@@ -208,6 +208,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     clearButton.classList.toggle("hidden", !selected[1] && !selected[2]);
     render(aggregate, selected[1], selected[2]);
+
+    if (selected[1] && selected[2] && window.matchMedia("(max-width: 639px)").matches) {
+      window.requestAnimationFrame(() => {
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        document.getElementById("h2h-result")?.scrollIntoView({
+          behavior: reduceMotion ? "auto" : "smooth",
+          block: "start",
+        });
+      });
+    }
   }
 
   faceButtons.forEach((button) => {
