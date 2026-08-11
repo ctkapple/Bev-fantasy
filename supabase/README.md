@@ -1,5 +1,8 @@
 # Super Beef 3-Way AP Poll database
 
+Living product roadmap and verification status:
+[`docs/ap-poll-plan.md`](../docs/ap-poll-plan.md).
+
 Phase 1 is deployed to the free-tier Supabase project `gkxpwopjmfdxymhsbnyh` at
 `https://gkxpwopjmfdxymhsbnyh.supabase.co`.
 

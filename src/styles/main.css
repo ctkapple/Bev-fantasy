@@ -828,29 +828,164 @@
     @apply text-sm text-amber-100/80;
   }
   .poll-results-card {
-    @apply p-0 overflow-hidden;
+    @apply p-0 overflow-hidden border-accent-500/20;
+    background:
+      radial-gradient(circle at top right, rgb(var(--color-accent-500) / 0.09), transparent 34%),
+      rgb(var(--color-surface) / 0.96);
   }
   .poll-results-card .poll-section-heading {
     @apply p-4 md:p-6;
   }
-  .poll-results-table th,
-  .poll-results-table td {
-    @apply px-3 md:px-4 py-3 whitespace-nowrap;
+  .poll-result-column-labels,
+  .poll-result-row {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr) 5rem 6rem;
+    @apply items-center gap-3;
   }
-  .poll-results-table td:nth-child(2) {
-    @apply min-w-56 whitespace-normal;
+  .poll-result-column-labels {
+    @apply mx-4 md:mx-6 border-b border-border/70 px-3 pb-2 text-[0.68rem] font-semibold uppercase tracking-widest text-text-muted;
   }
-  .poll-results-table td:nth-child(2) small {
-    @apply block text-text-secondary mt-0.5;
+  .poll-result-column-labels span:nth-child(3),
+  .poll-result-column-labels span:nth-child(4) {
+    @apply text-center;
+  }
+  .poll-result-list {
+    @apply space-y-2 p-4 pt-3 md:p-6 md:pt-4;
+  }
+  .poll-result-row {
+    @apply min-h-16 rounded-xl border border-border/70 bg-bg/55 px-3 py-2.5;
+    box-shadow: 0 5px 18px rgb(0 0 0 / 0.12);
+  }
+  .poll-result-row.is-rank-1,
+  .poll-result-row.is-rank-2,
+  .poll-result-row.is-rank-3 {
+    @apply border-accent-500/40 bg-accent-500/5;
+    box-shadow: inset 3px 0 0 rgb(var(--color-accent-500) / 0.75), 0 7px 22px rgb(0 0 0 / 0.16);
+  }
+  .poll-result-rank {
+    @apply flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface-hover text-lg font-bold text-text-primary;
+  }
+  .poll-result-row.is-rank-1 .poll-result-rank {
+    @apply border-amber-300/80 bg-amber-400/20 text-amber-200;
+  }
+  .poll-result-row.is-rank-2 .poll-result-rank {
+    @apply border-slate-300/80 bg-slate-300/20 text-slate-100;
+  }
+  .poll-result-row.is-rank-3 .poll-result-rank {
+    @apply border-orange-500/80 bg-orange-600/20 text-orange-200;
   }
   .poll-results-team {
-    @apply flex items-center gap-2.5;
+    @apply min-w-0 flex items-center gap-3;
   }
   .poll-results-team .poll-team-avatar {
-    @apply w-8 h-8;
+    @apply h-10 w-10 shrink-0;
   }
-  .poll-official-rank {
-    @apply text-lg font-bold text-accent-400;
+  .poll-result-team-copy {
+    @apply min-w-0;
+  }
+  .poll-result-team-copy strong,
+  .poll-result-team-copy small {
+    @apply block truncate;
+  }
+  .poll-result-team-copy strong {
+    @apply text-sm md:text-base;
+  }
+  .poll-result-team-copy small {
+    @apply mt-0.5 text-xs text-text-secondary;
+  }
+  .poll-result-trend {
+    @apply inline-flex items-center justify-center gap-1 text-sm font-bold;
+  }
+  .poll-result-trend.is-up {
+    @apply text-win;
+  }
+  .poll-result-trend.is-down {
+    @apply text-loss;
+  }
+  .poll-result-trend.is-neutral {
+    @apply text-text-muted;
+  }
+  .poll-result-points {
+    @apply flex min-w-20 items-baseline justify-center gap-1 rounded-lg border border-accent-500/30 bg-accent-500/10 px-2 py-1.5 text-center text-accent-400;
+  }
+  .poll-result-points strong {
+    @apply text-lg;
+  }
+  .poll-result-points small {
+    @apply text-[0.65rem] font-semibold uppercase tracking-wider;
+  }
+  .poll-results-empty,
+  .poll-award-empty {
+    @apply px-5 py-8 text-center text-sm text-text-secondary;
+  }
+  .poll-awards-section {
+    @apply space-y-4;
+  }
+  .poll-awards-section > .poll-section-heading {
+    @apply mb-0;
+  }
+  .poll-awards-grid {
+    @apply grid grid-cols-1 items-start gap-4 lg:grid-cols-3;
+  }
+  .poll-award-card {
+    @apply card relative overflow-hidden p-0;
+  }
+  .poll-award-card::before {
+    content: "";
+    @apply absolute inset-x-0 top-0 h-1 bg-accent-500;
+  }
+  .poll-award-label {
+    @apply px-4 pb-3 pt-5 text-xs font-semibold uppercase tracking-widest text-accent-400;
+  }
+  .poll-award-winners {
+    @apply divide-y divide-border/60;
+  }
+  .poll-award-winner {
+    @apply flex min-h-20 items-center justify-between gap-3 px-4 py-3;
+  }
+  .poll-award-total {
+    @apply shrink-0 text-right;
+  }
+  .poll-award-total strong,
+  .poll-award-total small {
+    @apply block;
+  }
+  .poll-award-total strong {
+    @apply text-xl text-accent-400;
+  }
+  .poll-award-total small {
+    @apply text-xs text-text-secondary;
+  }
+
+  @media (max-width: 639px) {
+    .poll-result-column-labels {
+      @apply hidden;
+    }
+    .poll-result-list {
+      @apply pt-4;
+    }
+    .poll-result-row {
+      grid-template-columns: 2.5rem minmax(0, 1fr) 4.75rem;
+      grid-template-areas:
+        "rank team points"
+        "rank team trend";
+      @apply gap-x-2 gap-y-0.5;
+    }
+    .poll-result-rank {
+      grid-area: rank;
+      @apply h-9 w-9;
+    }
+    .poll-result-row .poll-results-team {
+      grid-area: team;
+    }
+    .poll-result-trend {
+      grid-area: trend;
+      @apply justify-end pr-1 text-xs;
+    }
+    .poll-result-points {
+      grid-area: points;
+      @apply min-w-0 justify-end border-0 bg-transparent p-0;
+    }
   }
 
   @keyframes poll-progress-fill {

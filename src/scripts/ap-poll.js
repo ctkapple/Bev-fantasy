@@ -634,12 +634,76 @@ if (root) {
     return results.some((result) => Object.hasOwn(result, field));
   }
 
+  function resultTrendMarkup(result) {
+    const currentRank = Number(result.rank);
+    const hasPreviousRank = result.previous_rank !== null
+      && result.previous_rank !== undefined
+      && result.previous_rank !== "";
+    const previousRank = Number(result.previous_rank);
+
+    if (!hasPreviousRank || !Number.isFinite(currentRank) || !Number.isFinite(previousRank)) {
+      return '<span class="poll-result-trend is-neutral" aria-label="No previous poll">&mdash;</span>';
+    }
+
+    const change = previousRank - currentRank;
+    if (change > 0) {
+      return `<span class="poll-result-trend is-up" aria-label="Up ${change} places"><span aria-hidden="true">&uarr;</span>${change}</span>`;
+    }
+    if (change < 0) {
+      return `<span class="poll-result-trend is-down" aria-label="Down ${Math.abs(change)} places"><span aria-hidden="true">&darr;</span>${Math.abs(change)}</span>`;
+    }
+    return '<span class="poll-result-trend is-neutral" aria-label="Rank unchanged">&mdash;</span>';
+  }
+
+  function resultRowMarkup(result) {
+    const rank = Number(result.rank);
+    const rankClass = Number.isInteger(rank) && rank >= 1 && rank <= 3 ? ` is-rank-${rank}` : "";
+
+    return `<li class="poll-result-row${rankClass}">
+      <span class="poll-result-rank" aria-label="Rank ${escapeHtml(result.rank)}">${escapeHtml(result.rank)}</span>
+      <span class="poll-results-team">
+        ${portraitMarkup(result.owner_label, "poll-team-avatar")}
+        <span class="poll-result-team-copy"><strong>${escapeHtml(result.display_name)}</strong><small>${escapeHtml(result.owner_label)}</small></span>
+      </span>
+      ${resultTrendMarkup(result)}
+      <span class="poll-result-points"><strong>${escapeHtml(result.ap_points)}</strong><small>AP</small></span>
+    </li>`;
+  }
+
+  function resultAwardWinners(results, field) {
+    const highestVoteCount = Math.max(0, ...results.map((result) => Number(result[field]) || 0));
+    if (highestVoteCount === 0) return [];
+    return results.filter((result) => (Number(result[field]) || 0) === highestVoteCount);
+  }
+
+  function resultAwardMarkup(results, field, title, submissionCount) {
+    const winners = resultAwardWinners(results, field);
+
+    return `<article class="poll-award-card">
+      <p class="poll-award-label">${escapeHtml(title)}</p>
+      ${winners.length > 0 ? `<div class="poll-award-winners">
+        ${winners.map((winner) => {
+          const voteCount = Number(winner[field]) || 0;
+          const percentage = submissionCount > 0 ? Math.round((voteCount / submissionCount) * 100) : 0;
+          return `<div class="poll-award-winner">
+            <span class="poll-results-team">
+              ${portraitMarkup(winner.owner_label, "poll-team-avatar")}
+              <span class="poll-result-team-copy"><strong>${escapeHtml(winner.display_name)}</strong><small>${escapeHtml(winner.owner_label)}</small></span>
+            </span>
+            <span class="poll-award-total"><strong>${voteCount}</strong><small>${voteCount === 1 ? "vote" : "votes"} &middot; ${percentage}%</small></span>
+          </div>`;
+        }).join("")}
+      </div>` : '<p class="poll-award-empty">No votes recorded</p>'}
+    </article>`;
+  }
+
   function renderPublished() {
     const results = Array.isArray(pollState.results) ? pollState.results : [];
+    const topResults = results.slice(0, 10);
+    const submissionCount = Number(pollState.submission_count) || 0;
     const showChampionship = hasResultField(results, "championship_votes");
     const showUnderrated = hasResultField(results, "underrated_votes");
     const showOverrated = hasResultField(results, "overrated_votes");
-    const columnCount = 5 + Number(showChampionship) + Number(showUnderrated) + Number(showOverrated);
 
     root.innerHTML = `${renderNotice()}
       ${pollHeaderMarkup(pollState, "Published")}
@@ -651,40 +715,30 @@ if (root) {
         <div class="poll-section-heading">
           <div>
             <p class="poll-step">Official results</p>
-            <h2 id="poll-results-title">AP Poll rankings</h2>
+            <h2 id="poll-results-title">AP Poll Top 10</h2>
           </div>
-          <p>${Number(pollState.submission_count) || 0} ballots counted</p>
+          <p>${submissionCount} ballots counted</p>
         </div>
-        <div class="overflow-x-auto">
-          <table class="stat-table poll-results-table">
-            <thead><tr>
-              <th scope="col">Rank</th>
-              <th scope="col">Team</th>
-              <th scope="col">AP points</th>
-              <th scope="col">Avg. rank</th>
-              <th scope="col">1st-place</th>
-              ${showChampionship ? '<th scope="col">Champion</th>' : ""}
-              ${showUnderrated ? '<th scope="col">Underrated</th>' : ""}
-              ${showOverrated ? '<th scope="col">Overrated</th>' : ""}
-            </tr></thead>
-            <tbody>
-              ${results.length > 0 ? results.map((result) => `<tr>
-                <td class="poll-official-rank">${escapeHtml(result.rank)}</td>
-                <td><span class="poll-results-team">
-                  ${portraitMarkup(result.owner_label, "poll-team-avatar")}
-                  <span><strong>${escapeHtml(result.display_name)}</strong><small>${escapeHtml(result.owner_label)}</small></span>
-                </span></td>
-                <td>${escapeHtml(result.ap_points)}</td>
-                <td>${escapeHtml(result.average_rank ?? "—")}</td>
-                <td>${escapeHtml(result.first_place_votes ?? 0)}</td>
-                ${showChampionship ? `<td>${escapeHtml(result.championship_votes ?? 0)}</td>` : ""}
-                ${showUnderrated ? `<td>${escapeHtml(result.underrated_votes ?? 0)}</td>` : ""}
-                ${showOverrated ? `<td>${escapeHtml(result.overrated_votes ?? 0)}</td>` : ""}
-              </tr>`).join("") : `<tr><td colspan="${columnCount}" class="text-center text-text-secondary">No aggregate results were returned.</td></tr>`}
-            </tbody>
-          </table>
+        <div class="poll-result-column-labels" aria-hidden="true">
+          <span>Rank</span><span>Team</span><span>Trend</span><span>AP points</span>
         </div>
-      </section>`;
+        ${topResults.length > 0
+          ? `<ol class="poll-result-list">${topResults.map(resultRowMarkup).join("")}</ol>`
+          : '<p class="poll-results-empty">No aggregate results were returned.</p>'}
+      </section>
+      ${(showChampionship || showUnderrated || showOverrated) ? `<section class="poll-awards-section" aria-labelledby="poll-awards-title">
+        <div class="poll-section-heading">
+          <div>
+            <p class="poll-step">Final picks</p>
+            <h2 id="poll-awards-title">League superlatives</h2>
+          </div>
+        </div>
+        <div class="poll-awards-grid">
+          ${showChampionship ? resultAwardMarkup(results, "championship_votes", "Championship Favorite", submissionCount) : ""}
+          ${showUnderrated ? resultAwardMarkup(results, "underrated_votes", "Most Underrated", submissionCount) : ""}
+          ${showOverrated ? resultAwardMarkup(results, "overrated_votes", "Most Overrated", submissionCount) : ""}
+        </div>
+      </section>` : ""}`;
   }
 
   function renderState() {
