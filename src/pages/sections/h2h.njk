@@ -16,16 +16,34 @@ eleventyComputed:
 {% else %}
 <div class="card">
   <h2 class="text-xl font-bold mb-4 text-accent-500">Head-to-Head Comparison</h2>
-  <div class="flex flex-col sm:flex-row gap-4 items-center mb-6">
-    <select id="manager1-select" class="bg-bg border border-border rounded-md p-2 w-full sm:w-1/2 focus:ring-2 focus:ring-accent-500">
-      <option value="">-- Manager 1 --</option>
-      {% for id, m in aggregate.managers %}<option value="{{ id }}">{{ m.displayName }}</option>{% endfor %}
-    </select>
-    <span class="font-bold text-lg">VS</span>
-    <select id="manager2-select" class="bg-bg border border-border rounded-md p-2 w-full sm:w-1/2 focus:ring-2 focus:ring-accent-500">
-      <option value="">-- Manager 2 --</option>
-      {% for id, m in aggregate.managers %}<option value="{{ id }}">{{ m.displayName }}</option>{% endfor %}
-    </select>
+  <p class="text-sm text-text-secondary text-center mb-4">Choose one face from each side to build a matchup.</p>
+  <div class="h2h-picker" aria-label="Choose two managers to compare">
+    <section class="h2h-picker-side" data-h2h-side-panel="1" aria-labelledby="h2h-side-1-label">
+      <h3 id="h2h-side-1-label" class="h2h-picker-label">Side A</h3>
+      <div class="h2h-face-grid" data-h2h-face-grid>
+        {% for id, m in aggregate.managers %}
+        <button type="button" class="h2h-face-button" data-h2h-manager-id="{{ id }}" data-h2h-side="1" data-manager-name="{{ m.displayName }}" aria-label="Select {{ m.displayName }} for side A" aria-pressed="false" title="{{ m.displayName }}">
+          <img src="{{ m.avatar }}" alt="">
+        </button>
+        {% endfor %}
+      </div>
+    </section>
+
+    <div class="h2h-picker-vs" aria-hidden="true">VS</div>
+
+    <section class="h2h-picker-side" data-h2h-side-panel="2" aria-labelledby="h2h-side-2-label">
+      <h3 id="h2h-side-2-label" class="h2h-picker-label">Side B</h3>
+      <div class="h2h-face-grid" data-h2h-face-grid>
+        {% for id, m in aggregate.managers %}
+        <button type="button" class="h2h-face-button" data-h2h-manager-id="{{ id }}" data-h2h-side="2" data-manager-name="{{ m.displayName }}" aria-label="Select {{ m.displayName }} for side B" aria-pressed="false" title="{{ m.displayName }}">
+          <img src="{{ m.avatar }}" alt="">
+        </button>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+  <div class="h2h-picker-actions">
+    <button type="button" class="h2h-clear-button hidden" data-clear-h2h>Clear matchup</button>
   </div>
   <div id="h2h-result" class="text-center p-4">
     <p class="text-text-secondary">Please select two managers to compare head-to-head</p>
@@ -33,5 +51,5 @@ eleventyComputed:
 </div>
 
 <script id="h2h-aggregate" type="application/json">{{ aggregate | dump | safe }}</script>
-<script type="module" src="/assets/js/h2h.js"></script>
+<script type="module" src="/assets/js/h2h.js?v=face-picker"></script>
 {% endif %}

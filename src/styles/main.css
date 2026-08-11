@@ -183,6 +183,50 @@
     }
   }
 
+  /* Compact mirrored portrait picker for building a head-to-head matchup. */
+  .h2h-picker {
+    @apply grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-2 sm:gap-5 items-stretch mb-4;
+  }
+  .h2h-picker-side {
+    @apply min-w-0 rounded-xl border border-border bg-bg/40 p-2 sm:p-4 transition-[border-color,box-shadow] duration-150;
+  }
+  .h2h-picker-side.is-selected {
+    @apply border-accent-500/60;
+    box-shadow: inset 0 0 0 1px rgb(var(--color-accent-500) / 0.12);
+  }
+  .h2h-picker-label {
+    @apply mb-2 text-center text-xs sm:text-sm font-bold uppercase tracking-wider text-text-secondary;
+  }
+  .h2h-face-grid {
+    @apply grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-1.5 sm:gap-2 justify-items-center;
+  }
+  .h2h-face-button {
+    @apply w-9 h-9 sm:w-11 sm:h-11 lg:w-12 lg:h-12 rounded-full border-2 border-transparent bg-bg
+      transition-[filter,opacity,transform,border-color,box-shadow] duration-150
+      hover:scale-105 hover:border-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400;
+  }
+  .h2h-face-button img {
+    @apply w-full h-full rounded-full object-cover;
+  }
+  .h2h-face-button[aria-pressed="true"] {
+    @apply scale-110 border-accent-500;
+    box-shadow: 0 0 0 2px rgb(var(--color-accent-500) / 0.2), 0 6px 16px rgb(var(--color-accent-500) / 0.2);
+  }
+  .h2h-face-button:disabled {
+    @apply cursor-not-allowed grayscale opacity-25 hover:scale-100 hover:border-transparent;
+  }
+  .h2h-picker-vs {
+    @apply flex items-center justify-center text-2xl sm:text-4xl font-black italic text-accent-500;
+    text-shadow: 0 3px 16px rgb(var(--color-accent-500) / 0.25);
+  }
+  .h2h-picker-actions {
+    @apply flex min-h-8 justify-center;
+  }
+  .h2h-clear-button {
+    @apply text-sm font-semibold text-text-secondary underline decoration-border underline-offset-4
+      transition-colors hover:text-accent-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 rounded;
+  }
+
   /* SB3 AP Poll. These classes stay scoped to the poll page while reusing the
      site's existing surface, border, text, and orange accent tokens. */
   .ap-poll-page {

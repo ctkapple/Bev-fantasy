@@ -59,7 +59,7 @@ function render(aggregate, id1, id2) {
   if (!result) return;
 
   if (!id1 || !id2 || id1 === id2) {
-    result.innerHTML = `<p class="text-text-secondary">Please select two members to compare head-to-head</p>`;
+    result.innerHTML = `<p class="text-text-secondary">Please select two managers to compare head-to-head</p>`;
     return;
   }
 
@@ -167,11 +167,61 @@ function render(aggregate, id1, id2) {
 
 document.addEventListener("DOMContentLoaded", () => {
   const aggregate = readJson("h2h-aggregate");
-  const sel1 = document.getElementById("manager1-select");
-  const sel2 = document.getElementById("manager2-select");
-  if (!aggregate || !sel1 || !sel2) return;
+  const faceButtons = [...document.querySelectorAll("[data-h2h-manager-id]")];
+  const clearButton = document.querySelector("[data-clear-h2h]");
+  if (!aggregate || !faceButtons.length || !clearButton) return;
 
-  const update = () => render(aggregate, sel1.value, sel2.value);
-  sel1.addEventListener("change", update);
-  sel2.addEventListener("change", update);
+  const selected = { 1: "", 2: "" };
+
+  // Keep both mirrored grids in the same predictable order regardless of
+  // how manager IDs happen to be ordered in the aggregate data.
+  document.querySelectorAll("[data-h2h-face-grid]").forEach((grid) => {
+    [...grid.children]
+      .sort((a, b) => a.dataset.managerName.localeCompare(b.dataset.managerName))
+      .forEach((button) => grid.append(button));
+  });
+
+  function updatePicker() {
+    faceButtons.forEach((button) => {
+      const side = button.dataset.h2hSide;
+      const otherSide = side === "1" ? "2" : "1";
+      const managerId = button.dataset.h2hManagerId;
+      const isSelected = selected[side] === managerId;
+      const isSelectedOpposite = selected[otherSide] === managerId;
+      const sideLabel = side === "1" ? "side A" : "side B";
+
+      button.setAttribute("aria-pressed", String(isSelected));
+      button.disabled = isSelectedOpposite;
+      button.title = isSelectedOpposite
+        ? `${button.dataset.managerName} is selected on the other side`
+        : button.dataset.managerName;
+      button.setAttribute(
+        "aria-label",
+        isSelected
+          ? `Clear ${button.dataset.managerName} from ${sideLabel}`
+          : `Select ${button.dataset.managerName} for ${sideLabel}`
+      );
+    });
+
+    document.querySelectorAll("[data-h2h-side-panel]").forEach((panel) => {
+      panel.classList.toggle("is-selected", Boolean(selected[panel.dataset.h2hSidePanel]));
+    });
+    clearButton.classList.toggle("hidden", !selected[1] && !selected[2]);
+    render(aggregate, selected[1], selected[2]);
+  }
+
+  faceButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const side = button.dataset.h2hSide;
+      const managerId = button.dataset.h2hManagerId;
+      selected[side] = selected[side] === managerId ? "" : managerId;
+      updatePicker();
+    });
+  });
+
+  clearButton.addEventListener("click", () => {
+    selected[1] = "";
+    selected[2] = "";
+    updatePicker();
+  });
 });
