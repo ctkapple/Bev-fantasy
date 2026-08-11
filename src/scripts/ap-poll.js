@@ -14,7 +14,30 @@ if (root) {
   let overratedTeamId = "";
   let submissionPending = false;
   let draggedTeamId = null;
+  let rankMotion = null;
+  let rankMotionSequence = 0;
+  let pointerDrag = null;
+  let pointerAutoScrollFrame = null;
   let notice = null;
+
+  const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const POINTER_DRAG_THRESHOLD = 6;
+  const POINTER_EDGE_SCROLL_ZONE = 72;
+  const POINTER_MAX_SCROLL_SPEED = 12;
+
+  function readManagerInfo() {
+    const configNode = document.querySelector("#ap-poll-manager-info");
+    if (!configNode) return {};
+    try {
+      return JSON.parse(configNode.textContent);
+    } catch {
+      return {};
+    }
+  }
+
+  const avatarByOwnerName = new Map(
+    Object.values(readManagerInfo()).map((manager) => [manager.name, manager.avatar])
+  );
 
   class PollRequestError extends Error {
     constructor(message, details = {}) {
@@ -31,6 +54,44 @@ if (root) {
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
+
+  function portraitMarkup(ownerLabel, className) {
+    const avatar = avatarByOwnerName.get(ownerLabel);
+    if (!avatar) {
+      return `<span class="${escapeHtml(className)} poll-avatar-fallback" aria-hidden="true">${escapeHtml(ownerLabel?.charAt(0) || "?")}</span>`;
+    }
+    return `<img class="${escapeHtml(className)}" src="${escapeHtml(avatar)}" alt="" loading="lazy" decoding="async">`;
+  }
+
+  function interpolateColor(start, end, amount) {
+    return start.map((channel, index) => Math.round(channel + (end[index] - channel) * amount));
+  }
+
+  function rankTone(index, total) {
+    const progress = total > 1 ? index / (total - 1) : 0;
+    const green = [34, 197, 94];
+    const orange = [249, 115, 22];
+    const darkRed = [127, 29, 29];
+    const tone = progress <= 0.5
+      ? interpolateColor(green, orange, progress * 2)
+      : interpolateColor(orange, darkRed, (progress - 0.5) * 2);
+    return tone.join(" ");
+  }
+
+  function setRankMotion(teamId, direction) {
+    rankMotionSequence += 1;
+    rankMotion = { teamId, direction, id: rankMotionSequence };
+  }
+
+  function scheduleRankMotionCleanup(motion) {
+    if (!motion) return;
+    requestAnimationFrame(() => {
+      window.setTimeout(() => {
+        root.querySelector(`[data-rank-motion="${motion.id}"]`)
+          ?.classList.remove("is-moved-up", "is-moved-down");
+      }, 480);
+    });
+  }
 
   function fisherYates(items) {
     const shuffled = [...items];
@@ -80,7 +141,8 @@ if (root) {
   function renderNotice() {
     if (!notice) return "";
     const role = notice.type === "success" ? "status" : "alert";
-    return `<div class="poll-notice poll-notice-${escapeHtml(notice.type)}" role="${role}">
+    const focusTarget = notice.type === "success" ? ' data-poll-success-notice tabindex="-1"' : "";
+    return `<div class="poll-notice poll-notice-${escapeHtml(notice.type)}" role="${role}"${focusTarget}>
       <p>${escapeHtml(notice.message)}</p>
     </div>`;
   }
@@ -124,7 +186,10 @@ if (root) {
     return `<section class="poll-submitted-card" aria-labelledby="submitted-voters-heading">
       <h2 id="submitted-voters-heading">Submitted voters</h2>
       ${submittedVoters.length > 0
-        ? `<ul>${submittedVoters.map((voter) => `<li>${escapeHtml(voter.display_name)} <span>Submitted</span></li>`).join("")}</ul>`
+        ? `<ul>${submittedVoters.map((voter) => `<li>
+          <span class="poll-submitted-voter">${portraitMarkup(voter.display_name, "poll-submitted-avatar")}<span>${escapeHtml(voter.display_name)}</span></span>
+          <span>Submitted</span>
+        </li>`).join("")}</ul>`
         : '<p class="text-sm text-text-secondary">No ballots have been submitted yet.</p>'}
     </section>`;
   }
@@ -175,34 +240,58 @@ if (root) {
         data-voter-id="${escapeHtml(voter.id)}"
         aria-pressed="${selected}"
         ${voter.submitted || submissionPending ? "disabled" : ""}
-      ><span>${escapeHtml(voter.display_name)}</span>${suffix}</button>`;
+      ><span class="poll-voter-identity">${portraitMarkup(voter.display_name, "poll-voter-avatar")}<span>${escapeHtml(voter.display_name)}</span></span>${suffix}</button>`;
     }).join("");
   }
 
-  function teamSelectMarkup(name, label, selectedValue) {
-    return `<label class="poll-question">
-      <span>${escapeHtml(label)}</span>
-      <select name="${escapeHtml(name)}" required ${submissionPending ? "disabled" : ""}>
-        <option value="">Choose a team</option>
-        ${pollState.teams.map((team) => `<option value="${escapeHtml(team.id)}" ${team.id === selectedValue ? "selected" : ""}>
-          ${escapeHtml(team.display_name)} — ${escapeHtml(team.owner_label)}
-        </option>`).join("")}
-      </select>
-    </label>`;
+  function finalPickOptionsMarkup(question, selectedValue) {
+    return pollState.teams.map((team) => {
+      const selected = team.id === selectedValue;
+      return `<button
+        type="button"
+        class="poll-voter-button poll-pick-button"
+        data-action="select-final-pick"
+        data-pick-question="${escapeHtml(question)}"
+        data-team-id="${escapeHtml(team.id)}"
+        aria-pressed="${selected}"
+        ${submissionPending ? "disabled" : ""}
+      >
+        <span class="poll-voter-identity">
+          ${portraitMarkup(team.owner_label, "poll-voter-avatar")}
+          <span class="poll-pick-copy"><strong>${escapeHtml(team.display_name)}</strong><small>${escapeHtml(team.owner_label)}</small></span>
+        </span>
+        ${selected ? '<span class="poll-voter-state">Selected</span>' : ""}
+      </button>`;
+    }).join("");
+  }
+
+  function finalPickQuestionMarkup(question, label, selectedValue) {
+    return `<fieldset class="poll-pick-question" data-pick-group="${escapeHtml(question)}">
+      <legend>${escapeHtml(label)}</legend>
+      <div class="poll-pick-grid">${finalPickOptionsMarkup(question, selectedValue)}</div>
+    </fieldset>`;
   }
 
   function rankingMarkup() {
     const teamsById = new Map(pollState.teams.map((team) => [team.id, team]));
+    const activeMotion = rankMotion;
+    rankMotion = null;
+    scheduleRankMotionCleanup(activeMotion);
     return `<ol class="poll-ranking" aria-label="Team ranking from first to fourteenth">
       ${ranking.map((teamId, index) => {
         const team = teamsById.get(teamId);
         if (!team) return "";
-        return `<li class="poll-rank-item" draggable="${!submissionPending}" data-rank-item data-team-id="${escapeHtml(team.id)}">
+        const motionClass = activeMotion?.teamId === team.id
+          ? activeMotion.direction < 0 ? " is-moved-up" : " is-moved-down"
+          : "";
+        const motionAttribute = activeMotion?.teamId === team.id ? ` data-rank-motion="${activeMotion.id}"` : "";
+        return `<li class="poll-rank-item${motionClass}" style="--poll-rank-tone: ${rankTone(index, ranking.length)}" draggable="${!submissionPending}" data-rank-item data-team-id="${escapeHtml(team.id)}"${motionAttribute}>
           <span class="poll-drag-handle" aria-hidden="true">⋮⋮</span>
-          <span class="poll-rank-number" aria-label="Rank ${index + 1}">${index + 1}</span>
+          <span class="poll-rank-number" data-touch-drag-handle aria-label="Rank ${index + 1}; drag to reorder ${escapeHtml(team.display_name)}">${index + 1}</span>
+          ${portraitMarkup(team.owner_label, "poll-team-avatar")}
           <span class="poll-team-copy">
-            <strong>${escapeHtml(team.display_name)}</strong>
-            <small>${escapeHtml(team.owner_label)}</small>
+            <strong>${escapeHtml(team.owner_label)}</strong>
+            <small>${escapeHtml(team.display_name)}</small>
           </span>
           <span class="poll-rank-actions">
             <button type="button" data-action="move-up" aria-label="Move ${escapeHtml(team.display_name)} up one rank" ${index === 0 || submissionPending ? "disabled" : ""}>↑</button>
@@ -217,31 +306,35 @@ if (root) {
     if (!selectedVoterId) return "";
     ensureValidRanking();
     const selectedVoter = pollState.voters.find((voter) => voter.id === selectedVoterId);
-    return `<form class="poll-ballot" data-poll-ballot novalidate>
+    return `<form class="poll-ballot poll-stage-card is-active${submissionPending ? " is-submitting" : ""}" data-poll-ballot novalidate aria-busy="${submissionPending}">
       <div class="poll-section-heading">
         <div>
           <p class="poll-step">Step 2</p>
-          <h2>Rank all 14 teams</h2>
+          <h2 data-ballot-heading tabindex="-1">Rank all 14 teams</h2>
         </div>
         <p>Ballot for <strong>${escapeHtml(selectedVoter?.display_name)}</strong></p>
       </div>
       <p class="text-sm text-text-secondary">Drag teams into order, or use the move buttons. Rank 1 is your strongest team.</p>
       ${rankingMarkup()}
 
-      <fieldset class="poll-extra-questions">
-        <legend>Final picks</legend>
-        <p class="text-sm text-text-secondary">Each answer is required. You may choose any team, including your own.</p>
-        <div class="poll-question-grid">
-          ${teamSelectMarkup("championship", "Championship favorite", championshipTeamId)}
-          ${teamSelectMarkup("underrated", "Most underrated", underratedTeamId)}
-          ${teamSelectMarkup("overrated", "Most overrated", overratedTeamId)}
+      <section class="poll-extra-questions" aria-labelledby="poll-final-picks-heading">
+        <div class="poll-final-picks-heading">
+          <p class="poll-step">Step 3</p>
+          <h3 id="poll-final-picks-heading">Final picks</h3>
         </div>
-      </fieldset>
+        <p class="text-sm text-text-secondary">Each answer is required. You may choose any team, including your own.</p>
+        <div class="poll-pick-question-list">
+          ${finalPickQuestionMarkup("championship", "Championship favorite", championshipTeamId)}
+          ${finalPickQuestionMarkup("underrated", "Most underrated", underratedTeamId)}
+          ${finalPickQuestionMarkup("overrated", "Most overrated", overratedTeamId)}
+        </div>
+      </section>
 
       <div class="poll-form-message" data-form-message role="alert"></div>
       <button type="submit" class="poll-primary-button poll-submit-button" ${submissionPending ? "disabled" : ""}>
-        ${submissionPending ? "Submitting ballot…" : "Submit final ballot"}
+        ${submissionPending ? '<span class="poll-submit-spinner" aria-hidden="true"></span>Submitting ballot…' : "Submit final ballot"}
       </button>
+      ${submissionPending ? '<span class="sr-only" role="status">Submitting ballot…</span>' : ""}
       <p class="poll-submit-note">Ballots cannot be edited after submission.</p>
     </form>`;
   }
@@ -251,10 +344,12 @@ if (root) {
       ${pollHeaderMarkup(pollState, "Open")}
       <div class="poll-open-layout">
         <div class="poll-main-column">
-          <section class="card" aria-labelledby="voter-heading">
-            <p class="poll-step">Step 1</p>
-            <h2 id="voter-heading">Who are you?</h2>
-            <p class="text-sm text-text-secondary">Choose your name to begin. Submitted voters are locked.</p>
+          <section class="card poll-stage-card poll-voter-stage${selectedVoterId ? " is-complete" : ""}" aria-labelledby="voter-heading">
+            <div class="poll-voter-heading">
+              <p class="poll-step">Step 1</p>
+              <h2 id="voter-heading">Who are you?</h2>
+            </div>
+            <p class="poll-voter-instructions text-sm text-text-secondary">Choose your name to begin. Submitted voters are locked.</p>
             <div class="poll-voter-grid">${voterOptionsMarkup()}</div>
           </section>
           ${ballotMarkup()}
@@ -316,7 +411,10 @@ if (root) {
             <tbody>
               ${results.length > 0 ? results.map((result) => `<tr>
                 <td class="poll-official-rank">${escapeHtml(result.rank)}</td>
-                <td><strong>${escapeHtml(result.display_name)}</strong><small>${escapeHtml(result.owner_label)}</small></td>
+                <td><span class="poll-results-team">
+                  ${portraitMarkup(result.owner_label, "poll-team-avatar")}
+                  <span><strong>${escapeHtml(result.display_name)}</strong><small>${escapeHtml(result.owner_label)}</small></span>
+                </span></td>
                 <td>${escapeHtml(result.ap_points)}</td>
                 <td>${escapeHtml(result.average_rank ?? "—")}</td>
                 <td>${escapeHtml(result.first_place_votes ?? 0)}</td>
@@ -373,7 +471,12 @@ if (root) {
       notice = null;
     }
     renderOpen();
-    root.querySelector("[data-poll-ballot]")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const ballotHeading = root.querySelector("[data-ballot-heading]");
+    ballotHeading?.focus({ preventScroll: true });
+    root.querySelector("[data-poll-ballot]")?.scrollIntoView({
+      behavior: reducedMotionQuery.matches ? "auto" : "smooth",
+      block: "start",
+    });
   }
 
   function moveRank(teamId, direction) {
@@ -382,10 +485,11 @@ if (root) {
     const destination = index + direction;
     if (index < 0 || destination < 0 || destination >= ranking.length) return;
     [ranking[index], ranking[destination]] = [ranking[destination], ranking[index]];
+    setRankMotion(teamId, direction);
     renderOpen();
     const preferredAction = direction < 0 ? "move-up" : "move-down";
     const fallbackAction = direction < 0 ? "move-down" : "move-up";
-    const movedItem = root.querySelector(`[data-team-id="${CSS.escape(teamId)}"]`);
+    const movedItem = root.querySelector(`[data-rank-item][data-team-id="${CSS.escape(teamId)}"]`);
     const focusTarget = movedItem?.querySelector(`[data-action="${preferredAction}"]:not(:disabled)`)
       || movedItem?.querySelector(`[data-action="${fallbackAction}"]:not(:disabled)`);
     focusTarget?.focus();
@@ -427,7 +531,36 @@ if (root) {
     if (!messageNode) return;
     messageNode.textContent = message;
     messageNode.classList.toggle("is-visible", Boolean(message));
-    if (message) messageNode.focus?.();
+    if (message) {
+      root.querySelectorAll("[data-pick-group]").forEach((group) => {
+        const invalid = !group.querySelector('[aria-pressed="true"]');
+        group.setAttribute("aria-invalid", String(invalid));
+        group.classList.toggle("has-error", invalid);
+      });
+    }
+  }
+
+  function selectFinalPick(question, teamId) {
+    if (submissionPending || !pollState?.teams?.some((team) => team.id === teamId)) return;
+    if (question === "championship") championshipTeamId = teamId;
+    else if (question === "underrated") underratedTeamId = teamId;
+    else if (question === "overrated") overratedTeamId = teamId;
+    else return;
+
+    renderOpen();
+    root.querySelector(
+      `[data-pick-question="${CSS.escape(question)}"][data-team-id="${CSS.escape(teamId)}"]`
+    )?.focus({ preventScroll: true });
+  }
+
+  function focusSuccessNotice() {
+    const successNotice = root.querySelector("[data-poll-success-notice]");
+    if (!successNotice) return;
+    successNotice.focus({ preventScroll: true });
+    successNotice.scrollIntoView({
+      behavior: reducedMotionQuery.matches ? "auto" : "smooth",
+      block: "start",
+    });
   }
 
   async function submitBallot() {
@@ -459,6 +592,7 @@ if (root) {
       overratedTeamId = "";
       submissionPending = false;
       await loadPoll({ showLoading: false });
+      focusSuccessNotice();
     } catch (error) {
       submissionPending = false;
       renderOpen();
@@ -478,15 +612,9 @@ if (root) {
     } else if (action === "move-up" || action === "move-down") {
       const item = button.closest("[data-rank-item]");
       if (item) moveRank(item.dataset.teamId, action === "move-up" ? -1 : 1);
+    } else if (action === "select-final-pick") {
+      selectFinalPick(button.dataset.pickQuestion, button.dataset.teamId);
     }
-  });
-
-  root.addEventListener("change", (event) => {
-    if (!(event.target instanceof HTMLSelectElement)) return;
-    if (event.target.name === "championship") championshipTeamId = event.target.value;
-    if (event.target.name === "underrated") underratedTeamId = event.target.value;
-    if (event.target.name === "overrated") overratedTeamId = event.target.value;
-    showFormMessage("");
   });
 
   root.addEventListener("submit", (event) => {
@@ -509,8 +637,17 @@ if (root) {
     if (!item || !draggedTeamId || item.dataset.teamId === draggedTeamId) return;
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
-    root.querySelectorAll(".is-drag-over").forEach((node) => node.classList.remove("is-drag-over"));
-    item.classList.add("is-drag-over");
+    const bounds = item.getBoundingClientRect();
+    const insertBefore = event.clientY < bounds.top + bounds.height / 2;
+    clearDropIndicators();
+    const draggedItem = root.querySelector(`[data-rank-item][data-team-id="${CSS.escape(draggedTeamId)}"]`);
+    draggedItem?.classList.remove("is-dragging-up", "is-dragging-down");
+    draggedItem?.classList.add(
+      ranking.indexOf(item.dataset.teamId) < ranking.indexOf(draggedTeamId)
+        ? "is-dragging-up"
+        : "is-dragging-down"
+    );
+    item.classList.add("is-drag-over", insertBefore ? "is-drop-before" : "is-drop-after");
   });
 
   root.addEventListener("drop", (event) => {
@@ -524,16 +661,155 @@ if (root) {
     let targetIndex = reordered.indexOf(targetId);
     if (!insertBefore) targetIndex += 1;
     reordered.splice(targetIndex, 0, draggedTeamId);
+    const previousIndex = ranking.indexOf(draggedTeamId);
     ranking = reordered;
+    setRankMotion(draggedTeamId, targetIndex < previousIndex ? -1 : 1);
     draggedTeamId = null;
     renderOpen();
   });
 
   root.addEventListener("dragend", () => {
     draggedTeamId = null;
-    root.querySelectorAll(".is-dragging, .is-drag-over").forEach((node) => {
-      node.classList.remove("is-dragging", "is-drag-over");
+    clearDragClasses();
+  });
+
+  function clearDropIndicators() {
+    root.querySelectorAll(".is-drag-over, .is-drop-before, .is-drop-after").forEach((node) => {
+      node.classList.remove("is-drag-over", "is-drop-before", "is-drop-after");
     });
+  }
+
+  function clearDragClasses() {
+    root.querySelectorAll(".is-dragging, .is-pointer-dragging, .is-dragging-up, .is-dragging-down").forEach((node) => {
+      node.classList.remove("is-dragging", "is-pointer-dragging", "is-dragging-up", "is-dragging-down");
+      node.style.removeProperty("--poll-drag-y");
+    });
+    clearDropIndicators();
+    root.classList.remove("is-touch-reordering");
+  }
+
+  function pointerDropTarget(clientX, clientY) {
+    if (!pointerDrag?.active) return;
+    const targetItem = document.elementsFromPoint(clientX, clientY)
+      .map((node) => node.closest?.("[data-rank-item]"))
+      .find((item) => item && item.dataset.teamId !== pointerDrag.teamId);
+    clearDropIndicators();
+    pointerDrag.targetId = targetItem?.dataset.teamId || null;
+    const draggedItem = root.querySelector(`[data-rank-item][data-team-id="${CSS.escape(pointerDrag.teamId)}"]`);
+    draggedItem?.classList.remove("is-dragging-up", "is-dragging-down");
+    if (!targetItem) return;
+    const bounds = targetItem.getBoundingClientRect();
+    pointerDrag.insertBefore = clientY < bounds.top + bounds.height / 2;
+    const dragDirection = ranking.indexOf(targetItem.dataset.teamId) < ranking.indexOf(pointerDrag.teamId)
+      ? "is-dragging-up"
+      : "is-dragging-down";
+    draggedItem?.classList.add(dragDirection);
+    targetItem.classList.add("is-drag-over", pointerDrag.insertBefore ? "is-drop-before" : "is-drop-after");
+  }
+
+  function updatePointerDragVisual() {
+    if (!pointerDrag?.active) return;
+    const draggedItem = root.querySelector(`[data-rank-item][data-team-id="${CSS.escape(pointerDrag.teamId)}"]`);
+    if (draggedItem) {
+      const travel = pointerDrag.lastY - pointerDrag.startY + window.scrollY - pointerDrag.startScrollY;
+      draggedItem.style.setProperty("--poll-drag-y", `${travel}px`);
+    }
+    pointerDropTarget(pointerDrag.lastX, pointerDrag.lastY);
+  }
+
+  function runPointerAutoScroll() {
+    pointerAutoScrollFrame = null;
+    if (!pointerDrag?.active || pointerDrag.scrollSpeed === 0) return;
+    window.scrollBy(0, pointerDrag.scrollSpeed);
+    updatePointerDragVisual();
+    pointerAutoScrollFrame = requestAnimationFrame(runPointerAutoScroll);
+  }
+
+  function updatePointerAutoScroll(clientY) {
+    if (!pointerDrag) return;
+    if (clientY < POINTER_EDGE_SCROLL_ZONE) {
+      pointerDrag.scrollSpeed = -Math.ceil(
+        POINTER_MAX_SCROLL_SPEED * (1 - clientY / POINTER_EDGE_SCROLL_ZONE)
+      );
+    } else if (clientY > window.innerHeight - POINTER_EDGE_SCROLL_ZONE) {
+      pointerDrag.scrollSpeed = Math.ceil(
+        POINTER_MAX_SCROLL_SPEED * (1 - (window.innerHeight - clientY) / POINTER_EDGE_SCROLL_ZONE)
+      );
+    } else {
+      pointerDrag.scrollSpeed = 0;
+    }
+    if (pointerDrag.scrollSpeed !== 0 && pointerAutoScrollFrame === null) {
+      pointerAutoScrollFrame = requestAnimationFrame(runPointerAutoScroll);
+    }
+  }
+
+  function finishPointerDrag({ cancelled = false } = {}) {
+    if (!pointerDrag) return;
+    const completedDrag = pointerDrag;
+    pointerDrag = null;
+    if (pointerAutoScrollFrame !== null) {
+      cancelAnimationFrame(pointerAutoScrollFrame);
+      pointerAutoScrollFrame = null;
+    }
+    clearDragClasses();
+    if (cancelled || !completedDrag.active || !completedDrag.targetId) return;
+
+    const previousIndex = ranking.indexOf(completedDrag.teamId);
+    const reordered = ranking.filter((id) => id !== completedDrag.teamId);
+    let targetIndex = reordered.indexOf(completedDrag.targetId);
+    if (!completedDrag.insertBefore) targetIndex += 1;
+    if (targetIndex === previousIndex) return;
+    reordered.splice(targetIndex, 0, completedDrag.teamId);
+    ranking = reordered;
+    setRankMotion(completedDrag.teamId, targetIndex < previousIndex ? -1 : 1);
+    renderOpen();
+  }
+
+  root.addEventListener("pointerdown", (event) => {
+    if (event.pointerType === "mouse" || submissionPending) return;
+    const handle = event.target.closest("[data-touch-drag-handle]");
+    const item = handle?.closest("[data-rank-item]");
+    if (!handle || !item) return;
+    pointerDrag = {
+      pointerId: event.pointerId,
+      teamId: item.dataset.teamId,
+      startX: event.clientX,
+      startY: event.clientY,
+      lastX: event.clientX,
+      lastY: event.clientY,
+      startScrollY: window.scrollY,
+      active: false,
+      targetId: null,
+      insertBefore: true,
+      scrollSpeed: 0,
+    };
+    handle.setPointerCapture?.(event.pointerId);
+  });
+
+  root.addEventListener("pointermove", (event) => {
+    if (!pointerDrag || event.pointerId !== pointerDrag.pointerId) return;
+    pointerDrag.lastX = event.clientX;
+    pointerDrag.lastY = event.clientY;
+    if (!pointerDrag.active) {
+      const distance = Math.hypot(event.clientX - pointerDrag.startX, event.clientY - pointerDrag.startY);
+      if (distance < POINTER_DRAG_THRESHOLD) return;
+      pointerDrag.active = true;
+      root.classList.add("is-touch-reordering");
+      root.querySelector(`[data-rank-item][data-team-id="${CSS.escape(pointerDrag.teamId)}"]`)?.classList.add("is-pointer-dragging");
+    }
+    event.preventDefault();
+    updatePointerDragVisual();
+    updatePointerAutoScroll(event.clientY);
+  });
+
+  root.addEventListener("pointerup", (event) => {
+    if (!pointerDrag || event.pointerId !== pointerDrag.pointerId) return;
+    finishPointerDrag();
+  });
+
+  root.addEventListener("pointercancel", (event) => {
+    if (!pointerDrag || event.pointerId !== pointerDrag.pointerId) return;
+    finishPointerDrag({ cancelled: true });
   });
 
   loadPoll();
