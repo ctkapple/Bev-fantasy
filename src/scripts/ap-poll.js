@@ -5,6 +5,7 @@ if (root) {
   // Publishable keys are intentionally browser-visible and carry only anon privileges.
   const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_DYoO_OPd_F9_HiXsiKFXpQ_xkjuimGy";
   const leagueSlug = root.dataset.league || "sb3";
+  const historyPreviewEnabled = new URLSearchParams(window.location.search).get("apPollPreview") === "third";
 
   let pollState = null;
   let pollHistoryState = { status: "idle", data: null };
@@ -741,7 +742,29 @@ if (root) {
   }
 
   function historyPolls() {
-    return Array.isArray(pollHistoryState.data?.polls) ? pollHistoryState.data.polls : [];
+    const polls = Array.isArray(pollHistoryState.data?.polls) ? pollHistoryState.data.polls : [];
+    if (!historyPreviewEnabled || polls.length === 0) return polls;
+
+    const latestPoll = polls.at(-1);
+    const rankedResults = [...(latestPoll.results || [])]
+      .map((result) => ({ result, sortKey: previewHistorySortKey(result.team_id) }))
+      .sort((a, b) => a.sortKey - b.sortKey || String(a.result.team_id).localeCompare(String(b.result.team_id)));
+
+    return [...polls, {
+      id: "client-preview-week-2",
+      label: "Week 2 preview",
+      ballot_count: 3,
+      results: rankedResults.map(({ result }, index) => ({
+        ...result,
+        rank: index + 1,
+        ap_points: (rankedResults.length - index) * 3,
+      })),
+    }];
+  }
+
+  // This is intentionally client-only: it provides a stable, realistic third point without writing a fake poll to history.
+  function previewHistorySortKey(teamId) {
+    return [...String(teamId)].reduce((hash, character) => ((hash * 31) + character.charCodeAt(0)) >>> 0, 7);
   }
 
   function historyTeams(polls) {
@@ -816,7 +839,7 @@ if (root) {
   function historyDashboardMarkup() {
     if (pollHistoryState.status === "idle" || pollHistoryState.status === "loading") {
       return `<section class="card poll-history-card" aria-labelledby="poll-history-title">
-        <div class="poll-section-heading"><div><p class="poll-step">AP Poll history</p><h2 id="poll-history-title">AP points over time</h2></div></div>
+        <div class="poll-section-heading"><div><p class="poll-step">AP Poll history</p><h2 id="poll-history-title">AP Power Rankings</h2></div></div>
         <p class="poll-history-empty" role="status">Loading published AP Poll history&hellip;</p>
       </section>`;
     }
@@ -828,7 +851,7 @@ if (root) {
     const polls = historyPolls();
     if (polls.length === 0) {
       return `<section class="card poll-history-card" aria-labelledby="poll-history-title">
-        <div class="poll-section-heading"><div><p class="poll-step">AP Poll history</p><h2 id="poll-history-title">AP points over time</h2></div></div>
+        <div class="poll-section-heading"><div><p class="poll-step">AP Poll history</p><h2 id="poll-history-title">AP Power Rankings</h2></div></div>
         <p class="poll-history-empty">Published AP Poll results will appear here once the league has history to compare.</p>
       </section>`;
     }
@@ -852,8 +875,8 @@ if (root) {
 
     return `<section class="card poll-history-card" data-poll-history aria-labelledby="poll-history-title">
       <div class="poll-section-heading">
-        <div><p class="poll-step">AP Poll history</p><h2 id="poll-history-title">AP points over time</h2></div>
-        <p>${polls.length === 1 ? "1 published poll" : `${polls.length} published polls`}</p>
+        <div><p class="poll-step">AP Poll history</p><h2 id="poll-history-title">AP Power Rankings</h2></div>
+        <p>${pollHistoryState.data.polls.length === 1 ? "1 published poll" : `${pollHistoryState.data.polls.length} published polls`}${historyPreviewEnabled ? " + preview" : ""}</p>
       </div>
       <div class="poll-history-layout">
         <div class="poll-history-chart-wrap">
