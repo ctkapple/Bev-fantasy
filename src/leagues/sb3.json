@@ -10,6 +10,7 @@
   },
   "tabs": [
     { "id": "dashboard", "label": "Rankings", "template": "dashboard" },
+    { "id": "poll", "label": "AP Poll", "template": "poll" },
     { "id": "draft-odds", "label": "Draft Odds", "template": "draft-odds" },
     { "id": "myteam", "label": "My Team", "template": "myteam" },
     { "id": "h2h", "label": "H2H", "template": "h2h" },

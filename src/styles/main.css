@@ -182,4 +182,216 @@
       transform: translateY(-14px);
     }
   }
+
+  /* SB3 AP Poll. These classes stay scoped to the poll page while reusing the
+     site's existing surface, border, text, and orange accent tokens. */
+  .ap-poll-page {
+    @apply pt-2 space-y-5;
+  }
+  .poll-hero {
+    @apply grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 md:items-start;
+  }
+  .poll-hero h1,
+  .poll-state-card h1 {
+    @apply text-3xl md:text-4xl font-bold mt-1 mb-2;
+  }
+  .poll-eyebrow,
+  .poll-step {
+    @apply text-xs font-bold uppercase tracking-[0.18em] text-accent-400;
+  }
+  .poll-status-badge {
+    @apply inline-flex justify-center items-center min-h-9 px-3 rounded-full border border-accent-500/50
+      bg-accent-500/10 text-accent-400 text-sm font-bold;
+  }
+  .poll-progress-wrap {
+    @apply md:col-span-2 border-t border-border pt-4;
+  }
+  .poll-progress-copy {
+    @apply flex items-center justify-between gap-3 text-sm text-text-secondary mb-2;
+  }
+  .poll-progress-copy strong {
+    @apply text-text-primary;
+  }
+  .poll-progress {
+    @apply block w-full h-2 overflow-hidden rounded-full bg-border;
+    border: 0;
+  }
+  .poll-progress::-webkit-progress-bar {
+    @apply bg-border rounded-full;
+  }
+  .poll-progress::-webkit-progress-value {
+    @apply bg-accent-500 rounded-full;
+  }
+  .poll-progress::-moz-progress-bar {
+    @apply bg-accent-500 rounded-full;
+  }
+  .poll-open-layout {
+    @apply grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_18rem] gap-5 items-start;
+  }
+  .poll-main-column {
+    @apply space-y-5 min-w-0;
+  }
+  .poll-two-column {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-5 items-start;
+  }
+  .poll-state-card {
+    @apply space-y-4;
+  }
+  .poll-state-card h2,
+  .poll-section-heading h2,
+  .poll-ballot h2,
+  .poll-submitted-card h2 {
+    @apply text-xl md:text-2xl font-bold;
+  }
+  .poll-primary-button,
+  .poll-secondary-button {
+    @apply inline-flex min-h-11 items-center justify-center px-5 py-2.5 rounded-lg font-bold
+      transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400
+      focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .poll-primary-button {
+    @apply bg-accent-500 text-black hover:bg-accent-400;
+  }
+  .poll-secondary-button {
+    @apply border border-accent-500 text-accent-400 hover:bg-accent-500 hover:text-black;
+  }
+  .poll-voter-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4;
+  }
+  .poll-voter-button {
+    @apply min-h-12 flex items-center justify-between gap-3 text-left px-3 py-2 rounded-lg border border-border
+      bg-bg/40 text-text-primary transition-colors hover:border-border-hover hover:bg-surface-hover
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 disabled:cursor-not-allowed
+      disabled:text-text-muted disabled:bg-bg/20;
+  }
+  .poll-voter-button[aria-pressed="true"] {
+    @apply border-accent-500 bg-accent-500/10;
+  }
+  .poll-voter-state {
+    @apply text-xs font-bold uppercase tracking-wide text-text-secondary;
+  }
+  .poll-voter-button[aria-pressed="true"] .poll-voter-state {
+    @apply text-accent-400;
+  }
+  .poll-ballot {
+    @apply card space-y-5;
+  }
+  .poll-section-heading {
+    @apply flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 border-b border-border pb-4;
+  }
+  .poll-section-heading > p {
+    @apply text-sm text-text-secondary;
+  }
+  .poll-ranking {
+    @apply space-y-2;
+  }
+  .poll-rank-item {
+    @apply grid grid-cols-[auto_auto_minmax(0,1fr)_auto] items-center gap-2 sm:gap-3 min-h-16
+      rounded-lg border border-border bg-bg/50 px-2 sm:px-3 py-2 transition-[border-color,background-color,opacity,transform]
+      duration-150 hover:border-border-hover;
+  }
+  .poll-rank-item.is-dragging {
+    @apply opacity-40 scale-[0.99];
+  }
+  .poll-rank-item.is-drag-over {
+    @apply border-accent-500 bg-accent-500/10;
+  }
+  .poll-drag-handle {
+    @apply invisible sm:visible text-text-muted cursor-grab select-none;
+  }
+  .poll-rank-number {
+    @apply w-8 h-8 rounded-full inline-flex items-center justify-center bg-accent-500/15 text-accent-400 font-bold tabular-nums;
+  }
+  .poll-team-copy {
+    @apply min-w-0 flex flex-col;
+  }
+  .poll-team-copy strong {
+    @apply truncate;
+  }
+  .poll-team-copy small {
+    @apply text-text-secondary truncate;
+  }
+  .poll-rank-actions {
+    @apply flex shrink-0 gap-1;
+  }
+  .poll-rank-actions button {
+    @apply w-11 h-11 shrink-0 inline-flex items-center justify-center rounded-lg border border-border text-lg font-bold
+      text-text-secondary hover:text-text-primary hover:border-border-hover focus-visible:outline-none
+      focus-visible:ring-2 focus-visible:ring-accent-400 disabled:opacity-30 disabled:cursor-not-allowed;
+  }
+  .poll-extra-questions {
+    @apply border-t border-border pt-5;
+  }
+  .poll-extra-questions legend {
+    @apply text-xl md:text-2xl font-display font-bold tracking-wide;
+  }
+  .poll-question-grid {
+    @apply grid grid-cols-1 md:grid-cols-3 gap-4 mt-4;
+  }
+  .poll-question {
+    @apply block text-sm font-semibold;
+  }
+  .poll-question select {
+    @apply block w-full min-h-11 mt-2 rounded-lg border border-border bg-bg px-3 py-2 text-text-primary
+      focus:outline-none focus:ring-2 focus:ring-accent-400 focus:border-accent-500 disabled:opacity-50;
+  }
+  .poll-form-message {
+    @apply hidden rounded-lg border border-loss/40 bg-loss/10 px-4 py-3 text-sm text-red-200;
+  }
+  .poll-form-message.is-visible {
+    @apply block;
+  }
+  .poll-submit-button {
+    @apply w-full sm:w-auto;
+  }
+  .poll-submit-note {
+    @apply text-xs text-text-muted;
+  }
+  .poll-submitted-card {
+    @apply card;
+  }
+  .poll-submitted-card ul {
+    @apply mt-3 divide-y divide-border/60;
+  }
+  .poll-submitted-card li {
+    @apply flex items-center justify-between gap-2 py-2 text-sm;
+  }
+  .poll-submitted-card li span {
+    @apply text-xs uppercase tracking-wide text-text-secondary;
+  }
+  .poll-notice,
+  .poll-demo-banner {
+    @apply rounded-xl border px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3;
+  }
+  .poll-notice-success {
+    @apply border-win/40 bg-win/10 text-green-200;
+  }
+  .poll-notice-error {
+    @apply border-loss/40 bg-loss/10 text-red-200;
+  }
+  .poll-demo-banner {
+    @apply border-amber-400/40 bg-amber-400/10 text-amber-100;
+  }
+  .poll-demo-banner span {
+    @apply text-sm text-amber-100/80;
+  }
+  .poll-results-card {
+    @apply p-0 overflow-hidden;
+  }
+  .poll-results-card .poll-section-heading {
+    @apply p-4 md:p-6;
+  }
+  .poll-results-table th,
+  .poll-results-table td {
+    @apply px-3 md:px-4 py-3 whitespace-nowrap;
+  }
+  .poll-results-table td:nth-child(2) {
+    @apply min-w-56 whitespace-normal;
+  }
+  .poll-results-table td:nth-child(2) small {
+    @apply block text-text-secondary mt-0.5;
+  }
+  .poll-official-rank {
+    @apply text-lg font-bold text-accent-400;
+  }
 }

@@ -71,7 +71,7 @@ insert into poll_private.polls (
   '1180197099396288512',
   2026,
   '2026 Preseason AP Poll',
-  null,
+  0,
   'draft',
   false
 );
@@ -99,6 +99,8 @@ order by t.id;
 
 commit;
 ```
+
+Week `0` denotes the preseason; positive values denote regular-season weeks.
 
 Confirm that the new poll has exactly 14 voters and 14 teams before opening it:
 
@@ -146,8 +148,9 @@ delete from poll_private.polls
 where id = 'sb3_2026_v1_demo' and is_demo;
 ```
 
-The delete cascades only through that poll's snapshots, ballots, and rankings;
-it does not delete the permanent SB3 voter or franchise registry.
+Migration `20260811022729_add_ap_poll_poll_delete_cascades.sql` makes this delete
+cascade only through that poll's snapshots, ballots, and rankings; it does not
+delete the permanent SB3 voter or franchise registry.
 
 ## Updating league membership
 
