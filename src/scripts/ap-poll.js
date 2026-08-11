@@ -866,12 +866,31 @@ if (root) {
     const xForIndex = (index) => viewBox.left + (polls.length === 1 ? plotWidth / 2 : (plotWidth * index) / (polls.length - 1));
     const yForValue = (value) => viewBox.top + plotHeight - ((Number(value) || 0) / yMax) * plotHeight;
     const yTicks = Array.from({ length: 5 }, (_, index) => Math.round((yMax * index) / 4));
-    const historyPath = (team) => polls.reduce((path, poll, index) => {
-      const result = team.resultsByPoll.get(poll.id);
-      if (!result) return path;
-      const command = path ? "L" : "M";
-      return `${path}${command}${xForIndex(index).toFixed(2)} ${yForValue(result.ap_points).toFixed(2)} `;
-    }, "");
+    const historyPath = (team) => {
+      const points = polls.flatMap((poll, index) => {
+        const result = team.resultsByPoll.get(poll.id);
+        return result ? [{ x: xForIndex(index), y: yForValue(result.ap_points) }] : [];
+      });
+      if (points.length === 0) return "";
+
+      return points.reduce((path, point, index) => {
+        if (index === 0) return `M${point.x.toFixed(2)} ${point.y.toFixed(2)} `;
+
+        const previous = points[index - 1];
+        const beforePrevious = points[index - 2] || previous;
+        const next = points[index + 1] || point;
+        const curveAmount = 0.14;
+        const controlOne = {
+          x: previous.x + ((point.x - beforePrevious.x) * curveAmount),
+          y: previous.y + ((point.y - beforePrevious.y) * curveAmount),
+        };
+        const controlTwo = {
+          x: point.x - ((next.x - previous.x) * curveAmount),
+          y: point.y - ((next.y - previous.y) * curveAmount),
+        };
+        return `${path}C${controlOne.x.toFixed(2)} ${controlOne.y.toFixed(2)} ${controlTwo.x.toFixed(2)} ${controlTwo.y.toFixed(2)} ${point.x.toFixed(2)} ${point.y.toFixed(2)} `;
+      }, "");
+    };
 
     return `<section class="card poll-history-card" data-poll-history aria-labelledby="poll-history-title">
       <div class="poll-section-heading">
