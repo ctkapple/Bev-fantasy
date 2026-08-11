@@ -697,78 +697,6 @@ if (root) {
     </article>`;
   }
 
-  function resultNumber(result, field) {
-    const value = result[field];
-    if (value === null || value === undefined || value === "") return null;
-    const number = Number(value);
-    return Number.isFinite(number) ? number : null;
-  }
-
-  function resultMovementWinners(results, direction) {
-    return results
-      .filter((result) => {
-        const change = resultNumber(result, "rank_change");
-        return change !== null && (direction === "up" ? change > 0 : change < 0);
-      })
-      .sort((left, right) => {
-        const leftChange = Math.abs(resultNumber(left, "rank_change"));
-        const rightChange = Math.abs(resultNumber(right, "rank_change"));
-        return rightChange - leftChange || Number(left.rank) - Number(right.rank);
-      })
-      .slice(0, 3);
-  }
-
-  function resultMovementCardMarkup(results, title, direction) {
-    const winners = resultMovementWinners(results, direction);
-    const arrow = direction === "up" ? "&uarr;" : "&darr;";
-
-    return `<article class="poll-award-card">
-      <p class="poll-award-label">${escapeHtml(title)}</p>
-      ${winners.length > 0 ? `<div class="poll-award-winners">
-        ${winners.map((winner) => {
-          const change = Math.abs(resultNumber(winner, "rank_change"));
-          return `<div class="poll-award-winner">
-            <span class="poll-results-team">
-              ${portraitMarkup(winner.owner_label, "poll-team-avatar")}
-              <span class="poll-result-team-copy"><strong>${escapeHtml(winner.display_name)}</strong><small>${escapeHtml(winner.owner_label)}</small></span>
-            </span>
-            <span class="poll-award-total poll-movement-total is-${direction}"><strong><span aria-hidden="true">${arrow}</span>${change}</strong><small>places</small></span>
-          </div>`;
-        }).join("")}
-      </div>` : '<p class="poll-award-empty">No movement recorded</p>'}
-    </article>`;
-  }
-
-  function resultRangeWinners(results, direction) {
-    const rankedResults = results.filter((result) => resultNumber(result, "rank_range") !== null);
-    if (rankedResults.length === 0) return [];
-
-    const targetRange = direction === "highest"
-      ? Math.max(...rankedResults.map((result) => resultNumber(result, "rank_range")))
-      : Math.min(...rankedResults.map((result) => resultNumber(result, "rank_range")));
-    return rankedResults.filter((result) => resultNumber(result, "rank_range") === targetRange);
-  }
-
-  function resultRangeCardMarkup(results, title, direction) {
-    const winners = resultRangeWinners(results, direction);
-
-    return `<article class="poll-award-card">
-      <p class="poll-award-label">${escapeHtml(title)}</p>
-      ${winners.length > 0 ? `<div class="poll-award-winners">
-        ${winners.map((winner) => {
-          const range = resultNumber(winner, "rank_range");
-          return `<div class="poll-award-winner">
-            <span class="poll-results-team">
-              ${portraitMarkup(winner.owner_label, "poll-team-avatar")}
-              <span class="poll-result-team-copy"><strong>${escapeHtml(winner.display_name)}</strong><small>${escapeHtml(winner.owner_label)}</small></span>
-            </span>
-            <span class="poll-award-total"><strong>${range}</strong><small>${range}-place spread</small></span>
-          </div>`;
-        }).join("")}
-      </div>` : '<p class="poll-award-empty">Not enough ballot data</p>'}
-    </article>`;
-  }
-
   function renderPublished() {
     const results = Array.isArray(pollState.results) ? pollState.results : [];
     const topResults = results.slice(0, 10);
@@ -776,9 +704,6 @@ if (root) {
     const showChampionship = hasResultField(results, "championship_votes");
     const showUnderrated = hasResultField(results, "underrated_votes");
     const showOverrated = hasResultField(results, "overrated_votes");
-    const showMovement = results.some((result) => resultNumber(result, "rank_change") !== null);
-    const showDispersion = submissionCount >= 3
-      && results.some((result) => resultNumber(result, "rank_range") !== null);
 
     root.innerHTML = `${renderNotice()}
       ${pollHeaderMarkup(pollState, "Published")}
@@ -801,30 +726,6 @@ if (root) {
           ? `<ol class="poll-result-list">${topResults.map(resultRowMarkup).join("")}</ol>`
           : '<p class="poll-results-empty">No aggregate results were returned.</p>'}
       </section>
-      ${showMovement ? `<section class="poll-movement-section" aria-labelledby="poll-movement-title">
-        <div class="poll-section-heading">
-          <div>
-            <p class="poll-step">Across all 14 teams</p>
-            <h2 id="poll-movement-title">Biggest movement</h2>
-          </div>
-        </div>
-        <div class="poll-movement-grid">
-          ${resultMovementCardMarkup(results, "Biggest Risers", "up")}
-          ${resultMovementCardMarkup(results, "Biggest Fallers", "down")}
-        </div>
-      </section>` : ""}
-      ${showDispersion ? `<section class="poll-dispersion-section" aria-labelledby="poll-dispersion-title">
-        <div class="poll-section-heading">
-          <div>
-            <p class="poll-step">Ballot agreement</p>
-            <h2 id="poll-dispersion-title">Where voters disagreed</h2>
-          </div>
-        </div>
-        <div class="poll-dispersion-grid">
-          ${resultRangeCardMarkup(results, "Most Polarizing", "highest")}
-          ${resultRangeCardMarkup(results, "Strongest Consensus", "lowest")}
-        </div>
-      </section>` : ""}
       ${(showChampionship || showUnderrated || showOverrated) ? `<section class="poll-awards-section" aria-labelledby="poll-awards-title">
         <div class="poll-section-heading">
           <div>
