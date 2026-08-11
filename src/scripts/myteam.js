@@ -117,11 +117,18 @@ function renderManager(managers, reigningChampId, userId) {
 document.addEventListener("DOMContentLoaded", () => {
   const managers = readJson("myteam-data");
   const reigningChampId = readJson("myteam-reigning-champ");
-  const select = document.getElementById("my-team-select");
-  if (!managers || !select) return;
+  const buttons = [...document.querySelectorAll("[data-my-team-id]")];
+  if (!managers || !buttons.length) return;
 
-  select.addEventListener("change", () => {
-    if (select.value) renderManager(managers, reigningChampId, select.value);
-    else document.getElementById("my-team-data")?.classList.add("hidden");
+  buttons.forEach((button) => {
+    button.addEventListener("click", () => {
+      buttons.forEach((candidate) => {
+        const selected = candidate === button;
+        candidate.setAttribute("aria-pressed", String(selected));
+        const state = candidate.querySelector(".poll-voter-state");
+        if (state) state.textContent = selected ? "Selected" : "";
+      });
+      renderManager(managers, reigningChampId, button.dataset.myTeamId);
+    });
   });
 });

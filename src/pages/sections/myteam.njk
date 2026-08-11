@@ -15,13 +15,25 @@ eleventyComputed:
 <p class="text-text-secondary text-sm">No completed seasons yet.</p>
 {% else %}
 <div class="card mb-6">
-  <label for="my-team-select" class="block text-lg font-medium text-accent-500 mb-2">Please select your name</label>
-  <select id="my-team-select" class="bg-bg border border-border rounded-md p-2 w-full max-w-md text-text-primary focus:ring-2 focus:ring-accent-500 focus:border-accent-500">
-    <option value="">-- Select a Manager --</option>
+  <div class="poll-voter-heading">
+    <h2 id="my-team-picker-heading">Which team are you?</h2>
+  </div>
+  <p class="poll-voter-instructions text-sm text-text-secondary">Choose your team to view its franchise history and stats.</p>
+  <div class="poll-voter-grid" role="group" aria-labelledby="my-team-picker-heading">
     {% for id, m in aggregate.managers %}
-    <option value="{{ id }}">{{ m.displayName }}</option>
+    {% set latestTeam = m.teamNameHistory | last %}
+    <button type="button" class="poll-voter-button" data-my-team-id="{{ id }}" aria-pressed="false">
+      <span class="poll-voter-identity">
+        <img src="{{ m.avatar }}" alt="" class="poll-voter-avatar">
+        <span class="poll-pick-copy">
+          <strong>{{ latestTeam.name if latestTeam and latestTeam.name else m.displayName }}</strong>
+          <small>{{ m.displayName }}</small>
+        </span>
+      </span>
+      <span class="poll-voter-state" aria-hidden="true"></span>
+    </button>
     {% endfor %}
-  </select>
+  </div>
 </div>
 
 <div id="my-team-data" class="hidden"></div>
