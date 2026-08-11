@@ -234,10 +234,18 @@
     animation: poll-progress-fill 320ms ease-out both;
   }
   .poll-open-layout {
-    @apply grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_18rem] gap-5 items-start;
+    @apply grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_20rem] gap-5 items-start;
   }
   .poll-main-column {
     @apply space-y-5 min-w-0;
+  }
+  .poll-sidebar {
+    @apply space-y-5 min-w-0;
+  }
+  @media (min-width: 1024px) {
+    .poll-sidebar {
+      @apply sticky top-4;
+    }
   }
   .poll-two-column {
     @apply grid grid-cols-1 md:grid-cols-2 gap-5 items-start;
@@ -248,8 +256,89 @@
   .poll-state-card h2,
   .poll-section-heading h2,
   .poll-ballot h2,
-  .poll-submitted-card h2 {
+  .poll-submitted-card h2,
+  .poll-team-snapshot-card h2 {
     @apply text-xl md:text-2xl font-bold;
+  }
+  .poll-team-snapshot-card {
+    @apply card hidden lg:flex flex-col gap-4 overflow-hidden;
+    min-height: 27rem;
+    background-image: radial-gradient(circle at 100% 0%, rgb(var(--color-accent-500) / 0.08), transparent 42%);
+  }
+  .poll-team-snapshot-card:hover {
+    transform: none;
+  }
+  .poll-team-snapshot-card h2 {
+    @apply border-b border-accent-500/40 pb-3;
+  }
+  .poll-snapshot-content {
+    @apply flex-1 min-h-0;
+    animation: poll-snapshot-content-in 180ms ease-out both;
+  }
+  .poll-snapshot-empty {
+    @apply min-h-64 flex items-center justify-center text-center text-sm text-text-secondary;
+  }
+  .poll-snapshot-team-heading {
+    @apply flex flex-col gap-0.5;
+  }
+  .poll-snapshot-team-heading strong {
+    @apply text-base leading-tight;
+  }
+  .poll-snapshot-team-heading span {
+    @apply text-xs text-text-secondary;
+  }
+  .poll-snapshot-label {
+    @apply mt-4 mb-2 text-[0.68rem] font-bold uppercase tracking-[0.16em] text-accent-400;
+  }
+  .poll-snapshot-players {
+    @apply space-y-1;
+  }
+  .poll-snapshot-player {
+    @apply grid grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-2 rounded-lg px-2 py-2 bg-bg/35 border border-transparent;
+  }
+  .poll-snapshot-player:hover {
+    @apply border-border bg-surface-hover/70;
+  }
+  .poll-player-headshot-wrap {
+    @apply relative w-8 h-8 rounded-full overflow-hidden border border-white/10 bg-bg;
+  }
+  .poll-player-headshot,
+  .poll-player-headshot-fallback {
+    @apply absolute inset-0 w-full h-full;
+  }
+  .poll-player-headshot {
+    @apply object-cover;
+  }
+  .poll-player-headshot-fallback {
+    @apply flex items-center justify-center text-[0.6rem] font-black text-text-secondary bg-surface-hover;
+  }
+  .poll-player-headshot-wrap.has-image-error .poll-player-headshot {
+    @apply hidden;
+  }
+  .poll-snapshot-player-copy {
+    @apply min-w-0 flex flex-col;
+  }
+  .poll-snapshot-player-copy strong,
+  .poll-snapshot-player-copy small {
+    @apply truncate;
+  }
+  .poll-snapshot-player-copy strong {
+    @apply text-sm leading-tight;
+  }
+  .poll-snapshot-player-copy small {
+    @apply mt-0.5 text-[0.68rem] text-text-secondary;
+  }
+  .poll-snapshot-points {
+    @apply text-sm tabular-nums text-accent-400;
+  }
+  .poll-snapshot-points span {
+    @apply text-[0.62rem] font-normal text-text-muted;
+  }
+  .poll-snapshot-footer {
+    @apply border-t border-border pt-3 flex flex-col gap-0.5 text-[0.65rem] leading-relaxed text-text-muted;
+  }
+  .poll-snapshot-footer.is-stale {
+    @apply text-amber-300;
   }
   .poll-primary-button,
   .poll-secondary-button {
@@ -371,6 +460,12 @@
   .poll-rank-item.is-drag-over {
     @apply border-accent-500 bg-accent-500/10;
   }
+  @media (min-width: 1024px) {
+    .poll-rank-item.is-snapshot-viewed {
+      @apply border-accent-400;
+      box-shadow: inset 3px 0 0 rgb(var(--color-accent-400)), 0 0 0 1px rgb(var(--color-accent-500) / 0.22), 0 8px 22px rgb(var(--color-accent-500) / 0.1);
+    }
+  }
   .poll-rank-item.is-dragging-up {
     background-color: rgb(var(--color-win) / 0.28);
     border-color: rgb(var(--color-win) / 0.85);
@@ -440,11 +535,23 @@
   .poll-team-copy {
     @apply min-w-0 flex flex-col;
   }
+  .poll-team-owner-line {
+    @apply min-w-0 flex items-center gap-2;
+  }
   .poll-team-copy strong {
     @apply truncate;
   }
   .poll-team-copy small {
     @apply text-text-secondary truncate;
+  }
+  .poll-snapshot-viewing {
+    @apply hidden shrink-0 rounded-full border border-accent-500/50 bg-accent-500/15 px-1.5 py-0.5
+      text-[0.58rem] font-bold uppercase tracking-wide text-accent-400;
+  }
+  @media (min-width: 1024px) {
+    .poll-rank-item.is-snapshot-viewed .poll-snapshot-viewing {
+      @apply inline-flex;
+    }
   }
   .poll-rank-actions {
     @apply flex shrink-0 gap-1;
@@ -655,6 +762,10 @@
   @keyframes poll-spin {
     to { transform: rotate(360deg); }
   }
+  @keyframes poll-snapshot-content-in {
+    from { opacity: 0.25; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 
   @media (max-width: 639px) {
     .poll-ballot {
@@ -691,6 +802,9 @@
       background-color: rgb(var(--color-loss) / 0.28) !important;
       border-color: rgb(var(--color-loss) / 0.85) !important;
       box-shadow: inset 4px 0 0 rgb(var(--color-loss)), 0 0 22px rgb(var(--color-loss) / 0.18) !important;
+    }
+    .poll-snapshot-content {
+      animation: none !important;
     }
   }
 }

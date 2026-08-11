@@ -4,10 +4,10 @@ on:
   push:
     branches: [main]
   schedule:
-    # Daily, off-peak UTC. Not needed for current-season freshness (that's a purely
-    # client-side localStorage cache) - this exists to catch a season's Sleeper
-    # `status` flipping to "complete" (freezing it into history) and to pick up
-    # manager/team-name metadata drift, without anyone needing to remember to rebuild.
+    # Daily, off-peak UTC. Current-season stats remain client-side, while this
+    # refreshes build-time AP Poll projections, catches a season's Sleeper
+    # `status` flipping to "complete", and picks up manager/team-name metadata
+    # drift without anyone needing to remember to rebuild.
     - cron: "0 9 * * *"
   workflow_dispatch: {}
 

@@ -36,6 +36,12 @@ This is just an index: which UI tab reads which top-level field.
   (season-rollover gap), `src/scripts/keeper-assistant.js` does a small live
   top-up. See JSDoc typedefs in `src/scripts/keeper-engine.mjs`, including the
   ROUND DIRECTION note explaining why keeper cost counts *down*.
+- `src/leagues/<slug>/data/poll-snapshot.json` — optional AP Poll sidebar data
+  for leagues with `pollTeamRosterMap`. Built once from the current Sleeper
+  rosters and regular-season half-PPR projections, keyed by the poll's stable
+  franchise ids. The browser fetches this compact artifact once and never
+  downloads the full projection/player datasets. Projection failure writes a
+  valid unavailable state so this decorative feature cannot block deployment.
 
 ## Tab → data field map
 
@@ -54,6 +60,7 @@ This is just an index: which UI tab reads which top-level field.
 | Earnings | `earnings.njk` | League config `earnings` object (100% hand-curated $ figures, not derivable from Sleeper — see porting note #6 in season-processor.mjs) |
 | Rules (jrwll only) | `rules.njk` | League config `rulesContent` (static text) |
 | Keeper Assistant (jrwll only) | `keeper-assistant.njk` | `drafts.json` (build-time, per-season draft picks + ADP) + live `SeasonData.rosterSnapshots`/`.playerInfoLookup` (client-time) + league config `keeperOverrides`, run through `src/scripts/keeper-engine.mjs` |
+| AP Poll Team Snapshot (sb3 only) | `poll.njk` / `ap-poll.js` | `poll-snapshot.json` (build-time top-five half-PPR projections keyed by permanent poll team id) |
 
 ## Known gaps / TODOs left for the commissioner to fill in
 

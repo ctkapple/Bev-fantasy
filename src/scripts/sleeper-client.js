@@ -22,22 +22,22 @@ const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 // "Unknown Player" for up to CACHE_TTL_MS after this ships.
 const CACHE_VERSION = "v2";
 
-function cacheKey(slug) {
-  return `bf:${slug}:current:${CACHE_VERSION}`;
+function cacheKey(slug, leagueId) {
+  return `bf:${slug}:current:${leagueId}:${CACHE_VERSION}`;
 }
 
-function readCache(slug) {
+function readCache(slug, leagueId) {
   try {
-    const raw = localStorage.getItem(cacheKey(slug));
+    const raw = localStorage.getItem(cacheKey(slug, leagueId));
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null; // localStorage unavailable (private mode, quota, etc.) - treat as no cache.
   }
 }
 
-function writeCache(slug, payload) {
+function writeCache(slug, leagueId, payload) {
   try {
-    localStorage.setItem(cacheKey(slug), JSON.stringify({ fetchedAt: Date.now(), payload }));
+    localStorage.setItem(cacheKey(slug, leagueId), JSON.stringify({ fetchedAt: Date.now(), payload }));
   } catch {
     // Storage full/unavailable - non-fatal, just means every load re-fetches.
   }
@@ -135,14 +135,14 @@ async function getNflPlayers() {
  * @returns {Promise<import('./season-processor.mjs').SeasonData|null>} null if both the live fetch AND any cached fallback are unavailable.
  */
 export async function getCurrentSeasonData(leagueConfig) {
-  const cached = readCache(leagueConfig.slug);
+  const cached = readCache(leagueConfig.slug, leagueConfig.currentLeagueId);
   if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
     return cached.payload;
   }
 
   try {
     const payload = await fetchLiveSeason(leagueConfig);
-    writeCache(leagueConfig.slug, payload);
+    writeCache(leagueConfig.slug, leagueConfig.currentLeagueId, payload);
     return payload;
   } catch (err) {
     console.warn(`[sleeper-client] Live fetch failed for ${leagueConfig.slug}, serving stale cache if any:`, err);

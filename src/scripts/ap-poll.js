@@ -19,11 +19,17 @@ if (root) {
   let pointerDrag = null;
   let pointerAutoScrollFrame = null;
   let notice = null;
+  let pollSnapshotState = { status: "idle", data: null };
+  let pollSnapshotPromise = null;
+  let deliberateSnapshotTeamId = null;
+  let hoveredSnapshotTeamId = null;
 
   const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const desktopSnapshotQuery = window.matchMedia("(min-width: 1024px)");
   const POINTER_DRAG_THRESHOLD = 6;
   const POINTER_EDGE_SCROLL_ZONE = 72;
   const POINTER_MAX_SCROLL_SPEED = 12;
+  const SNAPSHOT_STALE_MS = 72 * 60 * 60 * 1000;
 
   function readManagerInfo() {
     const configNode = document.querySelector("#ap-poll-manager-info");
@@ -54,6 +60,151 @@ if (root) {
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
+
+  function snapshotInteractionsEnabled() {
+    return desktopSnapshotQuery.matches
+      && pollState?.poll?.status === "open"
+      && Boolean(selectedVoterId);
+  }
+
+  function displayedSnapshotTeamId() {
+    return hoveredSnapshotTeamId || deliberateSnapshotTeamId;
+  }
+
+  function pollTeamById(teamId) {
+    return pollState?.teams?.find((team) => team.id === teamId) || null;
+  }
+
+  function snapshotDateLabel(generatedAt) {
+    const date = new Date(generatedAt);
+    if (!Number.isFinite(date.getTime())) return null;
+    return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(date);
+  }
+
+  function snapshotFooterMarkup(snapshot) {
+    const updatedLabel = snapshotDateLabel(snapshot?.generatedAt);
+    if (!updatedLabel) return "";
+    const age = Date.now() - new Date(snapshot.generatedAt).getTime();
+    const isStale = age > SNAPSHOT_STALE_MS;
+    return `<footer class="poll-snapshot-footer${isStale ? " is-stale" : ""}">
+      <span>Sleeper projections &bull; 0.5 PPR &bull; ${isStale ? "Last updated" : "Updated"} ${escapeHtml(updatedLabel)}</span>
+      <span>Projections can change.</span>
+    </footer>`;
+  }
+
+  function snapshotPlayerMarkup(player) {
+    return `<li class="poll-snapshot-player">
+      <span class="poll-player-headshot-wrap">
+        <span class="poll-player-headshot-fallback" aria-hidden="true">${escapeHtml(player.position || "?")}</span>
+        <img class="poll-player-headshot" data-player-headshot src="${escapeHtml(player.headshot)}" alt="" width="32" height="32" loading="lazy" decoding="async">
+      </span>
+      <span class="poll-snapshot-player-copy">
+        <strong>${escapeHtml(player.name)}</strong>
+        <small>${escapeHtml(player.position)} &bull; ${escapeHtml(player.nflTeam)}</small>
+      </span>
+      <strong class="poll-snapshot-points">${Number(player.projectedPoints).toFixed(1)}<span> pts</span></strong>
+    </li>`;
+  }
+
+  function teamSnapshotMarkup() {
+    const teamId = displayedSnapshotTeamId();
+    const team = pollTeamById(teamId);
+    let content = '<p class="poll-snapshot-empty">Select a team to preview its projected core.</p>';
+    let footer = "";
+
+    if (team) {
+      if (pollSnapshotState.status === "idle" || pollSnapshotState.status === "loading") {
+        content = '<p class="poll-snapshot-empty">Loading team snapshot&hellip;</p>';
+      } else if (pollSnapshotState.status !== "ready" || !pollSnapshotState.data) {
+        content = '<p class="poll-snapshot-empty">Projections are unavailable right now. Rankings are unaffected.</p>';
+      } else {
+        const snapshot = pollSnapshotState.data;
+        footer = snapshotFooterMarkup(snapshot);
+        if (String(snapshot.season) !== String(pollState.poll.season)) {
+          content = '<p class="poll-snapshot-empty">Projections are unavailable right now. Rankings are unaffected.</p>';
+        } else if (snapshot.status === "roster_unavailable") {
+          content = '<p class="poll-snapshot-empty">Roster unavailable for this team.</p>';
+        } else if (snapshot.status !== "ready") {
+          content = '<p class="poll-snapshot-empty">Projections are unavailable right now. Rankings are unaffected.</p>';
+        } else {
+          const snapshotTeam = snapshot.teams?.[team.id];
+          if (!snapshotTeam || snapshotTeam.status === "roster_unavailable") {
+            content = '<p class="poll-snapshot-empty">Roster unavailable for this team.</p>';
+          } else if (snapshotTeam.status !== "ready" || snapshotTeam.players?.length !== 5) {
+            content = '<p class="poll-snapshot-empty">Projections are unavailable right now. Rankings are unaffected.</p>';
+          } else {
+            content = `<div class="poll-snapshot-team-heading">
+              <strong>${escapeHtml(team.display_name)}</strong>
+              <span>${escapeHtml(team.owner_label)}</span>
+            </div>
+            <p class="poll-snapshot-label">Top 5 projected players</p>
+            <ol class="poll-snapshot-players">${snapshotTeam.players.map(snapshotPlayerMarkup).join("")}</ol>`;
+          }
+        }
+      }
+    }
+
+    return `<section class="poll-team-snapshot-card" data-team-snapshot aria-labelledby="team-snapshot-heading">
+      <h2 id="team-snapshot-heading">Team Snapshot</h2>
+      <div class="poll-snapshot-content">${content}</div>
+      ${footer}
+    </section>`;
+  }
+
+  function updateRankingSnapshotState() {
+    const teamId = displayedSnapshotTeamId();
+    root.querySelectorAll("[data-rank-item]").forEach((item) => {
+      item.classList.toggle("is-snapshot-viewed", item.dataset.teamId === teamId);
+    });
+  }
+
+  function updateTeamSnapshotPanel() {
+    const panel = root.querySelector("[data-team-snapshot]");
+    if (panel) panel.outerHTML = teamSnapshotMarkup();
+    updateRankingSnapshotState();
+  }
+
+  function selectSnapshotTeam(teamId) {
+    if (!snapshotInteractionsEnabled() || !pollTeamById(teamId)) return;
+    deliberateSnapshotTeamId = teamId;
+    hoveredSnapshotTeamId = null;
+    updateTeamSnapshotPanel();
+  }
+
+  function previewSnapshotTeam(teamId) {
+    if (!snapshotInteractionsEnabled() || !pollTeamById(teamId)) return;
+    if (hoveredSnapshotTeamId === teamId) return;
+    hoveredSnapshotTeamId = teamId;
+    updateTeamSnapshotPanel();
+  }
+
+  function clearSnapshotPreview() {
+    if (!hoveredSnapshotTeamId) return;
+    hoveredSnapshotTeamId = null;
+    updateTeamSnapshotPanel();
+  }
+
+  async function loadPollSnapshot() {
+    if (pollSnapshotPromise) return pollSnapshotPromise;
+    pollSnapshotState = { status: "loading", data: null };
+    updateTeamSnapshotPanel();
+    pollSnapshotPromise = fetch(`/leagues/${encodeURIComponent(leagueSlug)}/data/poll-snapshot.json`)
+      .then((response) => {
+        if (!response.ok) throw new Error(`snapshot request failed with ${response.status}`);
+        return response.json();
+      })
+      .then((data) => {
+        if (data?.schemaVersion !== 1) throw new Error("unsupported snapshot schema");
+        pollSnapshotState = { status: "ready", data };
+        return data;
+      })
+      .catch(() => {
+        pollSnapshotState = { status: "unavailable", data: null };
+        return null;
+      })
+      .finally(() => updateTeamSnapshotPanel());
+    return pollSnapshotPromise;
+  }
 
   function portraitMarkup(ownerLabel, className) {
     const avatar = avatarByOwnerName.get(ownerLabel);
@@ -281,16 +432,17 @@ if (root) {
       ${ranking.map((teamId, index) => {
         const team = teamsById.get(teamId);
         if (!team) return "";
+        const snapshotViewed = displayedSnapshotTeamId() === team.id;
         const motionClass = activeMotion?.teamId === team.id
           ? activeMotion.direction < 0 ? " is-moved-up" : " is-moved-down"
           : "";
         const motionAttribute = activeMotion?.teamId === team.id ? ` data-rank-motion="${activeMotion.id}"` : "";
-        return `<li class="poll-rank-item${motionClass}" style="--poll-rank-tone: ${rankTone(index, ranking.length)}" draggable="${!submissionPending}" data-rank-item data-team-id="${escapeHtml(team.id)}"${motionAttribute}>
+        return `<li class="poll-rank-item${motionClass}${snapshotViewed ? " is-snapshot-viewed" : ""}" style="--poll-rank-tone: ${rankTone(index, ranking.length)}" draggable="${!submissionPending}" data-rank-item data-team-id="${escapeHtml(team.id)}"${motionAttribute}>
           <span class="poll-drag-handle" aria-hidden="true">⋮⋮</span>
           <span class="poll-rank-number" data-touch-drag-handle aria-label="Rank ${index + 1}; drag to reorder ${escapeHtml(team.display_name)}">${index + 1}</span>
           ${portraitMarkup(team.owner_label, "poll-team-avatar")}
           <span class="poll-team-copy">
-            <strong>${escapeHtml(team.owner_label)}</strong>
+            <span class="poll-team-owner-line"><strong>${escapeHtml(team.owner_label)}</strong><span class="poll-snapshot-viewing">Viewing</span></span>
             <small>${escapeHtml(team.display_name)}</small>
           </span>
           <span class="poll-rank-actions">
@@ -354,7 +506,10 @@ if (root) {
           </section>
           ${ballotMarkup()}
         </div>
-        <aside>${submittedVotersMarkup(pollState.voters)}</aside>
+        <aside class="poll-sidebar">
+          ${submittedVotersMarkup(pollState.voters)}
+          ${teamSnapshotMarkup()}
+        </aside>
       </div>`;
   }
 
@@ -452,8 +607,19 @@ if (root) {
   async function loadPoll({ showLoading = true } = {}) {
     if (showLoading) renderLoading();
     try {
+      const previousPollId = pollState?.poll?.id || null;
+      const previousSeason = pollState?.poll?.season || null;
       pollState = await callRpc("ap_poll_get_state", { p_league_slug: leagueSlug });
+      if (previousPollId && previousPollId !== pollState?.poll?.id) {
+        deliberateSnapshotTeamId = null;
+        hoveredSnapshotTeamId = null;
+      }
+      if (previousSeason && String(previousSeason) !== String(pollState?.poll?.season)) {
+        pollSnapshotState = { status: "idle", data: null };
+        pollSnapshotPromise = null;
+      }
       renderState();
+      if (pollState?.poll?.status === "open") void loadPollSnapshot();
     } catch (error) {
       renderLoadError(error);
     }
@@ -590,6 +756,8 @@ if (root) {
       championshipTeamId = "";
       underratedTeamId = "";
       overratedTeamId = "";
+      deliberateSnapshotTeamId = null;
+      hoveredSnapshotTeamId = null;
       submissionPending = false;
       await loadPoll({ showLoading: false });
       focusSuccessNotice();
@@ -602,7 +770,11 @@ if (root) {
 
   root.addEventListener("click", (event) => {
     const button = event.target.closest("button[data-action]");
-    if (!button) return;
+    if (!button) {
+      const item = event.target.closest("[data-rank-item]");
+      if (item) selectSnapshotTeam(item.dataset.teamId);
+      return;
+    }
     const action = button.dataset.action;
     if (action === "retry-load") {
       notice = null;
@@ -611,7 +783,10 @@ if (root) {
       selectVoter(button.dataset.voterId);
     } else if (action === "move-up" || action === "move-down") {
       const item = button.closest("[data-rank-item]");
-      if (item) moveRank(item.dataset.teamId, action === "move-up" ? -1 : 1);
+      if (item) {
+        selectSnapshotTeam(item.dataset.teamId);
+        moveRank(item.dataset.teamId, action === "move-up" ? -1 : 1);
+      }
     } else if (action === "select-final-pick") {
       selectFinalPick(button.dataset.pickQuestion, button.dataset.teamId);
     }
@@ -623,10 +798,40 @@ if (root) {
     submitBallot();
   });
 
+  root.addEventListener("focusin", (event) => {
+    const item = event.target.closest("[data-rank-item]");
+    if (item) selectSnapshotTeam(item.dataset.teamId);
+  });
+
+  root.addEventListener("pointerover", (event) => {
+    if (event.pointerType !== "mouse" || draggedTeamId || pointerDrag?.active) return;
+    const item = event.target.closest("[data-rank-item]");
+    if (!item) return;
+    const previousItem = event.relatedTarget?.closest?.("[data-rank-item]");
+    if (previousItem === item) return;
+    previewSnapshotTeam(item.dataset.teamId);
+  });
+
+  root.addEventListener("pointerout", (event) => {
+    if (event.pointerType !== "mouse" || draggedTeamId || pointerDrag?.active) return;
+    const item = event.target.closest("[data-rank-item]");
+    if (!item) return;
+    const nextItem = event.relatedTarget?.closest?.("[data-rank-item]");
+    if (nextItem === item) return;
+    if (nextItem) previewSnapshotTeam(nextItem.dataset.teamId);
+    else clearSnapshotPreview();
+  });
+
+  root.addEventListener("error", (event) => {
+    if (!event.target.matches?.("[data-player-headshot]")) return;
+    event.target.closest(".poll-player-headshot-wrap")?.classList.add("has-image-error");
+  }, true);
+
   root.addEventListener("dragstart", (event) => {
     const item = event.target.closest("[data-rank-item]");
     if (!item || submissionPending) return;
     draggedTeamId = item.dataset.teamId;
+    selectSnapshotTeam(draggedTeamId);
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData("text/plain", draggedTeamId);
     requestAnimationFrame(() => item.classList.add("is-dragging"));
@@ -834,6 +1039,7 @@ if (root) {
 
   root.addEventListener("pointerdown", (event) => {
     const item = event.target.closest("[data-rank-item]");
+    if (item) selectSnapshotTeam(item.dataset.teamId);
     if (event.pointerType === "mouse") {
       if (item && event.target.closest(".poll-rank-actions button")) item.draggable = false;
       return;

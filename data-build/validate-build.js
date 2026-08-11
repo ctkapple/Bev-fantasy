@@ -68,7 +68,87 @@ for (const page of requiredPages) {
   if (!existsSync(path.join(siteDir, page))) errors.push(`Missing required page: _site/${page}`);
 }
 
-// --- 4. Data sanity: don't ship a live site full of empty states -------------
+// --- 4. Optional AP Poll snapshot artifacts ----------------------------------
+for (const league of configs) {
+  const mappings = Object.entries(league.pollTeamRosterMap || {});
+  if (mappings.length === 0) continue;
+
+  const teamIds = mappings.map(([teamId]) => teamId);
+  const rosterIds = mappings.map(([, rosterId]) => Number(rosterId));
+  if (teamIds.length !== 14 || new Set(teamIds).size !== teamIds.length) {
+    errors.push(`Poll snapshot mapping for "${league.slug}" must contain 14 unique team ids.`);
+  }
+  if (rosterIds.some((id) => !Number.isInteger(id) || id < 1) || new Set(rosterIds).size !== rosterIds.length) {
+    errors.push(`Poll snapshot mapping for "${league.slug}" must contain unique positive roster ids.`);
+  }
+
+  const sourcePath = path.join(leaguesDir, league.slug, "data", "poll-snapshot.json");
+  const builtPath = path.join(siteDir, "leagues", league.slug, "data", "poll-snapshot.json");
+  if (!existsSync(sourcePath)) {
+    if (!process.env.ALLOW_EMPTY_LEAGUE_DATA) {
+      errors.push(`No AP Poll snapshot generated for "${league.slug}" (${sourcePath} missing).`);
+    }
+    continue;
+  }
+  if (!existsSync(builtPath)) {
+    errors.push(`AP Poll snapshot for "${league.slug}" was not copied into _site/leagues/${league.slug}/data/.`);
+  }
+
+  let snapshot;
+  try {
+    snapshot = JSON.parse(readFileSync(sourcePath, "utf-8"));
+  } catch (err) {
+    errors.push(`AP Poll snapshot for "${league.slug}" is not valid JSON: ${err.message}`);
+    continue;
+  }
+
+  const allowedStatuses = new Set(["ready", "projections_unavailable", "roster_unavailable"]);
+  if (snapshot.schemaVersion !== 1 || !allowedStatuses.has(snapshot.status)) {
+    errors.push(`AP Poll snapshot for "${league.slug}" has an unsupported schema version or status.`);
+  }
+  if (String(snapshot.leagueId) !== String(league.currentLeagueId)) {
+    errors.push(`AP Poll snapshot for "${league.slug}" does not match currentLeagueId ${league.currentLeagueId}.`);
+  }
+  if (!snapshot.season || !Number.isFinite(Date.parse(snapshot.generatedAt))) {
+    errors.push(`AP Poll snapshot for "${league.slug}" is missing a valid season or generatedAt timestamp.`);
+  }
+
+  if (snapshot.status !== "ready") {
+    console.warn(`[validate-build] AP Poll snapshot for "${league.slug}" is ${snapshot.status}; fallback UI will be deployed.`);
+    continue;
+  }
+
+  const snapshotTeamIds = Object.keys(snapshot.teams || {});
+  if (snapshotTeamIds.length !== teamIds.length || teamIds.some((teamId) => !snapshotTeamIds.includes(teamId))) {
+    errors.push(`AP Poll snapshot for "${league.slug}" does not cover every configured poll team id.`);
+  }
+
+  for (const [teamId, expectedRosterId] of mappings) {
+    const team = snapshot.teams?.[teamId];
+    if (!team) continue;
+    if (Number(team.rosterId) !== Number(expectedRosterId)) {
+      errors.push(`AP Poll snapshot team "${teamId}" does not match configured roster ${expectedRosterId}.`);
+    }
+    if (team.status !== "ready") {
+      console.warn(`[validate-build] AP Poll snapshot team "${teamId}" is ${team.status}; its fallback UI will be used.`);
+      continue;
+    }
+    const players = Array.isArray(team.players) ? team.players : [];
+    const playerIds = players.map((player) => String(player.playerId || ""));
+    const playerIsInvalid = players.some((player) =>
+      !player.playerId
+      || !player.name
+      || !player.position
+      || !player.nflTeam
+      || !Number.isFinite(player.projectedPoints)
+    );
+    if (players.length !== 5 || new Set(playerIds).size !== 5 || playerIsInvalid) {
+      errors.push(`AP Poll snapshot team "${teamId}" must contain five valid, unique projected players.`);
+    }
+  }
+}
+
+// --- 5. Data sanity: don't ship a live site full of empty states -------------
 // The historical/current split keys off Sleeper's `league.status === 'complete'`,
 // which has never been verified against real API responses. If that assumption
 // is wrong, every league silently produces zero frozen seasons and the whole

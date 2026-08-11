@@ -39,6 +39,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const leaguesDir = path.join(__dirname, "..", "src", "leagues");
 const SLEEPER_BASE = "https://api.sleeper.app/v1";
 const MAX_REGULAR_SEASON_WEEK = 18;
+const POLL_PROJECTION_POSITIONS = ["QB", "RB", "WR", "TE"];
 
 async function loadLeagueConfigs() {
   const files = (await readdir(leaguesDir)).filter((f) => f.endsWith(".json"));
@@ -258,6 +259,126 @@ async function buildKeeperDraftHistory(slug, chain, primaryUserIdMap) {
   console.log(`  [keepers] drafts.json: ${seasons.length} season(s) on file.`);
 }
 
+function pollProjectionsUrl(season) {
+  const positions = POLL_PROJECTION_POSITIONS
+    .map((position) => `position[]=${encodeURIComponent(position)}`)
+    .join("&");
+  return `https://api.sleeper.com/projections/nfl/${season}?season_type=regular&${positions}&order_by=pts_half_ppr`;
+}
+
+function validatedPollTeamRosterEntries(config) {
+  const entries = Object.entries(config.pollTeamRosterMap || {});
+  if (entries.length === 0) return [];
+
+  const rosterIds = new Set();
+  for (const [teamId, rawRosterId] of entries) {
+    const rosterId = Number(rawRosterId);
+    if (!teamId || !Number.isInteger(rosterId) || rosterId < 1) {
+      throw new Error(`[${config.slug}] Invalid poll team-to-roster mapping for "${teamId}".`);
+    }
+    if (rosterIds.has(rosterId)) {
+      throw new Error(`[${config.slug}] Poll snapshot maps more than one team to Sleeper roster ${rosterId}.`);
+    }
+    rosterIds.add(rosterId);
+  }
+  return entries.map(([teamId, rosterId]) => [teamId, Number(rosterId)]);
+}
+
+async function writePollSnapshot(slug, snapshot) {
+  const outDir = path.join(leaguesDir, slug, "data");
+  await mkdir(outDir, { recursive: true });
+  await writeFile(path.join(outDir, "poll-snapshot.json"), JSON.stringify(snapshot));
+}
+
+/**
+ * Build a compact, optional AP Poll roster/projection artifact. Projection
+ * failure is deliberately non-fatal so decorative poll data cannot block a
+ * site deployment.
+ */
+async function buildPollSnapshot(config, currentSeason) {
+  const mappings = validatedPollTeamRosterEntries(config);
+  if (mappings.length === 0) return;
+
+  const generatedAt = new Date().toISOString();
+  const baseSnapshot = {
+    schemaVersion: 1,
+    status: "ready",
+    leagueId: String(currentSeason.league_id),
+    season: String(currentSeason.season),
+    generatedAt,
+    scoring: {
+      receptions: currentSeason.scoring_settings?.rec ?? null,
+      passingTouchdown: currentSeason.scoring_settings?.pass_td ?? null,
+    },
+    teams: {},
+  };
+
+  let rosters;
+  try {
+    rosters = await fetchWithRetry(`${SLEEPER_BASE}/league/${currentSeason.league_id}/rosters`);
+  } catch (err) {
+    console.warn(`  [poll-snapshot] Roster fetch failed; writing unavailable snapshot: ${err.message}`);
+    await writePollSnapshot(config.slug, { ...baseSnapshot, status: "roster_unavailable" });
+    return;
+  }
+
+  let projections;
+  try {
+    projections = await fetchWithRetry(pollProjectionsUrl(currentSeason.season));
+    if (!Array.isArray(projections)) throw new Error("projection response was not an array");
+  } catch (err) {
+    console.warn(`  [poll-snapshot] Projection fetch failed; writing unavailable snapshot: ${err.message}`);
+    await writePollSnapshot(config.slug, { ...baseSnapshot, status: "projections_unavailable" });
+    return;
+  }
+
+  const rosterById = new Map(rosters.map((roster) => [Number(roster.roster_id), roster]));
+  const projectionByPlayerId = new Map(
+    projections.map((projection) => [String(projection.player_id), projection])
+  );
+
+  for (const [teamId, rosterId] of mappings) {
+    const roster = rosterById.get(rosterId);
+    if (!roster) {
+      baseSnapshot.teams[teamId] = { rosterId, status: "roster_unavailable", players: [] };
+      continue;
+    }
+
+    const players = (roster.players || [])
+      .map((playerId) => projectionByPlayerId.get(String(playerId)))
+      .filter((projection) => Number.isFinite(projection?.stats?.pts_half_ppr))
+      .map((projection) => {
+        const playerId = String(projection.player_id);
+        const firstName = projection.player?.first_name || "";
+        const lastName = projection.player?.last_name || "";
+        return {
+          playerId,
+          name: `${firstName} ${lastName}`.trim() || "Unknown Player",
+          position: projection.player?.position || "N/A",
+          nflTeam: projection.player?.team || projection.player?.team_abbr || "FA",
+          projectedPoints: projection.stats.pts_half_ppr,
+          headshot: `https://sleepercdn.com/content/nfl/players/${playerId}.jpg`,
+        };
+      })
+      .sort((a, b) =>
+        b.projectedPoints - a.projectedPoints
+        || a.name.localeCompare(b.name)
+        || a.playerId.localeCompare(b.playerId)
+      )
+      .slice(0, 5);
+
+    baseSnapshot.teams[teamId] = {
+      rosterId,
+      status: players.length === 5 ? "ready" : "projections_unavailable",
+      players,
+    };
+  }
+
+  await writePollSnapshot(config.slug, baseSnapshot);
+  const readyTeams = Object.values(baseSnapshot.teams).filter((team) => team.status === "ready").length;
+  console.log(`  [poll-snapshot] poll-snapshot.json: ${readyTeams}/${mappings.length} teams ready.`);
+}
+
 async function buildLeague(config) {
   console.log(`\n=== ${config.slug} (${config.name}) ===`);
   const chain = await walkSeasonChain(config.currentLeagueId);
@@ -284,6 +405,8 @@ async function buildLeague(config) {
   // for the whole history (Sleeper user_id is stable across seasons/leagues).
   const currentUsers = await fetchWithRetry(`${SLEEPER_BASE}/league/${config.currentLeagueId}/users`);
   const primaryUserIdMap = buildPrimaryUserIdMap(config.coOwnerConfig, currentUsers);
+
+  await buildPollSnapshot(config, currentSeason);
 
   if (config.rulesContent?.keeperRules) {
     console.log(`  Keeper league detected - fetching draft/ADP history for the Keeper Assistant tab...`);

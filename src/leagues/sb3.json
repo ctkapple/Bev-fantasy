@@ -3,7 +3,23 @@
   "name": "Super Beef 3-Way",
   "tagline": "Dynasty",
   "footerTagline": "SB3 Fantasy Stats • Established in 2025 • All Statistics Certified Accurate*",
-  "currentLeagueId": "1180197099396288512",
+  "currentLeagueId": "1312102288294162432",
+  "pollTeamRosterMap": {
+    "sb3_franchise_01": 1,
+    "sb3_franchise_02": 2,
+    "sb3_franchise_03": 3,
+    "sb3_franchise_04": 4,
+    "sb3_franchise_05": 5,
+    "sb3_franchise_06": 6,
+    "sb3_franchise_07": 7,
+    "sb3_franchise_08": 8,
+    "sb3_franchise_09": 9,
+    "sb3_franchise_10": 10,
+    "sb3_franchise_11": 11,
+    "sb3_franchise_12": 12,
+    "sb3_franchise_13": 13,
+    "sb3_franchise_14": 14
+  },
   "coOwnerConfig": {
     "cmcole17": "kpflats",
     "seanrich3": "bigxp3te"
