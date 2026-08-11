@@ -855,14 +855,18 @@
     stroke-width: 1;
   }
   .poll-history-gridline text,
-  .poll-history-x-axis text,
   .poll-history-axis-label {
     fill: rgb(var(--color-text-muted));
     font-size: 15px;
     font-family: ui-sans-serif, system-ui, sans-serif;
   }
-  .poll-history-x-axis text:last-child {
+  .poll-history-x-axis text {
+    fill: rgb(var(--color-text-muted));
     font-size: 12px;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+  }
+  .poll-history-x-axis text:last-child {
+    font-size: 10px;
     fill: rgb(var(--color-text-secondary));
   }
   .poll-history-axis-label {
@@ -903,7 +907,21 @@
     r: 7;
   }
   .poll-history-legend {
-    @apply grid grid-cols-2 gap-2 sm:grid-cols-3;
+    @apply grid grid-cols-1 gap-5 sm:grid-cols-2;
+  }
+  .poll-history-division {
+    @apply min-w-0;
+  }
+  .poll-history-division-title {
+    @apply text-sm font-bold uppercase tracking-[0.16em] text-text-primary;
+  }
+  .poll-history-division-divider {
+    @apply mt-2 h-px w-full;
+    background: rgb(var(--color-accent-500));
+    box-shadow: 0 0 9px rgb(var(--color-accent-500) / 0.55);
+  }
+  .poll-history-division-teams {
+    @apply mt-3 grid grid-cols-1 gap-2;
   }
   .poll-history-team {
     @apply min-w-0 flex items-center gap-2 rounded-lg border border-border/70 bg-bg/40 px-2 py-2 text-left transition-[border-color,background-color,opacity,box-shadow] duration-150 hover:border-border-hover hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400;
@@ -979,12 +997,14 @@
       @apply px-0;
     }
     .poll-history-gridline text,
-    .poll-history-x-axis text,
     .poll-history-axis-label {
-      font-size: 17px;
+      font-size: 13px;
+    }
+    .poll-history-x-axis text {
+      font-size: 11px;
     }
     .poll-history-x-axis text:last-child {
-      font-size: 13px;
+      font-size: 9px;
     }
     .poll-history-focus {
       @apply mx-3 mb-3 gap-2 px-2.5;

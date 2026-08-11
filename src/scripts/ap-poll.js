@@ -38,14 +38,14 @@ if (root) {
   const POINTER_MAX_SCROLL_SPEED = 12;
   const SNAPSHOT_STALE_MS = 72 * 60 * 60 * 1000;
   const HISTORY_COLOR_BY_OWNER = {
-    "Will Dooling": "#facc15",
-    "Andrew Johnstone": "#a855f7",
+    "Will Dooling": "#a855f7",
+    "Andrew Johnstone": "#14b8a6",
     "Matt Manzo": "#2563eb",
     "Kevin & Chris": "#f8fafc",
     "Patrick Gavin": "#ec4899",
     "Matt Pitman": "#991b1b",
     "Johnny Jones": "#c2410c",
-    "Malcolm Zeroka": "#2dd4bf",
+    "Malcolm Zeroka": "#f87171",
     "Adam Ellis": "#38bdf8",
     "Brian Harty": "#eab308",
     "Connor Cademartori": "#16a34a",
@@ -53,6 +53,26 @@ if (root) {
     "Sam Abate": "#166534",
     "Kevin Morency": "#f472b6",
   };
+  const HISTORY_DIVISION_BY_OWNER = {
+    "Andrew Johnstone": "north",
+    "Kevin & Chris": "north",
+    "Patrick Gavin": "north",
+    "Johnny Jones": "north",
+    "Adam Ellis": "north",
+    "Brian Harty": "north",
+    "Kevin Morency": "north",
+    "Will Dooling": "south",
+    "Matt Manzo": "south",
+    "Matt Pitman": "south",
+    "Malcolm Zeroka": "south",
+    "Connor Cademartori": "south",
+    "Peter & Sean": "south",
+    "Sam Abate": "south",
+  };
+  const HISTORY_DIVISIONS = [
+    { id: "north", label: "The North" },
+    { id: "south", label: "The South" },
+  ];
   const HISTORY_FALLBACK_COLORS = ["#f97316", "#38bdf8", "#a3e635", "#f472b6", "#facc15", "#c084fc"];
 
   function readManagerInfo() {
@@ -752,6 +772,23 @@ if (root) {
     return hoveredHistoryTeamId || selectedHistoryTeamId;
   }
 
+  function historyLegendTeamMarkup(team) {
+    return `<button type="button" class="poll-history-team" data-action="select-history-team" data-history-team-id="${escapeHtml(team.id)}" style="--poll-history-team-color: ${team.color}" aria-pressed="${team.id === selectedHistoryTeamId}">
+      <span class="poll-history-swatch" aria-hidden="true"></span>${portraitMarkup(team.owner_label, "poll-history-avatar")}<span><strong>${escapeHtml(team.display_name)}</strong><small>${escapeHtml(team.owner_label)}</small></span>
+    </button>`;
+  }
+
+  function historyLegendMarkup(teams) {
+    return HISTORY_DIVISIONS.map((division) => {
+      const divisionTeams = teams.filter((team) => HISTORY_DIVISION_BY_OWNER[team.owner_label] === division.id);
+      return `<section class="poll-history-division" aria-labelledby="poll-history-${division.id}-title">
+        <h3 id="poll-history-${division.id}-title" class="poll-history-division-title">${division.label}</h3>
+        <div class="poll-history-division-divider" aria-hidden="true"></div>
+        <div class="poll-history-division-teams">${divisionTeams.map(historyLegendTeamMarkup).join("")}</div>
+      </section>`;
+    }).join("");
+  }
+
   function historyFocusMarkup(team, polls) {
     if (!team) {
       return '<p class="poll-history-focus-copy">Hover or tap a team to bring its AP-points path forward.</p>';
@@ -835,9 +872,7 @@ if (root) {
           </svg>
         </div>
         <div class="poll-history-legend" aria-label="Teams">
-          ${teams.map((team) => `<button type="button" class="poll-history-team" data-action="select-history-team" data-history-team-id="${escapeHtml(team.id)}" style="--poll-history-team-color: ${team.color}" aria-pressed="${team.id === selectedHistoryTeamId}">
-            <span class="poll-history-swatch" aria-hidden="true"></span>${portraitMarkup(team.owner_label, "poll-history-avatar")}<span><strong>${escapeHtml(team.display_name)}</strong><small>${escapeHtml(team.owner_label)}</small></span>
-          </button>`).join("")}
+          ${historyLegendMarkup(teams)}
         </div>
       </div>
       <div class="poll-history-focus" data-history-focus-detail>${historyFocusMarkup(activeTeam, polls)}</div>
