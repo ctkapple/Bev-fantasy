@@ -634,12 +634,19 @@ if (root) {
 
   root.addEventListener("dragover", (event) => {
     const item = event.target.closest("[data-rank-item]");
-    if (!item || !draggedTeamId || item.dataset.teamId === draggedTeamId) return;
+    if (!item || !draggedTeamId) return;
+    if (item.dataset.teamId === draggedTeamId) {
+      clearDropIndicators();
+      clearRankPreview();
+      return;
+    }
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
     const bounds = item.getBoundingClientRect();
     const insertBefore = event.clientY < bounds.top + bounds.height / 2;
+    const previewRanking = proposedRanking(draggedTeamId, item.dataset.teamId, insertBefore);
     clearDropIndicators();
+    updateRankPreview(previewRanking, draggedTeamId);
     const draggedItem = root.querySelector(`[data-rank-item][data-team-id="${CSS.escape(draggedTeamId)}"]`);
     draggedItem?.classList.remove("is-dragging-up", "is-dragging-down");
     draggedItem?.classList.add(
@@ -657,10 +664,9 @@ if (root) {
     const targetId = item.dataset.teamId;
     const bounds = item.getBoundingClientRect();
     const insertBefore = event.clientY < bounds.top + bounds.height / 2;
-    const reordered = ranking.filter((id) => id !== draggedTeamId);
-    let targetIndex = reordered.indexOf(targetId);
-    if (!insertBefore) targetIndex += 1;
-    reordered.splice(targetIndex, 0, draggedTeamId);
+    const reordered = proposedRanking(draggedTeamId, targetId, insertBefore);
+    if (!reordered) return;
+    const targetIndex = reordered.indexOf(draggedTeamId);
     const previousIndex = ranking.indexOf(draggedTeamId);
     ranking = reordered;
     setRankMotion(draggedTeamId, targetIndex < previousIndex ? -1 : 1);
@@ -679,12 +685,63 @@ if (root) {
     });
   }
 
+  function proposedRanking(teamId, targetId, insertBefore) {
+    if (!teamId || !targetId || teamId === targetId) return null;
+    const reordered = ranking.filter((id) => id !== teamId);
+    let targetIndex = reordered.indexOf(targetId);
+    if (targetIndex < 0) return null;
+    if (!insertBefore) targetIndex += 1;
+    reordered.splice(targetIndex, 0, teamId);
+    return reordered;
+  }
+
+  function updateRankPreview(previewRanking, draggedId) {
+    if (!previewRanking) {
+      clearRankPreview();
+      return;
+    }
+    const previewRankByTeam = new Map(previewRanking.map((teamId, index) => [teamId, index + 1]));
+    root.querySelectorAll("[data-rank-item]").forEach((item) => {
+      const currentRank = ranking.indexOf(item.dataset.teamId) + 1;
+      const previewRank = previewRankByTeam.get(item.dataset.teamId) || currentRank;
+      const rankNumber = item.querySelector(".poll-rank-number");
+      if (rankNumber) {
+        rankNumber.textContent = `${previewRank}`;
+        rankNumber.setAttribute(
+          "aria-label",
+          rankNumber.getAttribute("aria-label")?.replace(/^Rank \d+;/, `Rank ${previewRank};`) || `Rank ${previewRank}`
+        );
+      }
+      item.classList.toggle("is-rank-preview-shifted", previewRank !== currentRank);
+      item.classList.toggle(
+        "is-rank-preview-destination",
+        item.dataset.teamId === draggedId && previewRank !== currentRank
+      );
+    });
+  }
+
+  function clearRankPreview() {
+    root.querySelectorAll("[data-rank-item]").forEach((item) => {
+      const currentRank = ranking.indexOf(item.dataset.teamId) + 1;
+      const rankNumber = item.querySelector(".poll-rank-number");
+      if (rankNumber && currentRank > 0) {
+        rankNumber.textContent = `${currentRank}`;
+        rankNumber.setAttribute(
+          "aria-label",
+          rankNumber.getAttribute("aria-label")?.replace(/^Rank \d+;/, `Rank ${currentRank};`) || `Rank ${currentRank}`
+        );
+      }
+      item.classList.remove("is-rank-preview-shifted", "is-rank-preview-destination");
+    });
+  }
+
   function clearDragClasses() {
     root.querySelectorAll(".is-dragging, .is-pointer-dragging, .is-dragging-up, .is-dragging-down").forEach((node) => {
       node.classList.remove("is-dragging", "is-pointer-dragging", "is-dragging-up", "is-dragging-down");
       node.style.removeProperty("--poll-drag-y");
     });
     clearDropIndicators();
+    clearRankPreview();
     root.classList.remove("is-touch-reordering");
   }
 
@@ -697,9 +754,16 @@ if (root) {
     pointerDrag.targetId = targetItem?.dataset.teamId || null;
     const draggedItem = root.querySelector(`[data-rank-item][data-team-id="${CSS.escape(pointerDrag.teamId)}"]`);
     draggedItem?.classList.remove("is-dragging-up", "is-dragging-down");
-    if (!targetItem) return;
+    if (!targetItem) {
+      clearRankPreview();
+      return;
+    }
     const bounds = targetItem.getBoundingClientRect();
     pointerDrag.insertBefore = clientY < bounds.top + bounds.height / 2;
+    updateRankPreview(
+      proposedRanking(pointerDrag.teamId, targetItem.dataset.teamId, pointerDrag.insertBefore),
+      pointerDrag.teamId
+    );
     const dragDirection = ranking.indexOf(targetItem.dataset.teamId) < ranking.indexOf(pointerDrag.teamId)
       ? "is-dragging-up"
       : "is-dragging-down";
@@ -755,21 +819,26 @@ if (root) {
     if (cancelled || !completedDrag.active || !completedDrag.targetId) return;
 
     const previousIndex = ranking.indexOf(completedDrag.teamId);
-    const reordered = ranking.filter((id) => id !== completedDrag.teamId);
-    let targetIndex = reordered.indexOf(completedDrag.targetId);
-    if (!completedDrag.insertBefore) targetIndex += 1;
+    const reordered = proposedRanking(
+      completedDrag.teamId,
+      completedDrag.targetId,
+      completedDrag.insertBefore
+    );
+    if (!reordered) return;
+    const targetIndex = reordered.indexOf(completedDrag.teamId);
     if (targetIndex === previousIndex) return;
-    reordered.splice(targetIndex, 0, completedDrag.teamId);
     ranking = reordered;
     setRankMotion(completedDrag.teamId, targetIndex < previousIndex ? -1 : 1);
     renderOpen();
   }
 
   root.addEventListener("pointerdown", (event) => {
-    if (event.pointerType === "mouse" || submissionPending) return;
-    const handle = event.target.closest("[data-touch-drag-handle]");
-    const item = handle?.closest("[data-rank-item]");
-    if (!handle || !item) return;
+    const item = event.target.closest("[data-rank-item]");
+    if (event.pointerType === "mouse") {
+      if (item && event.target.closest(".poll-rank-actions button")) item.draggable = false;
+      return;
+    }
+    if (submissionPending || !item || event.target.closest(".poll-rank-actions button")) return;
     pointerDrag = {
       pointerId: event.pointerId,
       teamId: item.dataset.teamId,
@@ -783,7 +852,7 @@ if (root) {
       insertBefore: true,
       scrollSpeed: 0,
     };
-    handle.setPointerCapture?.(event.pointerId);
+    item.setPointerCapture?.(event.pointerId);
   });
 
   root.addEventListener("pointermove", (event) => {
@@ -803,11 +872,23 @@ if (root) {
   });
 
   root.addEventListener("pointerup", (event) => {
+    if (event.pointerType === "mouse") {
+      root.querySelectorAll("[data-rank-item]").forEach((item) => {
+        item.draggable = !submissionPending;
+      });
+      return;
+    }
     if (!pointerDrag || event.pointerId !== pointerDrag.pointerId) return;
     finishPointerDrag();
   });
 
   root.addEventListener("pointercancel", (event) => {
+    if (event.pointerType === "mouse") {
+      root.querySelectorAll("[data-rank-item]").forEach((item) => {
+        item.draggable = !submissionPending;
+      });
+      return;
+    }
     if (!pointerDrag || event.pointerId !== pointerDrag.pointerId) return;
     finishPointerDrag({ cancelled: true });
   });

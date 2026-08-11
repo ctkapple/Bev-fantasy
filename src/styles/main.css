@@ -352,10 +352,11 @@
   .poll-rank-item {
     @apply relative grid grid-cols-[auto_auto_auto_minmax(0,1fr)_auto] items-center gap-1.5 sm:gap-3 min-h-[4.5rem]
       rounded-lg border border-border bg-bg/50 px-2 sm:px-3 py-2 transition-[border-color,background-color,box-shadow,opacity,transform]
-      duration-150 hover:border-border-hover;
+      duration-150 hover:border-border-hover cursor-grab select-none;
     background-color: rgb(var(--poll-rank-tone) / 0.1);
     border-color: rgb(var(--poll-rank-tone) / 0.4);
     box-shadow: inset 3px 0 0 rgb(var(--poll-rank-tone) / 0.62);
+    touch-action: none;
   }
   .poll-rank-item.is-dragging {
     @apply opacity-40 scale-[0.99];
@@ -365,6 +366,7 @@
     z-index: 20;
     transform: translateY(var(--poll-drag-y, 0));
     transition: none;
+    cursor: grabbing;
   }
   .poll-rank-item.is-drag-over {
     @apply border-accent-500 bg-accent-500/10;
@@ -415,6 +417,16 @@
     border-color: rgb(var(--poll-rank-tone) / 0.9);
     box-shadow: 0 0 18px rgb(var(--poll-rank-tone) / 0.2);
   }
+  .poll-rank-item.is-rank-preview-shifted .poll-rank-number {
+    opacity: 0.52;
+    transform: scale(0.94);
+  }
+  .poll-rank-item.is-rank-preview-destination .poll-rank-number {
+    opacity: 1;
+    transform: scale(1.08);
+    border-color: rgb(var(--color-accent-400) / 0.95);
+    box-shadow: 0 0 18px rgb(var(--color-accent-500) / 0.28);
+  }
   .is-touch-reordering .poll-rank-number {
     cursor: grabbing;
   }
@@ -441,7 +453,7 @@
     @apply w-11 h-11 shrink-0 inline-flex items-center justify-center rounded-lg border border-border text-lg font-bold
       text-text-secondary hover:text-text-primary hover:border-border-hover focus-visible:outline-none
       focus-visible:ring-2 focus-visible:ring-accent-400 disabled:opacity-30 disabled:cursor-not-allowed
-      transition-[color,background-color,border-color,box-shadow,transform] duration-150 active:scale-[0.94];
+      transition-[color,background-color,border-color,box-shadow,transform] duration-150 active:scale-[0.94] cursor-pointer;
   }
   .poll-rank-actions button:not(:disabled):hover {
     @apply bg-surface-hover;
