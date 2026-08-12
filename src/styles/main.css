@@ -257,6 +257,12 @@
     @apply inline-flex justify-center items-center min-h-9 px-3 rounded-full border border-accent-500/50
       bg-accent-500/10 text-accent-400 text-sm font-bold;
   }
+  .poll-hero-actions {
+    @apply flex flex-wrap items-center justify-end gap-2;
+  }
+  .poll-open-ballot-button {
+    @apply min-h-9 px-4;
+  }
   .poll-progress-wrap {
     @apply md:col-span-2 border-t border-border pt-4;
   }
@@ -957,7 +963,7 @@
     @apply mt-0.5 text-[0.65rem] text-text-secondary;
   }
   .poll-history-focus {
-    @apply mx-4 mb-4 flex min-h-14 items-center justify-between gap-4 rounded-lg border border-border/70 bg-bg/35 px-3 py-2.5 md:mx-6 md:mb-6;
+    @apply flex min-h-14 items-center justify-between gap-4 rounded-lg border border-border/70 bg-bg/35 px-3 py-2.5;
   }
   .poll-history-focus-copy {
     @apply text-sm text-text-secondary;
@@ -1006,8 +1012,11 @@
     .poll-history-x-axis text:last-child {
       font-size: 9px;
     }
+    .poll-history-series.is-history-muted {
+      opacity: 0.24;
+    }
     .poll-history-focus {
-      @apply mx-3 mb-3 gap-2 px-2.5;
+      @apply gap-2 px-2.5;
     }
     .poll-history-focus-metric {
       @apply max-w-28;

@@ -12,6 +12,7 @@ if (root) {
   let pollHistoryPromise = null;
   let selectedHistoryTeamId = null;
   let hoveredHistoryTeamId = null;
+  let ballotRevealed = false;
   let selectedVoterId = null;
   let ranking = [];
   let championshipTeamId = "";
@@ -34,6 +35,7 @@ if (root) {
 
   const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
   const desktopSnapshotQuery = window.matchMedia("(min-width: 1024px)");
+  const mobileHistoryQuery = window.matchMedia("(max-width: 639px)");
   const POINTER_DRAG_THRESHOLD = 6;
   const POINTER_EDGE_SCROLL_ZONE = 72;
   const POINTER_MAX_SCROLL_SPEED = 12;
@@ -490,7 +492,7 @@ if (root) {
     </section>`;
   }
 
-  function pollHeaderMarkup(state, statusLabel) {
+  function pollHeaderMarkup(state, statusLabel, actionMarkup = "") {
     const poll = state.poll;
     return `<header class="card poll-hero">
       <div>
@@ -498,9 +500,9 @@ if (root) {
         <h1>${escapeHtml(poll.label)}</h1>
         <p class="text-text-secondary">Rank every team and help set the league's official AP Poll.</p>
       </div>
-      <span class="poll-status-badge">${escapeHtml(statusLabel)}</span>
-      ${progressMarkup(state)}
-    </header>`;
+       <div class="poll-hero-actions"><span class="poll-status-badge">${escapeHtml(statusLabel)}</span>${actionMarkup}</div>
+       ${progressMarkup(state)}
+     </header>`;
   }
 
   function renderNoPoll() {
@@ -637,15 +639,55 @@ if (root) {
     </form>`;
   }
 
+  function latestPublishedResultsMarkup() {
+    if (pollHistoryState.status === "idle" || pollHistoryState.status === "loading") {
+      return `<section class="card poll-results-card" aria-labelledby="latest-published-results-title">
+        <div class="poll-section-heading"><div><p class="poll-step">Latest published results</p><h2 id="latest-published-results-title">AP Poll Top 7</h2></div></div>
+        <p class="poll-results-empty" role="status">Loading the latest published AP Poll&hellip;</p>
+      </section>`;
+    }
+
+    const polls = Array.isArray(pollHistoryState.data?.polls) ? pollHistoryState.data.polls : [];
+    const latestPoll = polls.at(-1);
+    if (!latestPoll) return "";
+
+    const previousRanks = new Map((polls.at(-2)?.results || []).map((result) => [result.team_id, result.rank]));
+    const results = [...(latestPoll.results || [])]
+      .sort((left, right) => Number(left.rank) - Number(right.rank))
+      .slice(0, 7)
+      .map((result) => ({ ...result, previous_rank: previousRanks.get(result.team_id) ?? null }));
+
+    return `<section class="card poll-results-card" aria-labelledby="latest-published-results-title">
+      <div class="poll-section-heading">
+        <div><p class="poll-step">Latest published results</p><h2 id="latest-published-results-title">AP Poll Top 7</h2></div>
+        <p>${escapeHtml(latestPoll.label)} &middot; ${Number(latestPoll.ballot_count) || 0} ballots</p>
+      </div>
+      <div class="poll-result-column-labels" aria-hidden="true"><span>Rank</span><span>Team</span><span>Trend</span><span>AP points</span></div>
+      ${results.length > 0 ? `<ol class="poll-result-list">${results.map(resultRowMarkup).join("")}</ol>` : '<p class="poll-results-empty">No aggregate results were returned.</p>'}
+    </section>`;
+  }
+
+  function revealOpenBallot() {
+    ballotRevealed = true;
+    renderOpen();
+    root.querySelector("#poll-open-ballot")?.scrollIntoView({
+      behavior: reducedMotionQuery.matches ? "auto" : "smooth",
+      block: "start",
+    });
+    root.querySelector("#voter-heading")?.focus({ preventScroll: true });
+  }
+
   function renderOpen() {
     root.innerHTML = `${renderNotice()}
-      ${pollHeaderMarkup(pollState, "Open")}
-      <div class="poll-open-layout">
+      ${pollHeaderMarkup(pollState, "Open", `<button type="button" class="poll-primary-button poll-open-ballot-button" data-action="reveal-open-ballot" aria-controls="poll-open-ballot" aria-expanded="${ballotRevealed}">Cast your ballot</button>`)}
+      ${latestPublishedResultsMarkup()}
+      ${historyDashboardMarkup()}
+      ${ballotRevealed ? `<div class="poll-open-layout" id="poll-open-ballot">
         <div class="poll-main-column">
           <section class="card poll-stage-card poll-voter-stage${selectedVoterId ? " is-complete" : ""}" aria-labelledby="voter-heading">
             <div class="poll-voter-heading">
               <p class="poll-step">Step 1</p>
-              <h2 id="voter-heading">Who are you?</h2>
+              <h2 id="voter-heading" tabindex="-1">Who are you?</h2>
             </div>
             <p class="poll-voter-instructions text-sm text-text-secondary">Choose your name to begin. Submitted voters are locked.</p>
             <div class="poll-voter-grid">${voterOptionsMarkup()}</div>
@@ -657,7 +699,7 @@ if (root) {
           ${teamSnapshotMarkup()}
         </aside>
       </div>
-      ${mobileTeamSnapshotMarkup()}`;
+      ${mobileTeamSnapshotMarkup()}` : ""}`;
   }
 
   function renderClosed() {
@@ -860,7 +902,9 @@ if (root) {
     const activeTeam = teams.find((team) => team.id === activeHistoryTeamId()) || null;
     const maxPoints = Math.max(1, ...teams.flatMap((team) => polls.map((poll) => Number(team.resultsByPoll.get(poll.id)?.ap_points) || 0)));
     const yMax = Math.max(10, Math.ceil(maxPoints / 10) * 10);
-    const viewBox = { width: 920, height: 460, left: 62, right: 24, top: 30, bottom: 62 };
+    const viewBox = mobileHistoryQuery.matches
+      ? { width: 520, height: 540, left: 62, right: 24, top: 30, bottom: 78 }
+      : { width: 920, height: 460, left: 62, right: 24, top: 30, bottom: 62 };
     const plotWidth = viewBox.width - viewBox.left - viewBox.right;
     const plotHeight = viewBox.height - viewBox.top - viewBox.bottom;
     const xForIndex = (index) => viewBox.left + (polls.length === 1 ? plotWidth / 2 : (plotWidth * index) / (polls.length - 1));
@@ -913,11 +957,11 @@ if (root) {
             </g>`).join("")}
           </svg>
         </div>
+        <div class="poll-history-focus" data-history-focus-detail>${historyFocusMarkup(activeTeam, polls)}</div>
         <div class="poll-history-legend" aria-label="Teams">
           ${historyLegendMarkup(teams)}
         </div>
       </div>
-      <div class="poll-history-focus" data-history-focus-detail>${historyFocusMarkup(activeTeam, polls)}</div>
     </section>`;
   }
 
@@ -944,7 +988,7 @@ if (root) {
 
   function renderPublished() {
     const results = Array.isArray(pollState.results) ? pollState.results : [];
-    const topResults = results.slice(0, 10);
+    const topResults = results.slice(0, 7);
     const submissionCount = Number(pollState.submission_count) || 0;
     const showChampionship = hasResultField(results, "championship_votes");
     const showUnderrated = hasResultField(results, "underrated_votes");
@@ -952,7 +996,6 @@ if (root) {
 
     root.innerHTML = `${renderNotice()}
       ${pollHeaderMarkup(pollState, "Published")}
-      ${historyDashboardMarkup()}
       ${pollState.poll.is_demo ? `<div class="poll-demo-banner" role="note">
         <strong>Demo / sample data</strong>
         <span>These results come from deterministic sample ballots, not real league votes.</span>
@@ -961,7 +1004,7 @@ if (root) {
         <div class="poll-section-heading">
           <div>
             <p class="poll-step">Official results</p>
-            <h2 id="poll-results-title">AP Poll Top 10</h2>
+            <h2 id="poll-results-title">AP Poll Top 7</h2>
           </div>
           <p>${submissionCount} ballots counted</p>
         </div>
@@ -972,6 +1015,7 @@ if (root) {
           ? `<ol class="poll-result-list">${topResults.map(resultRowMarkup).join("")}</ol>`
           : '<p class="poll-results-empty">No aggregate results were returned.</p>'}
       </section>
+      ${historyDashboardMarkup()}
       ${(showChampionship || showUnderrated || showOverrated) ? `<section class="poll-awards-section" aria-labelledby="poll-awards-title">
         <div class="poll-section-heading">
           <div>
@@ -1029,10 +1073,11 @@ if (root) {
       if (previousSeason && String(previousSeason) !== String(pollState?.poll?.season)) {
         pollSnapshotState = { status: "idle", data: null };
         pollSnapshotPromise = null;
+        ballotRevealed = false;
       }
       renderState();
       if (pollState?.poll?.status === "open") void loadPollSnapshot();
-      else void loadPollHistory();
+      void loadPollHistory();
     } catch (error) {
       renderLoadError(error);
     }
@@ -1257,6 +1302,8 @@ if (root) {
       updateTeamSnapshotPanel({ focusMobileSelector: "[data-action='toggle-mobile-snapshot-players']" });
     } else if (action === "select-history-team") {
       selectHistoryTeam(button.dataset.historyTeamId);
+    } else if (action === "reveal-open-ballot") {
+      revealOpenBallot();
     } else if (action === "select-final-pick") {
       selectFinalPick(button.dataset.pickQuestion, button.dataset.teamId);
     }
