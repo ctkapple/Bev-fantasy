@@ -40,6 +40,7 @@ if (root) {
   const POINTER_EDGE_SCROLL_ZONE = 72;
   const POINTER_MAX_SCROLL_SPEED = 12;
   const SNAPSHOT_STALE_MS = 72 * 60 * 60 * 1000;
+  const REIGNING_CHAMPION_OWNER = "Kevin Morency";
   const HISTORY_COLOR_BY_OWNER = {
     "Will Dooling": "#a855f7",
     "Andrew Johnstone": "#14b8a6",
@@ -50,9 +51,9 @@ if (root) {
     "Johnny Jones": "#c2410c",
     "Malcolm Zeroka": "#f87171",
     "Adam Ellis": "#38bdf8",
-    "Brian Harty": "#eab308",
+    "Brian Harty": "#a78bfa",
     "Connor Cademartori": "#16a34a",
-    "Peter & Sean": "#a78bfa",
+    "Peter & Sean": "#eab308",
     "Sam Abate": "#166534",
     "Kevin Morency": "#f472b6",
   };
@@ -749,11 +750,17 @@ if (root) {
       <span class="poll-result-rank" aria-label="Rank ${escapeHtml(result.rank)}">${escapeHtml(result.rank)}</span>
       <span class="poll-results-team">
         ${portraitMarkup(result.owner_label, "poll-team-avatar")}
-        <span class="poll-result-team-copy"><strong>${escapeHtml(result.display_name)}</strong><small>${escapeHtml(result.owner_label)}</small></span>
+        <span class="poll-result-team-copy"><strong>${escapeHtml(result.display_name)}${reigningChampionMarkup(result.owner_label)}</strong><small>${escapeHtml(result.owner_label)}</small></span>
       </span>
       ${resultTrendMarkup(result)}
       <span class="poll-result-points"><strong>${escapeHtml(result.ap_points)}</strong><small>AP</small></span>
     </li>`;
+  }
+
+  function reigningChampionMarkup(ownerLabel) {
+    return ownerLabel === REIGNING_CHAMPION_OWNER
+      ? ' <span class="poll-reigning-champion" role="img" aria-label="Reigning champion">👑</span>'
+      : "";
   }
 
   function resultAwardWinners(results, field) {
@@ -839,7 +846,7 @@ if (root) {
 
   function historyLegendTeamMarkup(team) {
     return `<button type="button" class="poll-history-team" data-action="select-history-team" data-history-team-id="${escapeHtml(team.id)}" style="--poll-history-team-color: ${team.color}" aria-pressed="${team.id === selectedHistoryTeamId}">
-      <span class="poll-history-swatch" aria-hidden="true"></span>${portraitMarkup(team.owner_label, "poll-history-avatar")}<span><strong>${escapeHtml(team.display_name)}</strong><small>${escapeHtml(team.owner_label)}</small></span>
+      <span class="poll-history-swatch" aria-hidden="true"></span>${portraitMarkup(team.owner_label, "poll-history-avatar")}<span><strong>${escapeHtml(team.display_name)}${reigningChampionMarkup(team.owner_label)}</strong><small>${escapeHtml(team.owner_label)}</small></span>
     </button>`;
   }
 

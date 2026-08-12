@@ -1085,6 +1085,9 @@
   .poll-result-team-copy strong {
     @apply text-sm md:text-base;
   }
+  .poll-reigning-champion {
+    @apply inline-block text-sm;
+  }
   .poll-result-team-copy small {
     @apply mt-0.5 text-xs text-text-secondary;
   }

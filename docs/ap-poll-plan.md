@@ -4,11 +4,14 @@ This is the living roadmap for the AP Poll. It condenses the original V1
 product/design/technical specification and records the production decisions
 made during implementation and verification.
 
+Continuation checklist:
+[`ap-poll-dashboard-testing-handover.md`](./ap-poll-dashboard-testing-handover.md).
+
 ## Current production status (August 11, 2026)
 
-V1 is implemented and deployed. The production poll
-`sb3_2026_preseason` is intentionally left **published with fake test data**
-while dashboard and results-page work is evaluated.
+V1 and the approved V2 results presentation are implemented and deployed. The
+production poll `sb3_2026_preseason` is intentionally left **published with
+fake test data** as the baseline for movement and historical-dashboard testing.
 
 Current retained test state:
 
@@ -30,9 +33,12 @@ Production verification passed for:
 - Published results on mobile and desktop/web.
 - All published result totals and rank integrity through direct database
   auditing.
+- The live visual-card Top 10, top-three treatment, neutral no-history Trend,
+  and winner-only/tie-aware superlative cards on mobile and desktop.
+- The production build and GitHub Pages deployment for commit `33bdc38`.
 
-Do not delete these three fake ballots, reset the poll, or reopen voting until
-the dashboard work has been tested and explicitly approved for cleanup.
+Do not delete these three fake ballots or reset the poll. They are now the
+required previous-poll fixture for the next controlled fake poll.
 
 ## Original roadmap
 
@@ -157,18 +163,33 @@ multiple real polls or an explicitly approved historical-data fixture/import.
 
 ## Current decision
 
-V2 current-results polish was selected and implemented without changing the
-database contract. Narrative metrics and the full V3 historical foundation
-remain future decision gates.
+V2 current-results polish is live and verified. The next proposed testing slice
+is a second fake poll whose ballots deliberately reverse the preseason order.
+That fixture can verify per-row movement, biggest risers/fallers, a two-point
+team history, championship-vote movement, and initial
+polarization/consensus calculations.
 
-No database change, commit, push, deployment, or fake-data cleanup is approved
-by this document. Retain the fake published results until the implemented card
-layout has been verified on mobile and desktop.
+Before opening that poll, add and review a narrow aggregate history contract.
+The public response should expose previous rank and only the derived historical
+metrics required by the approved dashboard. It must not expose individual
+ballots or raw private-table access. The permanent deterministic demo must be
+excluded from real previous-poll selection.
+
+The detailed ballot pattern and expected results are recorded in the handover.
+This document approves the direction, not a production database mutation:
+creating the new poll, applying a migration, publishing results, cleanup,
+commit, push, and deployment each still require an explicit execution request.
 
 ## Deferred cleanup
 
-After dashboard verification, the intended cleanup is to delete exactly the 3
-fake preseason ballots (cascading through their 42 ranking rows), clear the
-publication state, and reopen the same preseason poll with an explicitly
-approved real deadline. Preserve the permanent voter/team registries, poll
-snapshots, and demo unless separately approved.
+After the second-poll dashboard verification, clean up both temporary real-flow
+fixtures in one reviewed operation. The exact final choice is still open:
+
+- Delete only the second test poll and retain the fake preseason baseline for
+  further dashboard work; or
+- Delete both fake poll histories, then recreate/reopen the real preseason poll
+  with an explicitly approved deadline.
+
+Any deletion must preview and assert the exact poll IDs and dependent row
+counts first. Preserve the permanent voter/team registries and
+`sb3_2026_v1_demo` unless separately approved.

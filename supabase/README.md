@@ -2,6 +2,8 @@
 
 Living product roadmap and verification status:
 [`docs/ap-poll-plan.md`](../docs/ap-poll-plan.md).
+Historical dashboard testing handover:
+[`docs/ap-poll-dashboard-testing-handover.md`](../docs/ap-poll-dashboard-testing-handover.md).
 
 Phase 1 is deployed to the free-tier Supabase project `gkxpwopjmfdxymhsbnyh` at
 `https://gkxpwopjmfdxymhsbnyh.supabase.co`.
