@@ -54,9 +54,10 @@ Decisions made with the split:
   which manager is recorded as `current_owner_voter_id`.
 - Only draft and open polls take the new roster. Published and closed polls keep
   the combined voter snapshots their ballots were actually cast under.
-- The two new managers reuse their franchise portrait on the poll page through
-  `SHARED_PORTRAIT_SOURCE` in `src/scripts/ap-poll.js`. Remove those entries once
-  each manager has their own photo in the league manager info.
+- SB3's manager info names franchises, not people, so the four managers get
+  their portraits from `CO_MANAGER_PORTRAITS` in `src/scripts/ap-poll.js`. Three
+  reuse the photos `bb.json` already gives them. Peter Coluntino has no solo
+  photo anywhere and keeps the shared `pete-and-richy.png` until he does.
 - AP points are not normalized by ballot count, so a 16-ballot poll tops out at
   224 points against 196 for the 14-ballot polls already in history. Ranks stay
   comparable; raw AP-point totals in the history chart do not.

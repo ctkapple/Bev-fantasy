@@ -78,13 +78,14 @@ if (root) {
     { id: "south", label: "The South" },
   ];
   const HISTORY_FALLBACK_COLORS = ["#f97316", "#38bdf8", "#a3e635", "#f472b6", "#facc15", "#c084fc"];
-  // Co-managers vote separately but borrow their franchise's portrait until each
-  // one has a photo of their own in the league manager info.
-  const SHARED_PORTRAIT_SOURCE = {
-    "Kevin Flaherty": "Kevin & Chris",
-    "Chris Cole": "Kevin & Chris",
-    "Peter Coluntino": "Peter & Sean",
-    "Sean Richardson": "Peter & Sean",
+  // Co-managers vote as themselves but their franchise, not they, is what the
+  // SB3 manager info names. Portraits reuse the ones bb.json already gives them;
+  // Peter has none anywhere yet, so he keeps the shared franchise photo.
+  const CO_MANAGER_PORTRAITS = {
+    "Kevin Flaherty": "/assets/kev.jpg",
+    "Chris Cole": "/assets/chris.png",
+    "Sean Richardson": "/assets/sean.jpg",
+    "Peter Coluntino": "/assets/pete-and-richy.png",
   };
 
   function readManagerInfo() {
@@ -363,8 +364,7 @@ if (root) {
   }
 
   function portraitMarkup(ownerLabel, className) {
-    const avatar = avatarByOwnerName.get(ownerLabel)
-      || avatarByOwnerName.get(SHARED_PORTRAIT_SOURCE[ownerLabel]);
+    const avatar = avatarByOwnerName.get(ownerLabel) || CO_MANAGER_PORTRAITS[ownerLabel];
     if (!avatar) {
       return `<span class="${escapeHtml(className)} poll-avatar-fallback" aria-hidden="true">${escapeHtml(ownerLabel?.charAt(0) || "?")}</span>`;
     }
