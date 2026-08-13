@@ -27,6 +27,10 @@ site source.
   fourteenth-place votes, then permanent franchise ID.
 - Franchise IDs such as `sb3_franchise_01` are stable even when a team name or
   owner changes. Poll snapshots preserve the labels shown for that poll.
+- One voter is one person, not one franchise. Co-managed franchises have a voter
+  per manager and therefore submit more than one ballot. `teams.owner_label`
+  holds the combined public label ("Kevin & Chris"), independent of the voter
+  named in `teams.current_owner_voter_id`.
 
 The initial poll `sb3_2026_v1_demo` is explicitly marked `is_demo = true`. Its
 14 complete ballots are deterministic sample data, not real votes.
@@ -96,9 +100,8 @@ select
   'sb3_2026_preseason',
   t.id,
   t.display_name,
-  v.display_name
+  t.owner_label
 from poll_private.teams t
-join poll_private.voters v on v.id = t.current_owner_voter_id
 where t.league_slug = 'sb3' and t.active
 order by t.id;
 
@@ -107,7 +110,7 @@ commit;
 
 Week `0` denotes the preseason; positive values denote regular-season weeks.
 
-Confirm that the new poll has exactly 14 voters and 14 teams before opening it:
+Confirm that the new poll has exactly 16 voters and 14 teams before opening it:
 
 ```sql
 select
@@ -163,6 +166,10 @@ Update the permanent registry before creating the next poll. Preserve existing
 franchise IDs. Mark departed voters or franchises inactive instead of deleting
 history, and assign a new permanent voter ID when ownership changes. Snapshot
 queries above freeze the current labels for the new poll.
+
+To add a manager to a co-managed franchise, insert a voter for them and leave
+`teams.owner_label` alone. Do not point a second `teams.current_owner_voter_id`
+at the same franchise; that column names the primary owner only.
 
 ## Expected advisor notices
 

@@ -1176,6 +1176,11 @@
     .poll-result-row .poll-results-team {
       grid-area: team;
     }
+    /* Mobile has the vertical room to show full team names instead of truncating. */
+    .poll-result-row .poll-result-team-copy strong,
+    .poll-result-row .poll-result-team-copy small {
+      @apply overflow-visible whitespace-normal text-clip break-words;
+    }
     .poll-result-trend {
       grid-area: trend;
       @apply justify-end pr-1 text-xs;

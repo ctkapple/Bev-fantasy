@@ -40,6 +40,27 @@ Production verification passed for:
 Do not delete these three fake ballots or reset the poll. They are now the
 required previous-poll fixture for the next controlled fake poll.
 
+## Co-managed franchises (August 12, 2026)
+
+Kevin & Chris and Peter & Sean each shared one voting identity. Migration
+`20260812210500_split_ap_poll_co_manager_voters.sql` splits them into four
+voters: Kevin Flaherty, Chris Cole, Peter Coluntino, and Sean Richardson. SB3
+therefore has 16 eligible voters and 14 franchises.
+
+Decisions made with the split:
+
+- A franchise's public owner label moved to the new `poll_private.teams.owner_label`
+  column. Team cards still read "Kevin & Chris" and "Peter & Sean" no matter
+  which manager is recorded as `current_owner_voter_id`.
+- Only draft and open polls take the new roster. Published and closed polls keep
+  the combined voter snapshots their ballots were actually cast under.
+- The two new managers reuse their franchise portrait on the poll page through
+  `SHARED_PORTRAIT_SOURCE` in `src/scripts/ap-poll.js`. Remove those entries once
+  each manager has their own photo in the league manager info.
+- AP points are not normalized by ballot count, so a 16-ballot poll tops out at
+  224 points against 196 for the 14-ballot polls already in history. Ranks stay
+  comparable; raw AP-point totals in the history chart do not.
+
 ## Original roadmap
 
 ### V1 - Voting system

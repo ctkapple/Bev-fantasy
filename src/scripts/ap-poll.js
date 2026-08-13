@@ -78,6 +78,14 @@ if (root) {
     { id: "south", label: "The South" },
   ];
   const HISTORY_FALLBACK_COLORS = ["#f97316", "#38bdf8", "#a3e635", "#f472b6", "#facc15", "#c084fc"];
+  // Co-managers vote separately but borrow their franchise's portrait until each
+  // one has a photo of their own in the league manager info.
+  const SHARED_PORTRAIT_SOURCE = {
+    "Kevin Flaherty": "Kevin & Chris",
+    "Chris Cole": "Kevin & Chris",
+    "Peter Coluntino": "Peter & Sean",
+    "Sean Richardson": "Peter & Sean",
+  };
 
   function readManagerInfo() {
     const configNode = document.querySelector("#ap-poll-manager-info");
@@ -355,7 +363,8 @@ if (root) {
   }
 
   function portraitMarkup(ownerLabel, className) {
-    const avatar = avatarByOwnerName.get(ownerLabel);
+    const avatar = avatarByOwnerName.get(ownerLabel)
+      || avatarByOwnerName.get(SHARED_PORTRAIT_SOURCE[ownerLabel]);
     if (!avatar) {
       return `<span class="${escapeHtml(className)} poll-avatar-fallback" aria-hidden="true">${escapeHtml(ownerLabel?.charAt(0) || "?")}</span>`;
     }
@@ -660,8 +669,8 @@ if (root) {
 
     return `<section class="card poll-results-card" aria-labelledby="latest-published-results-title">
       <div class="poll-section-heading">
-        <div><p class="poll-step">Latest published results</p><h2 id="latest-published-results-title">AP Poll Top 7</h2></div>
-        <p>${escapeHtml(latestPoll.label)} &middot; ${Number(latestPoll.ballot_count) || 0} ballots</p>
+        <div><p class="poll-step">${escapeHtml(latestPoll.label)}</p><h2 id="latest-published-results-title">AP Poll Top 7</h2></div>
+        <p>${Number(latestPoll.ballot_count) || 0} ballots</p>
       </div>
       <div class="poll-result-column-labels" aria-hidden="true"><span>Rank</span><span>Team</span><span>Trend</span><span>AP points</span></div>
       ${results.length > 0 ? `<ol class="poll-result-list">${results.map(resultRowMarkup).join("")}</ol>` : '<p class="poll-results-empty">No aggregate results were returned.</p>'}
