@@ -1300,9 +1300,11 @@
 
   /* --- Earnings tab: "the exchange" -------------------------------------
      The league's money page, dressed as a trading desk. Orange stays the
-     exchange's chrome brand (frame, live dot, leader's line); ticker symbols
-     use the site's win-green so they read like a market ticker. Red is still
-     reserved for whether a manager is actually down on their buy-ins.
+     exchange's chrome brand (frame, live dot, eyebrows); every ticker symbol,
+     avatar ring and chart fill carries its manager's own color instead, so
+     identity reads at a glance. Green is money — the legend's amounts ramp
+     through it by standing — and red is still reserved for whether a manager
+     is actually down on their buy-ins.
      Numbers everywhere are tabular so columns line up. */
   .exchange {
     @apply space-y-5 pt-1;
@@ -1381,7 +1383,7 @@
     border-color: var(--line, var(--chip, rgb(var(--color-accent-500) / 0.5)));
   }
   .exch-tape-item img {
-    @apply w-7 h-7 rounded-full object-cover border;
+    @apply w-7 h-7 rounded-full object-cover border-2;
   }
   /* Ticker symbols carry the manager's own color — the same one the AP Poll
      gives them (see manager-colors.js) — so a symbol identifies a person at a
@@ -1425,7 +1427,7 @@
     color: var(--chip, rgb(var(--color-accent-400)));
   }
   .exch-stat-value--sym img {
-    @apply w-7 h-7 rounded-full object-cover border;
+    @apply w-7 h-7 rounded-full object-cover border-2;
   }
   .exch-stat-sub {
     @apply mt-1.5 text-[0.7rem] text-text-secondary;
@@ -1557,8 +1559,23 @@
   .exch-chart-card.is-isolating .exch-series.is-active .exch-end-label {
     opacity: 1;
   }
-  .exch-chart-card.is-isolating .exch-area {
-    opacity: 0.15;
+  /* Each manager's fill is drawn in their own color and stays invisible until
+     their line is hovered or their chip is pinned — sixteen translucent washes
+     at once would be mud, and one permanent fill under the leader said nothing
+     the thick stroke wasn't already saying. */
+  .exch-area {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease-out;
+  }
+  .exch-chart-card.is-isolating .exch-series.is-active .exch-area {
+    opacity: 1;
+  }
+  /* Same fill on a plain hover, so the chart still responds to a pointer with
+     JS disabled. Guarded on :not(.is-isolating) because once JS is running the
+     hover is already in the active set and this would fight it. */
+  .exch-chart-card:not(.is-isolating) .exch-series:hover .exch-area {
+    opacity: 1;
   }
 
   .exch-legend {
@@ -1570,7 +1587,7 @@
       hover:border-border-hover hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400;
   }
   .exch-legend-chip img {
-    @apply w-5 h-5 rounded-full object-cover border;
+    @apply w-5 h-5 rounded-full object-cover border-2;
   }
   /* The symbol carries the manager's own color on every chip, not just the
      top three — it's the same color as their line, which is the whole point of
@@ -1586,17 +1603,13 @@
     border-color: var(--line);
     color: var(--line);
   }
+  /* The amount is a green ramp by standing — deepest green at #1, pale mint at
+     last — so the rail reads as a money column top to bottom. --val is set per
+     chip at build time and re-applied by earnings.js whenever the All Leagues
+     toggle re-ranks everyone; see rampColor in lib/earnings-model.js. */
   .exch-legend-val {
-    @apply ml-0.5 font-semibold normal-case tracking-normal text-text-muted;
-  }
-  .exch-legend-chip.is-top .exch-legend-val,
-  .exch-legend-chip[aria-pressed="true"] .exch-legend-val {
-    color: color-mix(in srgb, var(--line) 65%, rgb(var(--color-text-muted)));
-  }
-  /* The $ reads as the exchange's win-green on every chip; the ticker
-     letters keep whatever color the chip state already gives them. */
-  .exch-legend-dollar {
-    @apply text-win;
+    @apply ml-0.5 font-semibold normal-case tracking-normal;
+    color: var(--val, rgb(var(--color-text-muted)));
   }
   /* Desktop rail: ranked richest-to-poorest top to bottom, bigger chips
      since there's no wrapping to economize for. Kept narrow so the curve
@@ -1650,7 +1663,7 @@
     @apply flex items-center gap-2 min-w-0 font-semibold whitespace-nowrap;
   }
   .exch-holder img {
-    @apply w-9 h-9 flex-shrink-0 rounded-full object-cover border cursor-pointer
+    @apply w-9 h-9 flex-shrink-0 rounded-full object-cover border-2 cursor-pointer
       transition-transform hover:scale-110;
   }
   .exch-spark-bar {
@@ -1671,7 +1684,7 @@
     @apply grid-cols-[1fr_auto] border-b border-border/60 py-2 last:border-b-0;
   }
   .exch-board-row img {
-    @apply w-7 h-7 rounded-full object-cover border cursor-pointer transition-transform hover:scale-110;
+    @apply w-7 h-7 rounded-full object-cover border-2 cursor-pointer transition-transform hover:scale-110;
   }
   .exch-board-bar {
     @apply block h-2 min-w-0 rounded-full bg-bg overflow-hidden;
@@ -1718,6 +1731,12 @@
      an animation rather than a re-render — see earnings.js. */
   .exch-viewbar {
     @apply flex flex-wrap items-center justify-between gap-x-6 gap-y-2;
+  }
+  /* The bar carries data-view-note itself, and earnings.js hides it with the
+     `hidden` attribute — which the display above would otherwise win against,
+     since both land in the same layer at the same specificity. */
+  .exch-viewbar[hidden] {
+    display: none;
   }
   .exch-viewbar-note {
     @apply text-xs text-text-muted;

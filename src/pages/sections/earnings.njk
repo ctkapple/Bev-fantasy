@@ -25,17 +25,14 @@ eleventyComputed:
    a pure animation: nothing is created or destroyed, it only moves. #}
 <div class="exchange" data-exchange data-view="league">
 
-  {# --- View toggle ------------------------------------------------------- #}
+  {# --- View note ---------------------------------------------------------
+     The toggle itself lives in the chart card's header; this is only the
+     one-line scope caption, and it's on the bar itself rather than a child
+     span so the whole bar leaves the flow in the combined view (which has no
+     caption of its own) instead of collapsing to an empty row. #}
   {% if view.hasAll %}
-  <div class="exch-viewbar">
-    <p class="exch-viewbar-note">
-      <span data-view-note="league">Money won in {{ league.name }}.</span>
-      <span data-view-note="all" hidden>Every league combined — co-owned franchises split evenly between their owners.</span>
-    </p>
-    <div class="exch-toggle" role="group" aria-label="Which leagues to count">
-      <button type="button" data-view-btn="league" aria-pressed="true">This League</button>
-      <button type="button" data-view-btn="all" aria-pressed="false">All Leagues</button>
-    </div>
+  <div class="exch-viewbar" data-view-note="league">
+    <p class="exch-viewbar-note">Money won in {{ league.name }}.</p>
   </div>
   {% endif %}
 
@@ -74,21 +71,18 @@ eleventyComputed:
         <p class="exch-eyebrow">Cumulative Performance</p>
         <h2 class="exch-title">Lifetime Equity Curve</h2>
       </div>
-      <p class="exch-section-note">Running total of every dollar won,
-        <span data-stat="firstYear">{{ market.years[0] }}</span>–<span data-stat="latestYear">{{ market.summary.latestYear }}</span>.</p>
+      {% if view.hasAll %}
+      <div class="exch-toggle" role="group" aria-label="Which leagues to count">
+        <button type="button" data-view-btn="league" aria-pressed="true">This League</button>
+        <button type="button" data-view-btn="all" aria-pressed="false">All Leagues</button>
+      </div>
+      {% endif %}
     </header>
 
     <div class="exch-chart-body">
       <div class="exch-chart-scroll">
         <svg class="exch-chart" viewBox="0 0 {{ market.chart.width }} {{ market.chart.height }}"
           role="img" aria-label="Cumulative lifetime winnings for every manager by season">
-          <defs>
-            <linearGradient id="exch-leader-fill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#fb923c" stop-opacity="0.28"></stop>
-              <stop offset="100%" stop-color="#fb923c" stop-opacity="0"></stop>
-            </linearGradient>
-          </defs>
-
           {% for t in view.grid or market.chart.yTicks %}
           <g class="exch-gridline {{ 'is-offview' if view.hasAll and not t.inLeague }}" data-grid="{{ t.value }}"
             data-y-league="{{ t.yLeague or t.y }}" data-y-all="{{ t.yAll or t.y }}"
@@ -105,21 +99,23 @@ eleventyComputed:
             x="{{ t.xLeague or t.x }}" y="{{ market.chart.baselineY + 28 }}" text-anchor="middle">{{ t.label }}</text>
           {% endfor %}
 
-          {# One area per manager who leads *either* view, so the fill can hand
-             off between them mid-animation instead of popping. #}
-          {% for s in market.chart.series %}
-          {% if s.rank == 1 or (view.hasAll and view.data.leader == s.ticker) %}
-          <path class="exch-area {{ 'is-lit' if s.rank == 1 }}" data-area="{{ s.ticker }}"
-            d="{{ s.areaD }}" fill="url(#exch-leader-fill)"></path>
-          {% endif %}
-          {% endfor %}
-
           {# Painted worst-to-best so the leaders land on top of the pack. #}
           {% for s in market.chart.series | reverse %}
           {# Rank still drives emphasis — stroke weight, dots and end label —
              now that color carries identity instead of standing. #}
           <g class="exch-series {{ 'is-top' if s.rank <= 3 }} {{ 'is-absent' if s.absent }}" data-ticker="{{ s.ticker }}"
             style="--line: {{ s.line }}; --chip: {{ s.color }}">
+            {# Every manager carries their own fill, transparent until they're
+               hovered or pinned — the gradient lives inside the group rather
+               than a shared <defs> because its stops are this manager's color,
+               and a stop can't read a CSS variable off the element that
+               references it. #}
+            <linearGradient id="exch-fill-{{ s.ticker }}" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="{{ s.line }}" stop-opacity="0.34"></stop>
+              <stop offset="100%" stop-color="{{ s.line }}" stop-opacity="0"></stop>
+            </linearGradient>
+            <path class="exch-area" data-area="{{ s.ticker }}" d="{{ s.areaD }}"
+              fill="url(#exch-fill-{{ s.ticker }})"></path>
             <path class="exch-line-hit" d="{{ s.d }}"></path>
             <path class="exch-line" d="{{ s.d }}"></path>
             {% for p in s.dots %}
@@ -136,17 +132,18 @@ eleventyComputed:
          wraps below like a normal legend. #}
       <div class="exch-legend" role="group" aria-label="Isolate a manager on the chart">
         {% for s in market.chart.series %}
+        {# --val is the rank ramp on the dollar amount; it has to be re-applied
+           by earnings.js when the toggle re-ranks everyone. #}
         <button type="button" class="exch-legend-chip {{ 'is-top' if s.rank <= 3 }} {{ 'is-absent' if s.absent }}" data-ticker="{{ s.ticker }}"
-          style="--line: {{ s.line }}; --chip: {{ s.color }}" aria-pressed="false"
-          title="{{ s.name }} — {{ s.totalText }}">
+          style="--line: {{ s.line }}; --chip: {{ s.color }}; --val: {{ s.valColor }}" aria-pressed="false"
+          title="{{ s.name }} — {{ s.totalText }}. Click to compare on the chart; Esc clears.">
           <img src="{{ s.avatar }}" alt="">
-          <span class="exch-legend-sym"><span class="exch-legend-dollar">$</span>{{ s.ticker }}</span>
+          <span class="exch-legend-sym">${{ s.ticker }}</span>
           <span class="exch-legend-val" data-field="totalRoundText">{{ s.totalRoundText }}</span>
         </button>
         {% endfor %}
       </div>
     </div>
-    <p class="exch-hint">Hover a line to preview it, or tap managers to compare as many runs as you like. Esc clears.</p>
   </section>
 
   {# --- Holdings blotter -------------------------------------------------- #}

@@ -136,12 +136,13 @@ if (exchange && island && card) {
   /* ---- reading the two views ---- */
 
   function readDom() {
-    const state = { series: {}, areas: {}, rows: {}, summary: {}, order: [], leader: null };
+    const state = { series: {}, rows: {}, summary: {}, order: [] };
 
     card.querySelectorAll(".exch-series").forEach((g) => {
       const label = g.querySelector(".exch-end-label");
       state.series[g.dataset.ticker] = {
         d: g.querySelector(".exch-line").getAttribute("d"),
+        area: g.querySelector(".exch-area").getAttribute("d"),
         dots: [...g.querySelectorAll(".exch-dot")].map((c) => ({
           x: parseFloat(c.getAttribute("cx")),
           y: parseFloat(c.getAttribute("cy")),
@@ -150,11 +151,6 @@ if (exchange && island && card) {
         end: { x: parseFloat(label.getAttribute("x")) - 10, y: parseFloat(label.getAttribute("y")) - 4 },
         hidden: g.classList.contains("is-absent"),
       };
-    });
-
-    card.querySelectorAll("[data-area]").forEach((path) => {
-      state.areas[path.dataset.area] = path.getAttribute("d");
-      if (path.classList.contains("is-lit")) state.leader = path.dataset.area;
     });
 
     const row = (ticker) => (state.rows[ticker] = state.rows[ticker] || {});
@@ -196,9 +192,9 @@ if (exchange && island && card) {
     });
 
     document.querySelectorAll(".exch-legend-chip").forEach((chip) => {
-      row(chip.dataset.ticker).chipValue = chip
-        .querySelector('[data-field="totalRoundText"]')
-        .textContent.trim();
+      const r = row(chip.dataset.ticker);
+      r.chipValue = chip.querySelector('[data-field="totalRoundText"]').textContent.trim();
+      r.valColor = chip.style.getPropertyValue("--val").trim();
     });
 
     document.querySelectorAll("[data-board]").forEach((board) => {
@@ -225,21 +221,19 @@ if (exchange && island && card) {
   function readIsland(data) {
     const state = {
       series: {},
-      areas: {},
       rows: {},
       summary: { ...data.summary, firstYear: data.years[0] },
-      leader: data.leader,
       order: [],
     };
 
     for (const [ticker, s] of Object.entries(data.series)) {
-      state.series[ticker] = { ...s, hidden: false };
-      state.areas[ticker] = areaFor(s, data.plot.baselineY);
+      state.series[ticker] = { ...s, area: areaFor(s, data.plot.baselineY), hidden: false };
     }
 
     for (const [ticker, r] of Object.entries(data.rows)) {
       state.rows[ticker] = {
         rank: r.rank,
+        valColor: r.valColor,
         hidden: false,
         totalText: r.totalText,
         totalValue: r.total,
@@ -284,6 +278,10 @@ if (exchange && island && card) {
       const d = lerpPath(a.d, b.d, t);
       g.querySelector(".exch-line").setAttribute("d", d);
       g.querySelector(".exch-line-hit").setAttribute("d", d);
+      // The fill is invisible unless this manager is lit, but it still has to
+      // travel with the line — otherwise hovering mid-animation shows a wash
+      // sitting under where the curve used to be.
+      g.querySelector(".exch-area").setAttribute("d", lerpPath(a.area, b.area, t));
 
       g.querySelectorAll(".exch-dot").forEach((dot, i) => {
         if (!a.dots[i] || !b.dots[i]) return;
@@ -304,16 +302,6 @@ if (exchange && island && card) {
       // A manager with no money in this league starts flattened onto the axis
       // (see mergeAbsent in the model) and fades up as their real curve grows.
       if (a.hidden) g.style.opacity = String(t);
-    });
-
-    card.querySelectorAll("[data-area]").forEach((path) => {
-      const ticker = path.dataset.area;
-      if (league.areas[ticker] && all.areas[ticker]) {
-        path.setAttribute("d", lerpPath(league.areas[ticker], all.areas[ticker], t));
-      }
-      const from = league.leader === ticker ? 1 : 0;
-      const to = all.leader === ticker ? 1 : 0;
-      path.style.opacity = String(lerp(from, to, t));
     });
 
     card.querySelectorAll("[data-grid]").forEach((g) => {
@@ -401,6 +389,10 @@ if (exchange && island && card) {
       chip.classList.toggle("is-top", r.rank <= 3);
       chip.querySelector('[data-field="totalRoundText"]').textContent = r.chipValue;
       chip.style.order = String(r.rank);
+      // The green ramp is by rank, and the combined view re-ranks everyone, so
+      // the color has to move with the chip or the rail would read as sorted
+      // by one thing and colored by another.
+      if (r.valColor) chip.style.setProperty("--val", r.valColor);
     });
 
     document.querySelectorAll("[data-board]").forEach((board) => {
