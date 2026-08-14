@@ -15,28 +15,46 @@ eleventyComputed:
 <p class="text-text-secondary text-sm">No completed seasons yet.</p>
 {% else %}
 
-{% set market = aggregate.managers | earningsMarket(league.earnings) %}
-{% set champ = aggregate.reigningChampionId %}
+{% set view = league | earningsView(leagues, leagueStats, people) %}
+{% set market = view.league %}
 
 {% if market %}
-<div class="exchange">
+{# Every row, chip, line and cell below is rendered for the union of managers
+   and years across *all* leagues, with the ones this league doesn't cover
+   marked `is-absent` / `is-offview`. That's what lets the All Leagues toggle be
+   a pure animation: nothing is created or destroyed, it only moves. #}
+<div class="exchange" data-exchange data-view="league">
+
+  {# --- View toggle ------------------------------------------------------- #}
+  {% if view.hasAll %}
+  <div class="exch-viewbar">
+    <p class="exch-viewbar-note">
+      <span data-view-note="league">Money won in {{ league.name }}.</span>
+      <span data-view-note="all" hidden>Every league combined — co-owned franchises split evenly between their owners.</span>
+    </p>
+    <div class="exch-toggle" role="group" aria-label="Which leagues to count">
+      <button type="button" data-view-btn="league" aria-pressed="true">This League</button>
+      <button type="button" data-view-btn="all" aria-pressed="false">All Leagues</button>
+    </div>
+  </div>
+  {% endif %}
 
   {# --- Ticker tape ------------------------------------------------------ #}
   {# The track holds two identical copies of the tape so the CSS marquee can
      translate a full 50% and loop with no visible seam. #}
   <section class="exch-tape" aria-label="Lifetime winnings ticker">
-    <div class="exch-tape-brand"><span class="exch-live-dot"></span>{{ league.slug | upper }}</div>
+    <div class="exch-tape-brand"><span class="exch-live-dot"></span><span data-tape-brand>{{ league.slug | upper }}</span></div>
     <div class="exch-tape-window">
       <div class="exch-tape-track">
         {% for copy in [1, 2] %}
         <div class="exch-tape-run" {% if copy == 2 %}aria-hidden="true"{% endif %}>
           {% for r in market.tape %}
-          <span class="exch-tape-item" data-ticker="{{ r.ticker }}">
-            <img src="{{ r.manager.avatar }}" alt="" loading="lazy">
+          <span class="exch-tape-item {{ 'is-absent' if r.absent }}" data-ticker="{{ r.ticker }}" style="--chip: {{ r.color }}">
+            <img src="{{ r.avatar }}" alt="" loading="lazy">
             <b>{{ r.symbol }}</b>
-            <span class="exch-tape-price">{{ r.totalText }}</span>
-            <span class="exch-tape-delta {{ 'is-up' if r.change > 0 else 'is-flat' }}">
-              {{ "▲" if r.change > 0 else "▬" }} {{ r.changeText }}
+            <span class="exch-tape-price" data-field="totalText">{{ r.totalText }}</span>
+            <span class="exch-tape-delta {{ 'is-up' if r.change > 0 else 'is-flat' }}" data-field="delta">
+              <i>{{ "▲" if r.change > 0 else "▬" }}</i> <span data-field="changeText">{{ r.changeText }}</span>
             </span>
           </span>
           {% endfor %}
@@ -50,25 +68,31 @@ eleventyComputed:
   <section class="exch-summary" aria-label="Market summary">
     <div class="exch-stat">
       <p class="exch-stat-label">Total Distributed</p>
-      <p class="exch-stat-value">{{ market.summary.distributedText }}</p>
-      <p class="exch-stat-sub">of {{ market.summary.potText }} collected · {{ market.summary.seasons }} seasons</p>
+      <p class="exch-stat-value" data-stat="distributedText">{{ market.summary.distributedText }}</p>
+      <p class="exch-stat-sub">of <span data-stat="potText">{{ market.summary.potText }}</span> collected ·
+        <span data-stat="seasons">{{ market.summary.seasons }}</span> seasons</p>
     </div>
     <div class="exch-stat">
-      <p class="exch-stat-label">{{ market.summary.latestYear }} Pot</p>
-      <p class="exch-stat-value">{{ market.summary.latestPotText }}</p>
-      <p class="exch-stat-sub">${{ market.buyIn }} buy-in per manager</p>
+      <p class="exch-stat-label"><span data-stat="latestYear">{{ market.summary.latestYear }}</span> Pot</p>
+      <p class="exch-stat-value" data-stat="latestPotText">{{ market.summary.latestPotText }}</p>
+      <p class="exch-stat-sub">
+        <span data-view-note="league">${{ market.buyIn }} buy-in per manager</span>
+        <span data-view-note="all" hidden>every league's buy-ins that season</span>
+      </p>
     </div>
     <div class="exch-stat">
       <p class="exch-stat-label">All-Time Leader</p>
       <p class="exch-stat-value exch-stat-value--sym">
-        <img src="{{ market.summary.leader.manager.avatar }}" alt="">{{ market.summary.leader.symbol }}
+        <img src="{{ market.summary.leader.avatar }}" alt="" data-stat-img="leaderAvatar"><span data-stat="leaderSymbol">{{ market.summary.leader.symbol }}</span>
       </p>
-      <p class="exch-stat-sub">{{ market.summary.leader.totalText }} · {{ market.summary.leader.name }}</p>
+      <p class="exch-stat-sub"><span data-stat="leaderTotalText">{{ market.summary.leader.totalText }}</span> ·
+        <span data-stat="leaderName">{{ market.summary.leader.name }}</span></p>
     </div>
     <div class="exch-stat">
       <p class="exch-stat-label">Biggest Single Year</p>
-      <p class="exch-stat-value">{{ market.summary.biggest.amountText }}</p>
-      <p class="exch-stat-sub">{{ market.summary.biggest.symbol }} in {{ market.summary.biggest.year }}</p>
+      <p class="exch-stat-value" data-stat="biggestAmountText">{{ market.summary.biggest.amountText }}</p>
+      <p class="exch-stat-sub"><span data-stat="biggestSymbol">{{ market.summary.biggest.symbol }}</span> in
+        <span data-stat="biggestYear">{{ market.summary.biggest.year }}</span></p>
     </div>
   </section>
 
@@ -79,7 +103,8 @@ eleventyComputed:
         <p class="exch-eyebrow">Cumulative Performance</p>
         <h2 class="exch-title">Lifetime Equity Curve</h2>
       </div>
-      <p class="exch-section-note">Running total of every dollar won, {{ market.years[0] }}–{{ market.summary.latestYear }}.</p>
+      <p class="exch-section-note">Running total of every dollar won,
+        <span data-stat="firstYear">{{ market.years[0] }}</span>–<span data-stat="latestYear">{{ market.summary.latestYear }}</span>.</p>
     </header>
 
     <div class="exch-chart-body">
@@ -93,32 +118,43 @@ eleventyComputed:
             </linearGradient>
           </defs>
 
-          {% for t in market.chart.yTicks %}
-          <g class="exch-gridline">
-            <line x1="{{ market.chart.plotLeft }}" x2="{{ market.chart.plotRight }}" y1="{{ t.y }}" y2="{{ t.y }}"></line>
-            <text x="{{ market.chart.plotLeft - 12 }}" y="{{ t.y + 4 }}" text-anchor="end">{{ t.label }}</text>
+          {% for t in view.grid or market.chart.yTicks %}
+          <g class="exch-gridline {{ 'is-offview' if view.hasAll and not t.inLeague }}" data-grid="{{ t.value }}"
+            data-y-league="{{ t.yLeague or t.y }}" data-y-all="{{ t.yAll or t.y }}"
+            data-in-league="{{ 1 if t.inLeague or not view.hasAll else 0 }}" data-in-all="{{ 1 if t.inAll or not view.hasAll else 0 }}">
+            <line x1="{{ market.chart.plotLeft }}" x2="{{ market.chart.plotRight }}" y1="{{ t.yLeague or t.y }}" y2="{{ t.yLeague or t.y }}"></line>
+            <text x="{{ market.chart.plotLeft - 12 }}" y="{{ (t.yLeague or t.y) + 4 }}" text-anchor="end">{{ t.label }}</text>
           </g>
           {% endfor %}
 
-          {% for t in market.chart.xTicks %}
-          <text class="exch-axis-x" x="{{ t.x }}" y="{{ market.chart.baselineY + 28 }}" text-anchor="middle">{{ t.label }}</text>
+          {% for t in view.xTicks or market.chart.xTicks %}
+          <text class="exch-axis-x {{ 'is-offview' if view.hasAll and not t.inLeague }}" data-xtick="{{ t.label }}"
+            data-x-league="{{ t.xLeague or t.x }}" data-x-all="{{ t.xAll or t.x }}"
+            data-in-league="{{ 1 if t.inLeague or not view.hasAll else 0 }}" data-in-all="{{ 1 if t.inAll or not view.hasAll else 0 }}"
+            x="{{ t.xLeague or t.x }}" y="{{ market.chart.baselineY + 28 }}" text-anchor="middle">{{ t.label }}</text>
           {% endfor %}
 
+          {# One area per manager who leads *either* view, so the fill can hand
+             off between them mid-animation instead of popping. #}
           {% for s in market.chart.series %}
-          {% if s.rank == 1 and s.areaD %}<path class="exch-area" d="{{ s.areaD }}" fill="url(#exch-leader-fill)"></path>{% endif %}
+          {% if s.rank == 1 or (view.hasAll and view.data.leader == s.ticker) %}
+          <path class="exch-area {{ 'is-lit' if s.rank == 1 }}" data-area="{{ s.ticker }}"
+            d="{{ s.areaD }}" fill="url(#exch-leader-fill)"></path>
+          {% endif %}
           {% endfor %}
 
           {# Painted worst-to-best so the leaders land on top of the pack. #}
           {% for s in market.chart.series | reverse %}
-          <g class="exch-series {{ 'is-top' if s.isTop }}" data-ticker="{{ s.ticker }}" style="--line: {{ s.color }}">
+          {# Rank still drives emphasis — stroke weight, dots and end label —
+             now that color carries identity instead of standing. #}
+          <g class="exch-series {{ 'is-top' if s.rank <= 3 }} {{ 'is-absent' if s.absent }}" data-ticker="{{ s.ticker }}"
+            style="--line: {{ s.line }}; --chip: {{ s.color }}">
             <path class="exch-line-hit" d="{{ s.d }}"></path>
             <path class="exch-line" d="{{ s.d }}"></path>
-            {% for p in s.points %}
-            <circle class="exch-dot" cx="{{ p.x }}" cy="{{ p.y }}" r="3.5"></circle>
+            {% for p in s.dots %}
+            <circle class="exch-dot" cx="{{ p.x }}" cy="{{ p.y }}" r="{{ p.r }}"></circle>
             {% endfor %}
-            {% if s.end %}
             <text class="exch-end-label" x="{{ s.end.x + 10 }}" y="{{ s.end.y + 4 }}">{{ s.symbol }}</text>
-            {% endif %}
           </g>
           {% endfor %}
         </svg>
@@ -129,12 +165,12 @@ eleventyComputed:
          wraps below like a normal legend. #}
       <div class="exch-legend" role="group" aria-label="Isolate a manager on the chart">
         {% for s in market.chart.series %}
-        <button type="button" class="exch-legend-chip {{ 'is-top' if s.isTop }}" data-ticker="{{ s.ticker }}"
-          style="--line: {{ s.color }}" aria-pressed="false"
+        <button type="button" class="exch-legend-chip {{ 'is-top' if s.rank <= 3 }} {{ 'is-absent' if s.absent }}" data-ticker="{{ s.ticker }}"
+          style="--line: {{ s.line }}; --chip: {{ s.color }}" aria-pressed="false"
           title="{{ s.name }} — {{ s.totalText }}">
           <img src="{{ s.avatar }}" alt="">
           <span class="exch-legend-sym"><span class="exch-legend-dollar">$</span>{{ s.ticker }}</span>
-          <span class="exch-legend-val">{{ s.totalRoundText }}</span>
+          <span class="exch-legend-val" data-field="totalRoundText">{{ s.totalRoundText }}</span>
         </button>
         {% endfor %}
       </div>
@@ -149,7 +185,7 @@ eleventyComputed:
         <p class="exch-eyebrow">Positions</p>
         <h2 class="exch-title">Holdings</h2>
       </div>
-      <p class="exch-section-note">Net is winnings less every ${{ market.buyIn }} buy-in paid. Click a column to sort.</p>
+      <p class="exch-section-note">Net is winnings less every buy-in paid. Click a column to sort.</p>
     </header>
     <div class="overflow-x-auto">
       <table class="stat-table exch-blotter">
@@ -157,8 +193,9 @@ eleventyComputed:
           <tr>
             <th class="px-3 py-3" data-sort="sym">Sym <span class="sort-arrow"></span></th>
             <th class="px-3 py-3" data-sort="manager">Manager <span class="sort-arrow"></span></th>
-            {% for y in market.years %}
-            <th class="px-3 py-3 text-right" data-sort="y{{ y }}">{{ y }} <span class="sort-arrow"></span></th>
+            {% for c in market.holdings[0].cells %}
+            <th class="px-3 py-3 text-right {{ 'is-offview' if not c.inView }}" data-year-col="{{ c.year }}"
+              data-sort="y{{ c.year }}">{{ c.year }} <span class="sort-arrow"></span></th>
             {% endfor %}
             <th class="px-3 py-3 text-center" data-sort="trend">Trend <span class="sort-arrow"></span></th>
             <th class="px-3 py-3 text-right" data-sort="total">Total <span class="sort-arrow"></span></th>
@@ -168,17 +205,18 @@ eleventyComputed:
         </thead>
         <tbody>
           {% for r in market.holdings %}
-          <tr data-ticker="{{ r.ticker }}">
-            <td class="px-3 py-2" data-value="{{ r.ticker }}"><span class="exch-sym">{{ r.symbol }}</span></td>
+          <tr data-ticker="{{ r.ticker }}" data-row-key="{{ r.ticker }}" class="{{ 'is-absent' if r.absent }}">
+            <td class="px-3 py-2" data-value="{{ r.ticker }}"><span class="exch-sym" style="--chip: {{ r.color }}">{{ r.symbol }}</span></td>
             <td class="px-3 py-2" data-value="{{ r.name }}">
               <span class="exch-holder">
-                <img src="{{ r.manager.avatar }}" alt="" loading="lazy"
+                <img src="{{ r.avatar }}" alt="" loading="lazy"
                   onclick="window.expandAvatar && window.expandAvatar(this.src)">
-                <span class="truncate">{{ r.name }}{% if r.manager.userId == champ %} <span title="Reigning Champ">{% icon "crown", "icon" %}</span>{% endif %}</span>
+                <span class="truncate">{{ r.name }}{% if r.ticker in view.champTickers %} <span title="Reigning Champ">{% icon "crown", "icon" %}</span>{% endif %}</span>
               </span>
             </td>
             {% for c in r.cells %}
-            <td class="px-3 py-2 text-right {{ 'exch-cell-empty' if not c.played }}" data-value="{{ c.value }}"
+            <td class="px-3 py-2 text-right {{ 'exch-cell-empty' if not c.played }} {{ 'is-offview' if not c.inView }}"
+              data-cell="{{ c.year }}" data-value="{{ c.value }}"
               {% if c.played and c.heat > 0.02 %}style="--heat: {{ c.heat }}"{% endif %}>{{ c.text }}</td>
             {% endfor %}
             <td class="px-3 py-2" data-value="{{ r.total }}">
@@ -189,10 +227,28 @@ eleventyComputed:
                 {% endfor %}
               </svg>
             </td>
-            <td class="px-3 py-2 text-right exch-total" data-value="{{ r.total }}">{{ r.totalText }}</td>
-            <td class="px-3 py-2 text-right font-semibold {{ 'win' if r.net >= 0 else 'loss' }}" data-value="{{ r.net }}">{{ r.netText }}</td>
-            <td class="px-3 py-2 text-right {{ 'win' if r.net >= 0 else 'loss' }}" data-value="{{ r.net / r.paid if r.paid else 0 }}">{{ r.roiText }}</td>
+            <td class="px-3 py-2 text-right exch-total" data-value="{{ r.total }}" data-field="totalText">{{ r.totalText }}</td>
+            <td class="px-3 py-2 text-right font-semibold {{ 'win' if r.net >= 0 else 'loss' }}" data-value="{{ r.net }}" data-field="netText">{{ r.netText }}</td>
+            <td class="px-3 py-2 text-right {{ 'win' if r.net >= 0 else 'loss' }}" data-value="{{ r.roi }}" data-field="roiText">{{ r.roiText }}</td>
           </tr>
+          {# Where a combined total actually came from. Hidden until the All
+             Leagues view is on — otherwise it would just restate the row. #}
+          {% if view.hasAll %}
+          <tr class="exch-breakdown" data-detail-for="{{ r.ticker }}" hidden>
+            <td></td>
+            <td class="px-3 py-1" colspan="{{ r.cells.length + 5 }}">
+              <span class="exch-breakdown-list">
+                {% for b in view.breakdown[r.ticker] %}
+                <span class="exch-breakdown-item">
+                  <b>{{ b.label }}</b>
+                  <span>{{ b.totalText }}</span>
+                  <small>{{ b.seasons }} season{{ "s" if b.seasons != 1 }}{% if b.share < 1 %}, {{ (b.share * 100) | round }}% share{% endif %} · {{ b.netText }} net</small>
+                </span>
+                {% endfor %}
+              </span>
+            </td>
+          </tr>
+          {% endif %}
           {% endfor %}
         </tbody>
       </table>
@@ -203,29 +259,32 @@ eleventyComputed:
   {# --- Secondary markets -------------------------------------------------- #}
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
     {% for board in [
-      { label: "Secondary Market", title: "Weekly Props", unit: "won", rows: market.props, key: "props" },
-      { label: "Secondary Market", title: "Weekly High Scores", unit: "wks", rows: market.highs, key: "highs" }
+      { title: league.earnings.propsLabel or "Weekly Props", unit: "won", rows: market.props, key: "props", show: market.hasProps },
+      { title: "Weekly High Scores", unit: "wks", rows: market.highs, key: "highs", show: market.hasHighs }
     ] %}
-    <section class="card exch-board-card">
+    {% if board.show or view.hasAll %}
+    <section class="card exch-board-card {{ 'is-offview' if not board.show }}" data-board="{{ board.key }}">
       <header class="exch-section-head">
         <div>
-          <p class="exch-eyebrow">{{ board.label }}</p>
+          <p class="exch-eyebrow">Secondary Market</p>
           <h2 class="exch-title">{{ board.title }}</h2>
         </div>
       </header>
       <div class="exch-board">
         {% for r in board.rows %}
-        <div class="exch-board-row">
-          <img src="{{ r.manager.avatar }}" alt="" loading="lazy"
+        {% set amount = r.props if board.key == "props" else r.highs %}
+        <div class="exch-board-row {{ 'is-absent' if amount == 0 }}" data-ticker="{{ r.ticker }}">
+          <img src="{{ r.avatar }}" alt="" loading="lazy"
             onclick="window.expandAvatar && window.expandAvatar(this.src)">
-          <span class="exch-sym">{{ r.symbol }}</span>
+          <span class="exch-sym" style="--chip: {{ r.color }}">{{ r.symbol }}</span>
           <span class="exch-board-bar"><i style="width: {{ r.pct }}%"></i></span>
-          <span class="exch-board-value">{{ r.props if board.key == "props" else r.highs }}
+          <span class="exch-board-value"><span data-field="amount">{{ amount }}</span>
             <small>{{ board.unit }}</small></span>
         </div>
         {% endfor %}
       </div>
     </section>
+    {% endif %}
     {% endfor %}
   </div>
 
@@ -237,21 +296,23 @@ eleventyComputed:
         <p class="exch-eyebrow">Prospectus</p>
         <h2 class="exch-title">Payout Structure</h2>
       </div>
-      <p class="exch-section-note">Where each season's pot goes.</p>
+      <p class="exch-section-note">Where each season's {{ league.name }} pot goes.</p>
     </header>
     <dl class="exch-payouts">
       {% for item in [
-        { k: "Buy-in", v: league.earnings.buyIn, note: "per manager" },
+        { k: "Buy-in", v: league.earnings.buyIn, note: "per manager, per season" },
         { k: "Champion", v: league.earnings.payoutStructure.champion },
         { k: "Runner-Up", v: league.earnings.payoutStructure.runnerUp },
         { k: "3rd Place", v: league.earnings.payoutStructure.thirdPlace },
         { k: "Weekly High Score", v: league.earnings.payoutStructure.weeklyHighScore, note: "per week" },
-        { k: "Weekly Prop", v: league.earnings.payoutStructure.weeklyProp, note: "per prop" }
+        { k: (league.earnings.propsLabel or "Weekly Props") | replace("Props", "Prop"), v: league.earnings.payoutStructure.weeklyProp, note: "per prop" }
       ] %}
+      {% if item.v %}
       <div class="exch-payout">
         <dt>{{ item.k }}{% if item.note %} <small>{{ item.note }}</small>{% endif %}</dt>
-        <dd>${{ item.v }}</dd>
+        <dd>{% if item.v is number %}${{ item.v }}{% else %}{{ item.v }}{% endif %}</dd>
       </div>
+      {% endif %}
       {% endfor %}
     </dl>
     {% if league.earnings.note %}
@@ -261,10 +322,13 @@ eleventyComputed:
   {% endif %}
 </div>
 
+{% if view.hasAll %}
+<script type="application/json" data-earnings-all>{{ view.data | dump | safe }}</script>
+{% endif %}
 <script type="module" src="/assets/js/earnings.js"></script>
 
 {% else %}
-{# Leagues without a hand-entered ledger (bb) get the same exchange chrome at a
+{# Leagues without a hand-entered ledger get the same exchange chrome at a
    smaller scale: championship payouts only, no per-year history to plot. #}
 <div class="exchange">
   <section class="card exch-blotter-card max-w-3xl mx-auto">
@@ -288,33 +352,6 @@ eleventyComputed:
     <p class="text-sm text-text-secondary">{{ league.earnings.note or "Earnings data hasn't been entered for this league yet." }}</p>
     {% endif %}
   </section>
-
-  {% if league.earnings.payoutStructure %}
-  <section class="card exch-prospectus max-w-3xl mx-auto">
-    <header class="exch-section-head">
-      <div>
-        <p class="exch-eyebrow">Prospectus</p>
-        <h2 class="exch-title">Payout Structure</h2>
-      </div>
-    </header>
-    <dl class="exch-payouts">
-      {% for item in [
-        { k: "Buy-in", v: league.earnings.buyIn },
-        { k: "Champion", v: league.earnings.payoutStructure.champion },
-        { k: "Runner-Up", v: league.earnings.payoutStructure.runnerUp },
-        { k: "3rd Place", v: league.earnings.payoutStructure.thirdPlace },
-        { k: "Weekly High Score", v: league.earnings.payoutStructure.weeklyHighScore },
-        { k: "Weekly Prop", v: league.earnings.payoutStructure.weeklyProp }
-      ] %}
-      <div class="exch-payout">
-        <dt>{{ item.k }}</dt>
-        <dd>${{ item.v }}</dd>
-      </div>
-      {% endfor %}
-    </dl>
-    {% if league.earnings.note %}<p class="exch-disclosure"><span>Disclosure</span>{{ league.earnings.note }}</p>{% endif %}
-  </section>
-  {% endif %}
 </div>
 {% endif %}
 {% endif %}

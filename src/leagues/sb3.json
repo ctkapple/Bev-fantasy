@@ -34,7 +34,8 @@
     { "id": "records", "label": "Records", "template": "records" },
     { "id": "legacies", "label": "Legends", "template": "legends" },
     { "id": "trades", "label": "Trades", "template": "trades" },
-    { "id": "faab", "label": "FAAB", "template": "faab" }
+    { "id": "faab", "label": "FAAB", "template": "faab" },
+    { "id": "earnings", "label": "Earnings", "template": "earnings" }
   ],
   "managerInfoMap": {
     "kpflats": { "name": "Kevin & Chris", "avatar": "/assets/kev-and-chris.png" },
@@ -55,5 +56,26 @@
     "kmore531196": { "name": "Kevin Morency", "avatar": "/assets/kevm.png" }
   },
   "punishmentGalleries": {},
-  "earnings": { "note": "This league has no Earnings tab in the original site.", "payoutsByYear": {} }
+  "earnings": {
+    "note": "2025 collected $1,400 and paid out $1,380 — one dynasty prop went unwon, and that $20 rolls forward into next year's Oracle prop. Peter & Sean finished 3rd in the standings but were the playoff runner-up, which is what the $200 pays. Tied props split the $20, which is why some prop counts land on a half.",
+    "buyIn": 100,
+    "propsLabel": "Dynasty Props",
+    "payoutStructure": { "champion": 850, "runnerUp": 200, "thirdPlace": 50, "weeklyProp": 20 },
+    "ledger": {
+      "Kevin Morency": { "byYear": { "2025": 870 }, "props": 1 },
+      "Peter & Sean": { "byYear": { "2025": 260 }, "props": 3 },
+      "Brian Harty": { "byYear": { "2025": 80 }, "props": 1.5 },
+      "Adam Ellis": { "byYear": { "2025": 60 }, "props": 3 },
+      "Will Dooling": { "byYear": { "2025": 30 }, "props": 1.5 },
+      "Johnny Jones": { "byYear": { "2025": 30 }, "props": 1.5 },
+      "Andrew Johnstone": { "byYear": { "2025": 20 }, "props": 1 },
+      "Matt Pitman": { "byYear": { "2025": 20 }, "props": 1 },
+      "Kevin & Chris": { "byYear": { "2025": 10 }, "props": 0.5 },
+      "Matt Manzo": { "byYear": { "2025": 0 }, "props": 0 },
+      "Malcolm Zeroka": { "byYear": { "2025": 0 }, "props": 0 },
+      "Connor Cademartori": { "byYear": { "2025": 0 }, "props": 0 },
+      "Patrick Gavin": { "byYear": { "2025": 0 }, "props": 0 },
+      "Sam Abate": { "byYear": { "2025": 0 }, "props": 0 }
+    }
+  }
 }

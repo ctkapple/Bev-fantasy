@@ -15,6 +15,7 @@
 import { readdirSync, readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { PEOPLE } from "../lib/people.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
@@ -59,6 +60,50 @@ for (const league of configs) {
     if (!existsSync(path.join(siteDir, ref))) {
       errors.push(`Missing asset: "${league.slug}" references ${ref} but no such file exists in _site${ref}.`);
     }
+  }
+}
+
+// --- 2b. Every ledger entry must resolve to a person -------------------------
+// The Earnings tab sums money across leagues by joining each hand-entered
+// ledger to lib/people.js. A name that doesn't resolve isn't an error at build
+// time - that manager silently vanishes from the chart - and a co-owned
+// franchise whose shares don't total 1 silently mints or destroys money. Both
+// are cheap to check and impossible to spot by eye on a 16-line chart.
+{
+  const shareTotals = {};
+  for (const league of configs) {
+    const ledger = league.earnings?.ledger;
+    if (!ledger) continue;
+
+    const claimed = new Map();
+    for (const person of Object.values(PEOPLE)) {
+      const identity = person.identities?.[league.slug];
+      if (!identity) continue;
+      const name = typeof identity === "string" ? identity : identity.name;
+      const share = typeof identity === "string" ? 1 : identity.share ?? 1;
+      claimed.set(name, (claimed.get(name) || 0) + share);
+      if (!(name in ledger)) {
+        errors.push(
+          `people.js maps "${person.name}" to "${name}" in "${league.slug}", but that league's ledger has no such entry.`
+        );
+      }
+    }
+
+    for (const name of Object.keys(ledger)) {
+      if (!claimed.has(name)) {
+        errors.push(
+          `"${league.slug}" ledger entry "${name}" matches nobody in lib/people.js, so their money would be dropped from the Earnings chart.`
+        );
+      }
+    }
+    for (const [name, total] of claimed) {
+      if (Math.abs(total - 1) > 1e-9) {
+        shareTotals[`${league.slug}:${name}`] = total;
+      }
+    }
+  }
+  for (const [key, total] of Object.entries(shareTotals)) {
+    errors.push(`Ownership shares for "${key}" sum to ${total}, not 1 — combined earnings would be wrong.`);
   }
 }
 

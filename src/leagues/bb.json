@@ -33,7 +33,24 @@
   },
   "punishmentGalleries": {},
   "earnings": {
-    "note": "Championship-count-based payout: each manager's total = sum of payoutsByYear[y] for every y in their championshipYears.",
-    "payoutsByYear": { "2022": 120, "2023": 110, "2024": 120 }
+    "note": "Winner takes the whole pot: $10 a head, so the champion's check is exactly the number of managers who paid in that year. 12 in 2022 and 2024 ($120), 11 in 2023 ($110), 14 in 2025 ($140). Nothing goes to the runner-up, and there are no weekly pools.",
+    "buyIn": 10,
+    "payoutStructure": { "champion": "the full pot" },
+    "ledger": {
+      "Malcolm Zeroka": { "byYear": { "2022": 120, "2023": 0, "2024": 0, "2025": 0 } },
+      "Andrew Johnstone": { "byYear": { "2022": 0, "2023": 110, "2024": 0, "2025": 0 } },
+      "Kevin Flaherty": { "byYear": { "2022": 0, "2023": 0, "2024": 120, "2025": 0 } },
+      "Patrick Gavin": { "byYear": { "2022": 0, "2023": 0, "2024": 0, "2025": 140 } },
+      "Will Dooling": { "byYear": { "2022": 0, "2023": 0, "2024": 0, "2025": 0 } },
+      "Brian Harty": { "byYear": { "2022": 0, "2023": 0, "2024": 0, "2025": 0 } },
+      "Matt Pitman": { "byYear": { "2022": 0, "2023": 0, "2024": 0, "2025": 0 } },
+      "Matt Manzo": { "byYear": { "2022": 0, "2023": 0, "2024": 0, "2025": 0 } },
+      "Connor Cademartori": { "byYear": { "2022": 0, "2023": 0, "2024": 0, "2025": 0 } },
+      "Johnny Jones": { "byYear": { "2022": 0, "2023": 0, "2024": 0, "2025": 0 } },
+      "Adam Ellis": { "byYear": { "2022": 0, "2023": 0, "2024": 0, "2025": 0 } },
+      "Sean Richardson": { "byYear": { "2022": 0, "2024": 0, "2025": 0 } },
+      "Sam Abate": { "byYear": { "2025": 0 } },
+      "Peter Coluntino": { "byYear": { "2025": 0 } }
+    }
   }
 }

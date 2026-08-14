@@ -1,4 +1,5 @@
 import { ICON_CROWN } from "./icons.js";
+import { FRANCHISE_COLORS } from "./manager-colors.js";
 
 const root = document.querySelector("#ap-poll-root");
 
@@ -43,22 +44,10 @@ if (root) {
   const POINTER_MAX_SCROLL_SPEED = 12;
   const SNAPSHOT_STALE_MS = 72 * 60 * 60 * 1000;
   const REIGNING_CHAMPION_OWNER = "Kevin Morency";
-  const HISTORY_COLOR_BY_OWNER = {
-    "Will Dooling": "#a855f7",
-    "Andrew Johnstone": "#14b8a6",
-    "Matt Manzo": "#2563eb",
-    "Kevin & Chris": "#f8fafc",
-    "Patrick Gavin": "#ec4899",
-    "Matt Pitman": "#991b1b",
-    "Johnny Jones": "#c2410c",
-    "Malcolm Zeroka": "#f87171",
-    "Adam Ellis": "#38bdf8",
-    "Brian Harty": "#a78bfa",
-    "Connor Cademartori": "#16a34a",
-    "Peter & Sean": "#eab308",
-    "Sam Abate": "#166534",
-    "Kevin Morency": "#f472b6",
-  };
+  // Shared with the Earnings exchange so a manager is the same color sitewide;
+  // see manager-colors.js for why the poll keys on franchise and earnings on
+  // person.
+  const HISTORY_COLOR_BY_OWNER = FRANCHISE_COLORS;
   const HISTORY_DIVISION_BY_OWNER = {
     "Andrew Johnstone": "north",
     "Kevin & Chris": "north",

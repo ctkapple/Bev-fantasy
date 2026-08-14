@@ -1325,6 +1325,7 @@
   }
   .exch-sym {
     @apply inline-block font-mono text-xs font-bold tracking-wider text-win;
+    color: var(--chip, rgb(var(--color-win)));
   }
   .exch-total {
     @apply font-semibold text-text-primary;
@@ -1373,8 +1374,12 @@
   .exch-tape-item img {
     @apply w-7 h-7 rounded-full object-cover;
   }
+  /* Ticker symbols carry the manager's own color — the same one the AP Poll
+     gives them (see manager-colors.js) — so a symbol identifies a person at a
+     glance instead of every symbol reading as generic ticker-green. */
   .exch-tape-item b {
-    @apply font-mono text-xs font-bold tracking-wider text-win;
+    @apply font-mono text-xs font-bold tracking-wider;
+    color: var(--chip);
   }
   .exch-tape-price {
     @apply font-semibold;
@@ -1685,6 +1690,63 @@
   }
   .exch-disclosure span {
     @apply mr-2 font-bold uppercase tracking-[0.14em] text-text-secondary;
+  }
+
+  /* --- This League / All Leagues toggle ----------------------------------
+     Every manager, year and board row across all three leagues is rendered
+     once, up front; the ones this league doesn't cover carry `is-absent` (a
+     person with no money here) or `is-offview` (a season this league didn't
+     play). Both are display:none, so flipping the view is a class change and
+     an animation rather than a re-render — see earnings.js. */
+  .exch-viewbar {
+    @apply flex flex-wrap items-center justify-between gap-x-6 gap-y-2;
+  }
+  .exch-viewbar-note {
+    @apply text-xs text-text-muted;
+  }
+  .exch-toggle {
+    @apply inline-flex flex-none rounded-lg border border-border bg-bg/50 p-0.5;
+  }
+  .exch-toggle button {
+    @apply rounded-[0.4rem] px-3 py-1.5 text-xs font-semibold text-text-muted transition-colors duration-150
+      hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400;
+  }
+  .exch-toggle button[aria-pressed="true"] {
+    @apply bg-accent-500/15 text-accent-400;
+    box-shadow: inset 0 0 0 1px rgb(var(--color-accent-500) / 0.35);
+  }
+
+  .exchange .is-absent,
+  .exchange .is-offview,
+  .exch-board-card.is-offview {
+    display: none;
+  }
+  /* The chart is the exception: an absent manager's line is present but
+     flattened onto the axis, so it has to stay in the render tree for the
+     toggle to grow it out of nothing. */
+  .exch-series.is-absent {
+    display: revert;
+    opacity: 0;
+  }
+
+  /* Where a combined total came from, league by league. */
+  .exch-breakdown td {
+    @apply border-t-0 pt-0;
+  }
+  .exch-breakdown-list {
+    @apply flex flex-wrap gap-x-5 gap-y-1 pl-1 text-[0.68rem] text-text-muted;
+  }
+  .exch-breakdown-item {
+    @apply inline-flex items-baseline gap-1.5;
+  }
+  .exch-breakdown-item b {
+    @apply font-semibold text-text-secondary;
+  }
+  .exch-breakdown-item span {
+    @apply font-semibold text-text-primary;
+  }
+  .exch-breakdown-item small {
+    @apply text-text-muted;
   }
 
   @media (max-width: 639px) {

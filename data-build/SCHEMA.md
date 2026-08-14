@@ -57,18 +57,41 @@ This is just an index: which UI tab reads which top-level field.
 | FAAB | `faab.njk` | `SeasonData[].faabBids` across `historical.json` |
 | Toilet Bowl (jrwll only) | `toilet-bowl.njk` | `SeasonData[].toiletBowl` + league config `toiletBowlLedger`/`punishmentGalleries` (hand-curated, not from Sleeper) |
 | Draft Odds (sb3 only) | `draft-odds.njk` | `SeasonData[].rosterSnapshots` (most recent season) |
-| Earnings | `earnings.njk` | League config `earnings` object (100% hand-curated $ figures, not derivable from Sleeper — see porting note #6 in season-processor.mjs) |
+| Earnings | `earnings.njk` | League config `earnings` object (100% hand-curated $ figures, not derivable from Sleeper — see porting note #6 in season-processor.mjs) joined to `lib/people.js` by `lib/earnings-model.js`; seasons-played (and therefore cost basis) still comes from `AggregateData.managers[].yearlyStandings` |
 | Rules (jrwll only) | `rules.njk` | League config `rulesContent` (static text) |
 | Keeper Assistant (jrwll only) | `keeper-assistant.njk` | `drafts.json` (build-time, per-season draft picks + ADP) + live `SeasonData.rosterSnapshots`/`.playerInfoLookup` (client-time) + league config `keeperOverrides`, run through `src/scripts/keeper-engine.mjs` |
 | AP Poll Team Snapshot (sb3 only) | `poll.njk` / `ap-poll.js` | `poll-snapshot.json` (build-time top-five half-PPR projections keyed by permanent poll team id) |
 
-## Known gaps / TODOs left for the commissioner to fill in
+## The `earnings` config contract
 
-- `src/leagues/jrwll.json` `.earnings` — yearly payout breakdown, prop-bet
-  winners, and weekly-high-score winners were hand-entered per year in the
-  original site and were not ported 1:1 (see the `"note"` field in the config).
-- `.earnings.payoutStructure` reflects the rules text; actual historical
-  `payoutsByYear` / `propWinners` / `highScoreWinners` need populating.
+Each league that pays out money carries an `earnings` object:
+
+```jsonc
+{
+  "buyIn": 100,                  // per manager, per season — drives cost basis
+  "propsLabel": "Dynasty Props", // optional; defaults to "Weekly Props"
+  "payoutStructure": { "champion": 850, "runnerUp": 200, "thirdPlace": 50,
+                       "weeklyHighScore": 10, "weeklyProp": 15 },
+  "note": "…",                   // rendered as the Disclosure line
+  "ledger": {                    // keyed by *this league's* name for the entity
+    "Kevin & Chris": { "byYear": { "2025": 10 }, "props": 0.5, "highs": 0 }
+  }
+}
+```
+
+Any key in `payoutStructure` may be omitted (SB3 has no weekly high score) and
+its value may be a string when it isn't a fixed figure (BestBall's champion
+takes `"the full pot"`). A league with no `ledger` falls back to the older
+`payoutsByYear` + `championshipEarnings` layout.
+
+Ledger keys are joined to people by `lib/people.js`, which is what makes the
+All Leagues toggle possible: SB3 pays *franchises* (two of them co-owned) while
+JRWLL and BestBall pay *people*, so each person declares their name in each
+league and, for a co-owned team, their `share` of it. `validate-build.js` fails
+the build if a ledger name resolves to nobody or a franchise's shares don't sum
+to 1 — both are silent money bugs otherwise.
+
+## Known gaps / TODOs left for the commissioner to fill in
 - `mergeAggregates()` has one documented precision limitation for the Legends
   tab when merging a live season (see the comment block atop `merge.js`) —
   self-corrects on the next full rebuild.
