@@ -129,7 +129,8 @@ eleventyComputed:
         style="--line: {{ s.color }}" aria-pressed="false"
         title="{{ s.name }} — {{ s.totalText }}">
         <img src="{{ s.avatar }}" alt="">
-        <span>{{ s.ticker }}</span>
+        <span class="exch-legend-sym">{{ s.ticker }}</span>
+        <span class="exch-legend-val">{{ s.totalRoundText }}</span>
       </button>
       {% endfor %}
     </div>

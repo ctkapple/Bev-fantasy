@@ -1507,6 +1507,13 @@
     border-color: var(--line);
     color: var(--line);
   }
+  .exch-legend-val {
+    @apply ml-0.5 font-semibold normal-case tracking-normal text-text-muted;
+  }
+  .exch-legend-chip.is-top .exch-legend-val,
+  .exch-legend-chip[aria-pressed="true"] .exch-legend-val {
+    color: color-mix(in srgb, var(--line) 65%, rgb(var(--color-text-muted)));
+  }
 
   /* Holdings blotter. */
   .exch-blotter tbody tr {

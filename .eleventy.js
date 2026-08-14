@@ -98,13 +98,68 @@ export default function (eleventyConfig) {
 
   // --- Earnings tab ("the exchange") ---------------------------------------
   // The three highlight colors the equity curve gives its top three earners.
-  // Everyone else draws in DIM so the leaders stay readable through twelve
-  // overlapping lines.
+  // Everyone else draws dim so the leaders stay readable through twelve
+  // overlapping lines - but a single flat dim color made all nine of them
+  // indistinguishable from each other, so DIM_RAMP fades light-to-dark by
+  // rank instead of flattening them to one gray.
   const EARNINGS_COLORS = ["#fb923c", "#fbbf24", "#fde68a"];
-  const EARNINGS_DIM = "#52525b";
+  const DIM_LIGHT = [161, 161, 170]; // zinc-400
+  const DIM_DARK = [63, 63, 70]; // zinc-700
+  function dimColor(index, count) {
+    const t = count > 1 ? index / (count - 1) : 0;
+    const mix = DIM_LIGHT.map((c, i) => Math.round(c + (DIM_DARK[i] - c) * t));
+    return `rgb(${mix.join(",")})`;
+  }
 
   const money = (n) =>
     "$" + Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const moneyRound = (n) => "$" + Math.round(Number(n)).toLocaleString("en-US");
+
+  // Cumulative winnings only ever go up (a $0 year adds nothing, ledger
+  // entries are never negative), so the curve connecting them must never
+  // imply a dip. Monotone cubic Hermite interpolation (Fritsch-Carlson)
+  // guarantees that: unlike a Catmull-Rom spline it can't overshoot past a
+  // sharp jump and bow below the flat run that preceded it.
+  function monotonePath(points) {
+    const n = points.length;
+    if (n === 0) return "";
+    if (n === 1) return `M${points[0].x} ${points[0].y}`;
+    const xs = points.map((p) => p.x);
+    const ys = points.map((p) => p.y);
+    const dx = [];
+    const slope = [];
+    for (let i = 0; i < n - 1; i++) {
+      dx.push(xs[i + 1] - xs[i]);
+      slope.push((ys[i + 1] - ys[i]) / dx[i]);
+    }
+    const m = new Array(n);
+    m[0] = slope[0];
+    m[n - 1] = slope[n - 2];
+    for (let i = 1; i < n - 1; i++) {
+      const same = slope[i - 1] !== 0 && slope[i] !== 0 && (slope[i - 1] < 0) === (slope[i] < 0);
+      m[i] = same ? (slope[i - 1] + slope[i]) / 2 : 0;
+    }
+    for (let i = 0; i < n - 1; i++) {
+      if (slope[i] === 0) continue; // m[i] and m[i + 1] are already 0 here by construction
+      const a = m[i] / slope[i];
+      const b = m[i + 1] / slope[i];
+      const h = Math.hypot(a, b);
+      if (h > 3) {
+        const tau = 3 / h;
+        m[i] = tau * a * slope[i];
+        m[i + 1] = tau * b * slope[i];
+      }
+    }
+    let d = `M${+xs[0].toFixed(2)} ${+ys[0].toFixed(2)}`;
+    for (let i = 0; i < n - 1; i++) {
+      const x1 = +(xs[i] + dx[i] / 3).toFixed(2);
+      const y1 = +(ys[i] + (m[i] * dx[i]) / 3).toFixed(2);
+      const x2 = +(xs[i + 1] - dx[i] / 3).toFixed(2);
+      const y2 = +(ys[i + 1] - (m[i + 1] * dx[i]) / 3).toFixed(2);
+      d += ` C${x1} ${y1} ${x2} ${y2} ${+xs[i + 1].toFixed(2)} ${+ys[i + 1].toFixed(2)}`;
+    }
+    return d;
+  }
 
   // A manager's ticker symbol: the first four letters of their surname, e.g.
   // "Malcolm Zeroka" -> ZERO. Collisions fall back to three surname letters
@@ -251,11 +306,12 @@ export default function (eleventyConfig) {
     const xFor = (i) => (years.length === 1 ? PAD.l + plotW / 2 : PAD.l + (plotW * i) / (years.length - 1));
     const yFor = (v) => PAD.t + plotH - (v / maxY) * plotH;
 
+    const dimCount = Math.max(1, lifetime.length - EARNINGS_COLORS.length);
     const series = lifetime.map((r, rank) => {
       const points = r.cumulative
         .map((v, i) => (v === null ? null : { x: +xFor(i).toFixed(2), y: +yFor(v).toFixed(2), value: v, year: years[i] }))
         .filter(Boolean);
-      const d = points.map((p, i) => `${i ? "L" : "M"}${p.x} ${p.y}`).join(" ");
+      const d = monotonePath(points);
       const first = points[0];
       const last = points[points.length - 1];
       return {
@@ -265,12 +321,13 @@ export default function (eleventyConfig) {
         userId: r.manager.userId,
         rank: rank + 1,
         isTop: rank < EARNINGS_COLORS.length,
-        color: EARNINGS_COLORS[rank] || EARNINGS_DIM,
+        color: EARNINGS_COLORS[rank] || dimColor(rank - EARNINGS_COLORS.length, dimCount),
         d,
         areaD: first && last ? `${d} L${last.x} ${yFor(0)} L${first.x} ${yFor(0)} Z` : "",
         points,
         end: last,
         totalText: r.totalText,
+        totalRoundText: moneyRound(r.total),
       };
     });
 
