@@ -82,57 +82,62 @@ eleventyComputed:
       <p class="exch-section-note">Running total of every dollar won, {{ market.years[0] }}–{{ market.summary.latestYear }}.</p>
     </header>
 
-    <div class="exch-chart-scroll">
-      <svg class="exch-chart" viewBox="0 0 {{ market.chart.width }} {{ market.chart.height }}"
-        role="img" aria-label="Cumulative lifetime winnings for every manager by season">
-        <defs>
-          <linearGradient id="exch-leader-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#fb923c" stop-opacity="0.28"></stop>
-            <stop offset="100%" stop-color="#fb923c" stop-opacity="0"></stop>
-          </linearGradient>
-        </defs>
+    <div class="exch-chart-body">
+      <div class="exch-chart-scroll">
+        <svg class="exch-chart" viewBox="0 0 {{ market.chart.width }} {{ market.chart.height }}"
+          role="img" aria-label="Cumulative lifetime winnings for every manager by season">
+          <defs>
+            <linearGradient id="exch-leader-fill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#fb923c" stop-opacity="0.28"></stop>
+              <stop offset="100%" stop-color="#fb923c" stop-opacity="0"></stop>
+            </linearGradient>
+          </defs>
 
-        {% for t in market.chart.yTicks %}
-        <g class="exch-gridline">
-          <line x1="{{ market.chart.plotLeft }}" x2="{{ market.chart.plotRight }}" y1="{{ t.y }}" y2="{{ t.y }}"></line>
-          <text x="{{ market.chart.plotLeft - 12 }}" y="{{ t.y + 4 }}" text-anchor="end">{{ t.label }}</text>
-        </g>
-        {% endfor %}
-
-        {% for t in market.chart.xTicks %}
-        <text class="exch-axis-x" x="{{ t.x }}" y="{{ market.chart.baselineY + 28 }}" text-anchor="middle">{{ t.label }}</text>
-        {% endfor %}
-
-        {% for s in market.chart.series %}
-        {% if s.rank == 1 and s.areaD %}<path class="exch-area" d="{{ s.areaD }}" fill="url(#exch-leader-fill)"></path>{% endif %}
-        {% endfor %}
-
-        {# Painted worst-to-best so the leaders land on top of the pack. #}
-        {% for s in market.chart.series | reverse %}
-        <g class="exch-series {{ 'is-top' if s.isTop }}" data-ticker="{{ s.ticker }}" style="--line: {{ s.color }}">
-          <path class="exch-line-hit" d="{{ s.d }}"></path>
-          <path class="exch-line" d="{{ s.d }}"></path>
-          {% for p in s.points %}
-          <circle class="exch-dot" cx="{{ p.x }}" cy="{{ p.y }}" r="3.5"></circle>
+          {% for t in market.chart.yTicks %}
+          <g class="exch-gridline">
+            <line x1="{{ market.chart.plotLeft }}" x2="{{ market.chart.plotRight }}" y1="{{ t.y }}" y2="{{ t.y }}"></line>
+            <text x="{{ market.chart.plotLeft - 12 }}" y="{{ t.y + 4 }}" text-anchor="end">{{ t.label }}</text>
+          </g>
           {% endfor %}
-          {% if s.end %}
-          <text class="exch-end-label" x="{{ s.end.x + 10 }}" y="{{ s.end.y + 4 }}">{{ s.symbol }}</text>
-          {% endif %}
-        </g>
-        {% endfor %}
-      </svg>
-    </div>
 
-    <div class="exch-legend" role="group" aria-label="Isolate a manager on the chart">
-      {% for s in market.chart.series %}
-      <button type="button" class="exch-legend-chip {{ 'is-top' if s.isTop }}" data-ticker="{{ s.ticker }}"
-        style="--line: {{ s.color }}" aria-pressed="false"
-        title="{{ s.name }} — {{ s.totalText }}">
-        <img src="{{ s.avatar }}" alt="">
-        <span class="exch-legend-sym">{{ s.symbol }}</span>
-        <span class="exch-legend-val">{{ s.totalRoundText }}</span>
-      </button>
-      {% endfor %}
+          {% for t in market.chart.xTicks %}
+          <text class="exch-axis-x" x="{{ t.x }}" y="{{ market.chart.baselineY + 28 }}" text-anchor="middle">{{ t.label }}</text>
+          {% endfor %}
+
+          {% for s in market.chart.series %}
+          {% if s.rank == 1 and s.areaD %}<path class="exch-area" d="{{ s.areaD }}" fill="url(#exch-leader-fill)"></path>{% endif %}
+          {% endfor %}
+
+          {# Painted worst-to-best so the leaders land on top of the pack. #}
+          {% for s in market.chart.series | reverse %}
+          <g class="exch-series {{ 'is-top' if s.isTop }}" data-ticker="{{ s.ticker }}" style="--line: {{ s.color }}">
+            <path class="exch-line-hit" d="{{ s.d }}"></path>
+            <path class="exch-line" d="{{ s.d }}"></path>
+            {% for p in s.points %}
+            <circle class="exch-dot" cx="{{ p.x }}" cy="{{ p.y }}" r="3.5"></circle>
+            {% endfor %}
+            {% if s.end %}
+            <text class="exch-end-label" x="{{ s.end.x + 10 }}" y="{{ s.end.y + 4 }}">{{ s.symbol }}</text>
+            {% endif %}
+          </g>
+          {% endfor %}
+        </svg>
+      </div>
+
+      {# Ranked richest-to-poorest — matches market.chart.series order. On
+         desktop this sits as a right-hand rail beside the curve; on mobile it
+         wraps below like a normal legend. #}
+      <div class="exch-legend" role="group" aria-label="Isolate a manager on the chart">
+        {% for s in market.chart.series %}
+        <button type="button" class="exch-legend-chip {{ 'is-top' if s.isTop }}" data-ticker="{{ s.ticker }}"
+          style="--line: {{ s.color }}" aria-pressed="false"
+          title="{{ s.name }} — {{ s.totalText }}">
+          <img src="{{ s.avatar }}" alt="">
+          <span class="exch-legend-sym"><span class="exch-legend-dollar">$</span>{{ s.ticker }}</span>
+          <span class="exch-legend-val">{{ s.totalRoundText }}</span>
+        </button>
+        {% endfor %}
+      </div>
     </div>
     <p class="exch-hint">Hover a line or tap a manager to isolate their run.</p>
   </section>

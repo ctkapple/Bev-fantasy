@@ -1357,7 +1357,7 @@
     @apply flex flex-shrink-0 items-center gap-2 border-r border-border/70 px-4 text-sm;
   }
   .exch-tape-item img {
-    @apply w-5 h-5 rounded-full object-cover;
+    @apply w-7 h-7 rounded-full object-cover;
   }
   .exch-tape-item b {
     @apply font-mono text-xs font-bold tracking-wider text-win;
@@ -1403,12 +1403,29 @@
   .exch-chart-card {
     background-image: radial-gradient(circle at 88% 0%, rgb(var(--color-accent-500) / 0.08), transparent 45%);
   }
+  .exch-chart-body {
+    @apply flex flex-col gap-4;
+  }
   .exch-chart-scroll {
-    @apply -mx-2 overflow-x-auto sm:mx-0;
+    @apply -mx-4 overflow-x-auto sm:mx-0;
   }
   .exch-chart {
     @apply w-full;
-    min-width: 560px;
+  }
+  @media (min-width: 640px) {
+    .exch-chart {
+      min-width: 560px;
+    }
+  }
+  /* Desktop: legend becomes a ranked right-hand rail beside the curve
+     instead of a row wrapping below it. */
+  @media (min-width: 1024px) {
+    .exch-chart-body {
+      @apply flex-row items-stretch gap-5;
+    }
+    .exch-chart-scroll {
+      @apply flex-1 min-w-0;
+    }
   }
   .exch-gridline line {
     stroke: rgb(var(--color-border));
@@ -1433,6 +1450,7 @@
     stroke-linecap: round;
     stroke-linejoin: round;
     opacity: 0.55;
+    vector-effect: non-scaling-stroke;
     transition: stroke-width 0.15s ease-out, opacity 0.15s ease-out;
   }
   .exch-series.is-top .exch-line {
@@ -1446,12 +1464,14 @@
     stroke: transparent;
     stroke-width: 18;
     cursor: pointer;
+    vector-effect: non-scaling-stroke;
   }
   .exch-dot {
     fill: rgb(var(--color-bg));
     stroke: var(--line);
     stroke-width: 2;
     opacity: 0;
+    vector-effect: non-scaling-stroke;
     transition: opacity 0.15s ease-out;
   }
   .exch-series.is-top .exch-dot {
@@ -1468,6 +1488,27 @@
   }
   .exch-series.is-top .exch-end-label {
     opacity: 1;
+  }
+  /* Below 640px the chart scales fluidly to the viewport instead of forcing
+     horizontal scroll (min-width above only applies at sm+), so the whole
+     curve is visible at once. That shrinks the effective viewBox scale from
+     ~0.56 to ~0.34, which would make strokes and text look thinner/smaller
+     than before if left alone — compensate here. */
+  @media (max-width: 639px) {
+    .exch-line {
+      stroke-width: 2.75;
+    }
+    .exch-series.is-top .exch-line {
+      stroke-width: 4.5;
+    }
+    .exch-dot {
+      r: 9;
+    }
+    .exch-gridline text,
+    .exch-axis-x,
+    .exch-end-label {
+      font-size: 30px;
+    }
   }
   /* Isolation: one series is active, everything else recedes. */
   .exch-chart-card.is-isolating .exch-series {
@@ -1515,6 +1556,29 @@
   .exch-legend-chip[aria-pressed="true"] .exch-legend-val {
     color: color-mix(in srgb, var(--line) 65%, rgb(var(--color-text-muted)));
   }
+  /* The $ reads as the exchange's win-green on every chip; the ticker
+     letters keep whatever color the chip state already gives them. */
+  .exch-legend-dollar {
+    @apply text-win;
+  }
+  /* Desktop rail: ranked richest-to-poorest top to bottom, bigger chips
+     since there's no wrapping to economize for. */
+  @media (min-width: 1024px) {
+    .exch-legend {
+      @apply mt-0 w-64 flex-none flex-col flex-nowrap gap-2 overflow-y-auto border-t-0 border-l
+        border-border pl-5 pt-0;
+      max-height: 440px;
+    }
+    .exch-legend-chip {
+      @apply w-full gap-2.5 rounded-lg py-2 pl-2 pr-3 text-sm;
+    }
+    .exch-legend-chip img {
+      @apply w-7 h-7;
+    }
+    .exch-legend-val {
+      @apply ml-auto;
+    }
+  }
 
   /* Holdings blotter. */
   .exch-blotter tbody tr {
@@ -1533,7 +1597,7 @@
     @apply flex items-center gap-2 min-w-0 font-semibold whitespace-nowrap;
   }
   .exch-holder img {
-    @apply w-7 h-7 flex-shrink-0 rounded-full object-cover border border-accent-500/50 cursor-pointer
+    @apply w-9 h-9 flex-shrink-0 rounded-full object-cover border border-accent-500/50 cursor-pointer
       transition-transform hover:scale-110;
   }
   .exch-spark-bar {
