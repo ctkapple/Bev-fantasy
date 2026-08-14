@@ -13,7 +13,7 @@ eleventyComputed:
    from one pass over the aggregate (lib/rankings-model.js):
 
      The Rafters — every banner on the wall, newest first
-     The Climb   — where everyone finished, season by season
+     The Climb   — cumulative wins, season by season
      The Table   — the all-time standings blotter
 
    The three data-driven regions are rendered by lib/rankings-markup.js rather
@@ -50,13 +50,13 @@ eleventyComputed:
         <p class="rank-eyebrow">Season by Season</p>
         <h2 class="rank-title">The Climb</h2>
       </div>
-      <p class="rank-section-note">Regular-season finish each year, best at the top. A <span class="rank-title-key">gold dot</span> is a season they went on to win it all. Click a manager to isolate them; Esc clears.</p>
+      <p class="rank-section-note">Career wins, stacking up season by season — everyone starts at 0. A <span class="rank-title-key">gold dot</span> is a season they went on to win it all. Click a manager to isolate them; Esc clears.</p>
     </header>
 
     <div class="rank-climb-body">
       <div class="rank-climb-scroll">
         <svg class="rank-chart" data-climb-svg viewBox="0 0 {{ view.climb.width }} {{ view.climb.height }}"
-          role="img" aria-label="Finishing position for every manager, season by season">{{ view.climb | climbMarkup | safe }}</svg>
+          role="img" aria-label="Cumulative regular-season wins for every manager, season by season">{{ view.climb | climbMarkup | safe }}</svg>
       </div>
 
       {# Ranked all-time, so the rail doubles as a standings preview. On desktop

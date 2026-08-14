@@ -1391,7 +1391,7 @@
 
   /* The Climb. Same machinery as the equity curve — fixed viewBox scaled by
      CSS, one <g> per manager, a fat invisible hit line, click to isolate —
-     with rank on Y instead of dollars, so up is literally better. */
+     with cumulative wins on Y instead of dollars, so up is literally better. */
   .rank-climb-card {
     background-image: radial-gradient(circle at 88% 0%, rgb(var(--color-accent-500) / 0.08), transparent 45%);
   }
@@ -1421,12 +1421,12 @@
     stroke: rgb(var(--color-border));
     stroke-width: 1;
   }
-  /* First place gets a brighter rule — the line everyone is climbing toward. */
-  .rank-gridline.is-crown line {
-    stroke: rgb(250 204 21 / 0.35);
+  /* Zero gets a brighter rule — the line everyone starts the climb from. */
+  .rank-gridline.is-baseline line {
+    stroke: rgb(var(--color-text-muted) / 0.55);
   }
-  .rank-gridline.is-crown text {
-    fill: #facc15;
+  .rank-gridline.is-baseline text {
+    fill: rgb(var(--color-text-secondary));
   }
   .rank-gridline text,
   .rank-axis-x {
