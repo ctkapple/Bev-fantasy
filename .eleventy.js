@@ -104,10 +104,15 @@ export default function (eleventyConfig) {
   // Everyone else draws dim so the leaders stay readable through twelve
   // overlapping lines - but a single flat dim color made all nine of them
   // indistinguishable from each other, so DIM_RAMP fades light-to-dark by
-  // rank instead of flattening them to one gray.
+  // rank instead of flattening them to one gray. The dark end lands on the
+  // same amber the Toilet Bowl uses for its "Toilet King" theming, so the
+  // worst earner's line visibly sinks toward the same deep brown - one step
+  // darker than the site's own amber-700 border, not the brighter amber-600
+  // text, so it still reads as dim rather than competing with the top-earner
+  // orange.
   const EARNINGS_COLORS = ["#fb923c", "#fbbf24", "#fde68a"];
   const DIM_LIGHT = [161, 161, 170]; // zinc-400
-  const DIM_DARK = [63, 63, 70]; // zinc-700
+  const DIM_DARK = [146, 64, 14]; // amber-800
   function dimColor(index, count) {
     const t = count > 1 ? index / (count - 1) : 0;
     const mix = DIM_LIGHT.map((c, i) => Math.round(c + (DIM_DARK[i] - c) * t));
