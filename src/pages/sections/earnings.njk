@@ -33,7 +33,7 @@ eleventyComputed:
           {% for r in market.tape %}
           <span class="exch-tape-item" data-ticker="{{ r.ticker }}">
             <img src="{{ r.manager.avatar }}" alt="" loading="lazy">
-            <b>{{ r.ticker }}</b>
+            <b>{{ r.symbol }}</b>
             <span class="exch-tape-price">{{ r.totalText }}</span>
             <span class="exch-tape-delta {{ 'is-up' if r.change > 0 else 'is-flat' }}">
               {{ "▲" if r.change > 0 else "▬" }} {{ r.changeText }}
@@ -61,14 +61,14 @@ eleventyComputed:
     <div class="exch-stat">
       <p class="exch-stat-label">All-Time Leader</p>
       <p class="exch-stat-value exch-stat-value--sym">
-        <img src="{{ market.summary.leader.manager.avatar }}" alt="">{{ market.summary.leader.ticker }}
+        <img src="{{ market.summary.leader.manager.avatar }}" alt="">{{ market.summary.leader.symbol }}
       </p>
       <p class="exch-stat-sub">{{ market.summary.leader.totalText }} · {{ market.summary.leader.name }}</p>
     </div>
     <div class="exch-stat">
       <p class="exch-stat-label">Biggest Single Year</p>
       <p class="exch-stat-value">{{ market.summary.biggest.amountText }}</p>
-      <p class="exch-stat-sub">{{ market.summary.biggest.ticker }} in {{ market.summary.biggest.year }}</p>
+      <p class="exch-stat-sub">{{ market.summary.biggest.symbol }} in {{ market.summary.biggest.year }}</p>
     </div>
   </section>
 
@@ -116,7 +116,7 @@ eleventyComputed:
           <circle class="exch-dot" cx="{{ p.x }}" cy="{{ p.y }}" r="3.5"></circle>
           {% endfor %}
           {% if s.end %}
-          <text class="exch-end-label" x="{{ s.end.x + 10 }}" y="{{ s.end.y + 4 }}">{{ s.ticker }}</text>
+          <text class="exch-end-label" x="{{ s.end.x + 10 }}" y="{{ s.end.y + 4 }}">{{ s.symbol }}</text>
           {% endif %}
         </g>
         {% endfor %}
@@ -129,7 +129,7 @@ eleventyComputed:
         style="--line: {{ s.color }}" aria-pressed="false"
         title="{{ s.name }} — {{ s.totalText }}">
         <img src="{{ s.avatar }}" alt="">
-        <span class="exch-legend-sym">{{ s.ticker }}</span>
+        <span class="exch-legend-sym">{{ s.symbol }}</span>
         <span class="exch-legend-val">{{ s.totalRoundText }}</span>
       </button>
       {% endfor %}
@@ -164,12 +164,12 @@ eleventyComputed:
         <tbody>
           {% for r in market.holdings %}
           <tr data-ticker="{{ r.ticker }}">
-            <td class="px-3 py-2" data-value="{{ r.ticker }}"><span class="exch-sym">{{ r.ticker }}</span></td>
+            <td class="px-3 py-2" data-value="{{ r.ticker }}"><span class="exch-sym">{{ r.symbol }}</span></td>
             <td class="px-3 py-2" data-value="{{ r.name }}">
               <span class="exch-holder">
                 <img src="{{ r.manager.avatar }}" alt="" loading="lazy"
                   onclick="window.expandAvatar && window.expandAvatar(this.src)">
-                <span class="truncate">{{ r.name }}{% if r.manager.userId == champ %} <span title="Reigning Champ">👑</span>{% endif %}</span>
+                <span class="truncate">{{ r.name }}{% if r.manager.userId == champ %} <span title="Reigning Champ">{% icon "crown", "icon" %}</span>{% endif %}</span>
               </span>
             </td>
             {% for c in r.cells %}
@@ -213,7 +213,7 @@ eleventyComputed:
         <div class="exch-board-row">
           <img src="{{ r.manager.avatar }}" alt="" loading="lazy"
             onclick="window.expandAvatar && window.expandAvatar(this.src)">
-          <span class="exch-sym">{{ r.ticker }}</span>
+          <span class="exch-sym">{{ r.symbol }}</span>
           <span class="exch-board-bar"><i style="width: {{ r.pct }}%"></i></span>
           <span class="exch-board-value">{{ r.props if board.key == "props" else r.highs }}
             <small>{{ board.unit }}</small></span>

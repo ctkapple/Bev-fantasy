@@ -2,6 +2,8 @@
 // in the page (see src/pages/sections/myteam.njk) - no network fetch needed,
 // this is all pre-computed at build time.
 
+import { ICON_CROWN } from "./icons.js";
+
 function readJson(id) {
   const el = document.getElementById(id);
   if (!el) return null;
@@ -21,7 +23,7 @@ function renderManager(managers, reigningChampId, userId) {
   const container = document.getElementById("my-team-data");
   if (!m || !container) return;
 
-  const crown = userId === reigningChampId ? ' <span title="Reigning Champ">👑</span>' : "";
+  const crown = userId === reigningChampId ? ` <span title="Reigning Champ">${ICON_CROWN}</span>` : "";
   const yearlyRows = m.yearlyStandings
     .map((y) => {
       const stats = m.yearlyStats[y.year] || {};

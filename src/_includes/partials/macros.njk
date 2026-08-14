@@ -23,7 +23,7 @@
       class="w-12 h-12 rounded-full object-cover border-4 {{ opts.ringClass }} cursor-pointer hover:scale-110 transition-transform"
       onclick="window.expandAvatar && window.expandAvatar(this.src)">
     <div>
-      <h3 class="text-lg font-bold {{ opts.nameClass }}">{{ opts.emoji }} {{ manager.displayName }}</h3>
+      <h3 class="text-lg font-bold {{ opts.nameClass }}">{% icon opts.icon, "icon mr-1" %}{{ manager.displayName }}</h3>
       <p class="text-sm text-text-secondary">{{ opts.label }} - {{ score | decimal2 }} points</p>
     </div>
   </div>
@@ -47,7 +47,7 @@
       class="w-9 h-9 rounded-full object-cover flex-shrink-0 border-2 border-accent-500 cursor-pointer hover:scale-110 transition-transform"
       onclick="window.expandAvatar && window.expandAvatar(this.src)">
     <div class="min-w-0">
-      <p class="text-sm font-semibold truncate">{{ manager.displayName }}{% if manager.userId == reigningId %} <span title="Reigning Champ">👑</span>{% endif %}</p>
+      <p class="text-sm font-semibold truncate">{{ manager.displayName }}{% if manager.userId == reigningId %} <span title="Reigning Champ">{% icon "crown", "icon" %}</span>{% endif %}</p>
       <p class="text-xs text-text-secondary">{{ context }}</p>
     </div>
   </div>

@@ -17,7 +17,7 @@ eleventyComputed:
   <h2 class="text-2xl font-bold text-text-primary mb-6">Toilet Bowl Punishment History</h2>
   <p class="mb-4 text-text-secondary text-sm">These poor, toilet-bowl-losing souls, spent the first week of the NFL season camped out at the Anchor from dusk til' dawn. A mere 15-30 minutes taken off their sentence for every drink they consumed.</p>
 
-  <h3 class="text-xl font-semibold mb-3 text-accent-500">⚓ Departure Ledger ⚓</h3>
+  <h3 class="text-xl font-semibold mb-3 text-accent-500">{% icon "anchor", "icon mr-1" %}Departure Ledger</h3>
   <div class="space-y-4">
     {% for entry in league.toiletBowlLedger %}
     <div class="bg-bg/50 p-4 rounded-lg border border-border flex items-center justify-between flex-wrap gap-2 {% if league.punishmentGalleries[entry.year] %}cursor-pointer hover:border-accent-500 transition-colors{% endif %}"
@@ -78,10 +78,10 @@ eleventyComputed:
     <div id="toilet-game-{{ game.season }}" class="grid grid-cols-1 md:grid-cols-2 gap-8">
       {{ gameSide(game.punished, game.punishedScore, game.punishedRoster, {
         borderClass: "border-amber-600/50", ringClass: "border-amber-700",
-        nameClass: "text-amber-600", emoji: "🚽", label: "💩 Roster" }) }}
+        nameClass: "text-amber-600", icon: "toilet", label: "💩 Roster" }) }}
       {{ gameSide(game.safe, game.safeScore, game.safeRoster, {
         borderClass: "border-border", ringClass: "border-gray-400",
-        nameClass: "text-text-primary", emoji: "😮‍💨", label: "Safe Roster" }) }}
+        nameClass: "text-text-primary", icon: "shield-check", label: "Safe Roster" }) }}
     </div>
   </div>
   {% endfor %}

@@ -39,7 +39,7 @@ eleventyComputed:
   </div>
   <div class="space-y-6">
     <div class="card">
-      <h2 class="text-xl font-bold mb-4 text-accent-500">Biggest Ballers 🤑</h2>
+      <h2 class="text-xl font-bold mb-4 text-accent-500">Biggest Ballers {% icon "coins", "icon ml-1" %}</h2>
       <div class="space-y-2 text-sm">
         {% for t in totals | limit(5) %}
         <div class="flex justify-between"><span>{{ t.displayName }}</span><span class="font-semibold">${{ t.total }}</span></div>
@@ -47,7 +47,7 @@ eleventyComputed:
       </div>
     </div>
     <div class="card">
-      <h2 class="text-xl font-bold mb-4 text-accent-500">Frugal Heroes 📉</h2>
+      <h2 class="text-xl font-bold mb-4 text-accent-500">Frugal Heroes {% icon "trending-down", "icon ml-1" %}</h2>
       <div class="space-y-2 text-sm">
         {% for t in totals | reverse | limit(5) %}
         <div class="flex justify-between"><span>{{ t.displayName }}</span><span class="font-semibold">${{ t.total }}</span></div>

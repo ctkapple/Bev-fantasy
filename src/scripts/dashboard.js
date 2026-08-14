@@ -5,6 +5,7 @@
 // same way.
 import { getCurrentSeasonData } from "./sleeper-client.js";
 import { mergeAggregates } from "./merge.js";
+import { ICON_CROWN, ICON_TROPHY } from "./icons.js";
 
 function readLeagueConfig() {
   const el = document.getElementById("dashboard-league-config");
@@ -25,7 +26,7 @@ function renderStandings(aggregate) {
         <td class="px-4 py-3 font-semibold">${m.rank}</td>
         <td class="px-4 py-3 flex items-center gap-2">
           <img src="${m.avatar}" alt="" class="w-7 h-7 rounded-full cursor-pointer" onclick="window.expandAvatar && window.expandAvatar(this.src)">
-          ${m.displayName}${m.userId === aggregate.reigningChampionId ? ' <span title="Reigning Champ">👑</span>' : ""}
+          ${m.displayName}${m.userId === aggregate.reigningChampionId ? ` <span title="Reigning Champ">${ICON_CROWN}</span>` : ""}
         </td>
         <td class="px-4 py-3"><span class="win">${m.wins}</span>-<span class="loss">${m.losses}</span>${m.ties ? "-" + m.ties : ""}</td>
         <td class="px-4 py-3">${(m.winPct * 100).toFixed(1)}%</td>
@@ -46,7 +47,7 @@ function renderTrophyCase(aggregate) {
   const champs = aggregate.trophyCase.champions;
   const runnerUps = aggregate.trophyCase.runnerUps;
   card.innerHTML = `
-    <h2 class="text-xl font-bold mb-4 text-yellow-400">🏆 Trophy Case 🏆</h2>
+    <h2 class="text-xl font-bold mb-4 text-yellow-400">${ICON_TROPHY} Trophy Case</h2>
     ${champs.length > 0 ? `<div class="space-y-3"><p class="text-xs uppercase tracking-wider text-text-secondary">Champions</p>${champs.map(row).join("")}</div>` : ""}
     ${runnerUps.length > 0 ? `<div class="space-y-3 mt-6"><p class="text-xs uppercase tracking-wider text-text-secondary">Runner-Ups</p>${runnerUps.map(row).join("")}</div>` : ""}
     ${champs.length === 0 ? '<p class="text-text-secondary text-sm">No champions crowned yet.</p>' : ""}

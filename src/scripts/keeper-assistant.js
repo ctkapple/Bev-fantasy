@@ -21,6 +21,7 @@ import {
   parseRostersByOwner,
   scoringFormatFromLeagueObj,
 } from "./keeper-engine.mjs";
+import { ICON_CHECK, ICON_X } from "./icons.js";
 
 const SLEEPER_BASE = "https://api.sleeper.app/v1";
 
@@ -118,7 +119,7 @@ function renderRoster(tbody, profiles) {
         <td class="px-4 py-2">${originLabel(p)}</td>
         <td class="px-4 py-2" data-value="${p.keeperRound ?? 99}">${keeperRoundLabel(p)}</td>
         <td class="px-4 py-2" data-value="${p.streakCount}">${streakLabel(p)}</td>
-        <td class="px-4 py-2 text-center ${p.eligible ? "win" : "loss"}">${p.eligible ? "✅" : "❌"}</td>
+        <td class="px-4 py-2 text-center ${p.eligible ? "win" : "loss"}">${p.eligible ? ICON_CHECK : ICON_X}</td>
       </tr>`;
     })
     .join("");

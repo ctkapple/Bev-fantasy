@@ -25,7 +25,7 @@ eleventyComputed:
       {% set lines = [] %}
       {% for h in p.history %}
         {% set who = mgrs[h.managerId].displayName if mgrs[h.managerId] else "Unknown" %}
-        {% set lines = (lines.push(h.season + " on " + who + "'s team (" + ("🏆 Won" if h.isWinner else "🥈 Lost") + ")"), lines) %}
+        {% set lines = (lines.push(h.season + " on " + who + "'s team (" + ("Won" if h.isWinner else "Lost") + ")"), lines) %}
       {% endfor %}
       {{ legacyCard(p.appearances, "APPEARANCES", p, lines) }}
     {% else %}

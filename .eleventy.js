@@ -15,7 +15,10 @@ export default function (eleventyConfig) {
       const svg = readFileSync(
         new URL(`./node_modules/lucide-static/icons/${name}.svg`, import.meta.url)
       ).toString();
-      return svg.replace("<svg ", `<svg class="${cls}" `);
+      // Lucide's source SVGs put `class` on its own indented line rather than
+      // right after `<svg `, so a literal "<svg " match never fires - match
+      // just the tag name instead.
+      return svg.replace("<svg", `<svg class="${cls}"`);
     } catch {
       console.warn(`[icon shortcode] Unknown Lucide icon "${name}" - check the exact filename under node_modules/lucide-static/icons/`);
       return "";
@@ -114,6 +117,57 @@ export default function (eleventyConfig) {
   const money = (n) =>
     "$" + Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const moneyRound = (n) => "$" + Math.round(Number(n)).toLocaleString("en-US");
+
+  // Deterministic per-string PRNG (mulberry32 seeded by an FNV-1a hash) so the
+  // cosmetic wiggle below is stable across rebuilds - same manager/segment
+  // always wiggles the same way instead of the chart re-randomizing on every
+  // `npx eleventy` run.
+  function seededRandom(seed) {
+    let h = 2166136261;
+    for (let i = 0; i < seed.length; i++) {
+      h ^= seed.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    let t = h >>> 0;
+    return function () {
+      t += 0x6d2b79f5;
+      let r = Math.imul(t ^ (t >>> 15), 1 | t);
+      r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
+      return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  // Cosmetic-only "market texture": a real yearly point-to-point segment reads
+  // as a flat teleport rather than a trading day. We insert waypoints between
+  // each pair of *real* points, nudged by a seeded random offset - but every
+  // waypoint's value is clamped to [v0, v1], the segment's own real endpoints.
+  // Cumulative winnings never actually decrease (see monotonePath above), so
+  // the true value at any moment in that segment is provably within that
+  // range; the wiggle can therefore never draw a total below where it really
+  // was. This only changes the path fed to monotonePath - the real per-year
+  // points (dots, end labels, hover) are untouched.
+  const WIGGLE_STEPS = 3;
+  const WIGGLE_AMPLITUDE = 0.4;
+  function wigglePoints(points, seedBase, xFor, yFor) {
+    if (points.length < 2) return points;
+    const out = [points[0]];
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[i];
+      const p1 = points[i + 1];
+      const rand = seededRandom(`${seedBase}:${p0.year}-${p1.year}`);
+      const lo = Math.min(p0.value, p1.value);
+      const hi = Math.max(p0.value, p1.value);
+      for (let s = 1; s <= WIGGLE_STEPS; s++) {
+        const f = s / (WIGGLE_STEPS + 1);
+        const base = p0.value + (p1.value - p0.value) * f;
+        const amplitude = (hi - lo) * WIGGLE_AMPLITUDE;
+        const value = Math.min(hi, Math.max(lo, base + (rand() - 0.5) * amplitude));
+        out.push({ x: +(p0.x + (p1.x - p0.x) * f).toFixed(2), y: +yFor(value).toFixed(2), value });
+      }
+      out.push(p1);
+    }
+    return out;
+  }
 
   // Cumulative winnings only ever go up (a $0 year adds nothing, ledger
   // entries are never negative), so the curve connecting them must never
@@ -232,10 +286,12 @@ export default function (eleventyConfig) {
         const paid = played.size * buyIn;
         const vals = years.map((y) => (played.has(y) ? byYear[y] || 0 : null));
         const latest = years[years.length - 1];
+        const ticker = overrides[name] || derived[name];
         return {
           manager,
           name,
-          ticker: overrides[name] || derived[name],
+          ticker,
+          symbol: "$" + ticker,
           byYear,
           vals,
           played: years.map((y) => played.has(y)),
@@ -311,11 +367,12 @@ export default function (eleventyConfig) {
       const points = r.cumulative
         .map((v, i) => (v === null ? null : { x: +xFor(i).toFixed(2), y: +yFor(v).toFixed(2), value: v, year: years[i] }))
         .filter(Boolean);
-      const d = monotonePath(points);
+      const d = monotonePath(wigglePoints(points, r.name, xFor, yFor));
       const first = points[0];
       const last = points[points.length - 1];
       return {
         ticker: r.ticker,
+        symbol: r.symbol,
         name: r.name,
         avatar: r.manager.avatar,
         userId: r.manager.userId,
@@ -356,7 +413,7 @@ export default function (eleventyConfig) {
     rows.forEach((r) =>
       years.forEach((y, i) => {
         if (r.played[i] && (r.byYear[y] || 0) > biggest.amount) {
-          biggest = { amount: r.byYear[y] || 0, year: y, ticker: r.ticker, name: r.name };
+          biggest = { amount: r.byYear[y] || 0, year: y, ticker: r.ticker, symbol: r.symbol, name: r.name };
         }
       })
     );

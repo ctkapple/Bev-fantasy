@@ -3,6 +3,8 @@
 // blowout, "Certified <opponent> Hater") flanking a center column with the
 // all-time record and the closest game between them.
 
+import { ICON_CROWN } from "./icons.js";
+
 function readJson(id) {
   const el = document.getElementById(id);
   if (!el) return null;
@@ -33,7 +35,7 @@ function managerCard(m, stats, opponentName, nemesis, hasWin, isReigning) {
       <img src="${m.avatar}" alt="${m.displayName}"
         class="w-24 h-24 rounded-full object-cover border-4 border-accent-500 cursor-pointer hover:scale-110 transition-transform"
         onclick="window.expandAvatar && window.expandAvatar(this.src)">
-      <p class="font-extrabold text-xl lg:text-2xl text-accent-500">${m.displayName}${isReigning ? ' <span title="Reigning Champ">👑</span>' : ""}</p>
+      <p class="font-extrabold text-xl lg:text-2xl text-accent-500">${m.displayName}${isReigning ? ` <span title="Reigning Champ">${ICON_CROWN}</span>` : ""}</p>
       <div class="text-sm text-text-secondary space-y-2 text-left w-full">
         <p class="flex justify-between"><span>Total Points:</span> <span class="font-bold text-text-primary">${stats.totalPoints.toFixed(2)}</span></p>
         <p class="flex justify-between"><span>Avg Points:</span> <span class="font-bold text-text-primary">${stats.avgPoints.toFixed(2)}</span></p>

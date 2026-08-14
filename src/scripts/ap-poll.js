@@ -1,3 +1,5 @@
+import { ICON_CROWN } from "./icons.js";
+
 const root = document.querySelector("#ap-poll-root");
 
 if (root) {
@@ -768,7 +770,7 @@ if (root) {
 
   function reigningChampionMarkup(ownerLabel) {
     return ownerLabel === REIGNING_CHAMPION_OWNER
-      ? ' <span class="poll-reigning-champion" role="img" aria-label="Reigning champion">👑</span>'
+      ? ` <span class="poll-reigning-champion" role="img" aria-label="Reigning champion">${ICON_CROWN}</span>`
       : "";
   }
 

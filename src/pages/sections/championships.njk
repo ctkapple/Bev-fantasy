@@ -32,10 +32,10 @@ eleventyComputed:
         <div id="championship-game-{{ season.season }}" class="grid grid-cols-1 md:grid-cols-2 gap-8">
           {{ gameSide(champ, winnerScore, season.championship.winnerRoster, {
             borderClass: "border-yellow-400/50", ringClass: "border-yellow-400",
-            nameClass: "text-yellow-400", emoji: "🏆", label: "Starting Roster" }) }}
+            nameClass: "text-yellow-400", icon: "trophy", label: "Starting Roster" }) }}
           {{ gameSide(runnerUp, loserScore, season.championship.loserRoster, {
             borderClass: "border-border", ringClass: "border-gray-400",
-            nameClass: "text-text-primary", emoji: "🥈", label: "Starting Roster" }) }}
+            nameClass: "text-text-primary", icon: "medal", label: "Starting Roster" }) }}
           {% if league.championshipNotes[season.season] %}
           <p class="text-xs text-text-muted mt-4 text-center col-span-1 md:col-span-2 italic">{{ league.championshipNotes[season.season] }}</p>
           {% endif %}
