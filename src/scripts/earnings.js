@@ -28,14 +28,20 @@ if (card) {
   const chips = [...card.querySelectorAll(".exch-legend-chip")];
   const rows = [...document.querySelectorAll(".exch-blotter tbody tr[data-ticker]")];
 
-  let pinned = null;
+  // Any number of managers can be pinned at once — comparing two or three runs
+  // is the thing people actually want from this chart. Hover is a preview of a
+  // single line and only applies while nothing is pinned; once a selection
+  // exists, hovering another line adds it to what's lit rather than replacing
+  // the selection out from under the pointer.
+  const pinned = new Set();
   let hovered = null;
 
   function render() {
-    const active = pinned || hovered;
-    card.classList.toggle("is-isolating", Boolean(active));
-    series.forEach((g) => g.classList.toggle("is-active", g.dataset.ticker === active));
-    chips.forEach((c) => c.setAttribute("aria-pressed", String(c.dataset.ticker === pinned)));
+    const active = new Set(pinned);
+    if (hovered) active.add(hovered);
+    card.classList.toggle("is-isolating", active.size > 0);
+    series.forEach((g) => g.classList.toggle("is-active", active.has(g.dataset.ticker)));
+    chips.forEach((c) => c.setAttribute("aria-pressed", String(pinned.has(c.dataset.ticker))));
   }
 
   function hover(ticker) {
@@ -44,7 +50,8 @@ if (card) {
   }
 
   function pin(ticker) {
-    pinned = pinned === ticker ? null : ticker;
+    if (pinned.has(ticker)) pinned.delete(ticker);
+    else pinned.add(ticker);
     render();
   }
 
@@ -73,7 +80,10 @@ if (card) {
   });
 
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && pinned) pin(pinned);
+    if (event.key === "Escape" && pinned.size) {
+      pinned.clear();
+      render();
+    }
   });
 }
 
@@ -177,7 +187,12 @@ if (exchange && island && card) {
       const r = row(item.dataset.ticker);
       r.tapeTotal = item.querySelector('[data-field="totalText"]').textContent.trim();
       r.tapeChange = item.querySelector('[data-field="changeText"]').textContent.trim();
-      r.tapeUp = item.querySelector('[data-field="delta"]').classList.contains("is-up");
+      const delta = item.querySelector('[data-field="delta"]');
+      r.tapeDir = delta.classList.contains("is-up")
+        ? "up"
+        : delta.classList.contains("is-down")
+          ? "down"
+          : "flat";
     });
 
     document.querySelectorAll(".exch-legend-chip").forEach((chip) => {
@@ -201,6 +216,8 @@ if (exchange && island && card) {
     });
     const img = document.querySelector("[data-stat-img]");
     state.summary.leaderAvatar = img ? img.getAttribute("src") : "";
+    const leaderTile = document.querySelector(".exch-stat-value--sym");
+    state.summary.leaderColor = leaderTile ? leaderTile.style.getPropertyValue("--chip") : "";
 
     return state;
   }
@@ -233,7 +250,7 @@ if (exchange && island && card) {
         chipValue: r.totalRoundText,
         tapeTotal: r.totalText,
         tapeChange: r.changeText,
-        tapeUp: r.change > 0,
+        tapeDir: r.change > 0 ? "up" : r.change < 0 ? "down" : "flat",
         cells: r.cells.map((c) => ({
           text: c.text,
           value: c.value,
@@ -370,9 +387,11 @@ if (exchange && island && card) {
       item.querySelector('[data-field="totalText"]').textContent = r.tapeTotal;
       item.querySelector('[data-field="changeText"]').textContent = r.tapeChange;
       const delta = item.querySelector('[data-field="delta"]');
-      delta.classList.toggle("is-up", r.tapeUp);
-      delta.classList.toggle("is-flat", !r.tapeUp);
-      delta.querySelector("i").textContent = r.tapeUp ? "▲" : "▬";
+      delta.classList.toggle("is-up", r.tapeDir === "up");
+      delta.classList.toggle("is-down", r.tapeDir === "down");
+      delta.classList.toggle("is-flat", r.tapeDir === "flat");
+      delta.querySelector("i").textContent =
+        r.tapeDir === "up" ? "▲" : r.tapeDir === "down" ? "▼" : "▬";
     });
 
     document.querySelectorAll(".exch-legend-chip").forEach((chip) => {
@@ -401,13 +420,19 @@ if (exchange && island && card) {
     });
 
     for (const [key, value] of Object.entries(state.summary)) {
-      if (key === "leaderAvatar") continue;
+      if (key === "leaderAvatar" || key === "leaderColor") continue;
       document.querySelectorAll(`[data-stat="${key}"]`).forEach((el) => {
         el.textContent = value;
       });
     }
     const img = document.querySelector("[data-stat-img]");
     if (img && state.summary.leaderAvatar) img.setAttribute("src", state.summary.leaderAvatar);
+    // The leader tile's symbol and avatar ring both hang off --chip, so the
+    // whole tile changes identity with one property.
+    const leaderTile = document.querySelector(".exch-stat-value--sym");
+    if (leaderTile && state.summary.leaderColor) {
+      leaderTile.style.setProperty("--chip", state.summary.leaderColor);
+    }
 
     document.querySelectorAll("[data-view-note]").forEach((el) => {
       el.hidden = el.dataset.viewNote !== target;

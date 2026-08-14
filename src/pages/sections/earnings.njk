@@ -53,46 +53,17 @@ eleventyComputed:
             <img src="{{ r.avatar }}" alt="" loading="lazy">
             <b>{{ r.symbol }}</b>
             <span class="exch-tape-price" data-field="totalText">{{ r.totalText }}</span>
-            <span class="exch-tape-delta {{ 'is-up' if r.change > 0 else 'is-flat' }}" data-field="delta">
-              <i>{{ "▲" if r.change > 0 else "▬" }}</i> <span data-field="changeText">{{ r.changeText }}</span>
+            {# Latest season's net: green up if the year cleared its buy-in,
+               red down if it didn't, flat only at exactly break-even or for a
+               season this manager didn't play. #}
+            <span class="exch-tape-delta {{ 'is-up' if r.change > 0 else ('is-down' if r.change < 0 else 'is-flat') }}" data-field="delta">
+              <i>{{ "▲" if r.change > 0 else ("▼" if r.change < 0 else "▬") }}</i> <span data-field="changeText">{{ r.changeText }}</span>
             </span>
           </span>
           {% endfor %}
         </div>
         {% endfor %}
       </div>
-    </div>
-  </section>
-
-  {# --- Market summary --------------------------------------------------- #}
-  <section class="exch-summary" aria-label="Market summary">
-    <div class="exch-stat">
-      <p class="exch-stat-label">Total Distributed</p>
-      <p class="exch-stat-value" data-stat="distributedText">{{ market.summary.distributedText }}</p>
-      <p class="exch-stat-sub">of <span data-stat="potText">{{ market.summary.potText }}</span> collected ·
-        <span data-stat="seasons">{{ market.summary.seasons }}</span> seasons</p>
-    </div>
-    <div class="exch-stat">
-      <p class="exch-stat-label"><span data-stat="latestYear">{{ market.summary.latestYear }}</span> Pot</p>
-      <p class="exch-stat-value" data-stat="latestPotText">{{ market.summary.latestPotText }}</p>
-      <p class="exch-stat-sub">
-        <span data-view-note="league">${{ market.buyIn }} buy-in per manager</span>
-        <span data-view-note="all" hidden>every league's buy-ins that season</span>
-      </p>
-    </div>
-    <div class="exch-stat">
-      <p class="exch-stat-label">All-Time Leader</p>
-      <p class="exch-stat-value exch-stat-value--sym">
-        <img src="{{ market.summary.leader.avatar }}" alt="" data-stat-img="leaderAvatar"><span data-stat="leaderSymbol">{{ market.summary.leader.symbol }}</span>
-      </p>
-      <p class="exch-stat-sub"><span data-stat="leaderTotalText">{{ market.summary.leader.totalText }}</span> ·
-        <span data-stat="leaderName">{{ market.summary.leader.name }}</span></p>
-    </div>
-    <div class="exch-stat">
-      <p class="exch-stat-label">Biggest Single Year</p>
-      <p class="exch-stat-value" data-stat="biggestAmountText">{{ market.summary.biggest.amountText }}</p>
-      <p class="exch-stat-sub"><span data-stat="biggestSymbol">{{ market.summary.biggest.symbol }}</span> in
-        <span data-stat="biggestYear">{{ market.summary.biggest.year }}</span></p>
     </div>
   </section>
 
@@ -175,7 +146,7 @@ eleventyComputed:
         {% endfor %}
       </div>
     </div>
-    <p class="exch-hint">Hover a line or tap a manager to isolate their run.</p>
+    <p class="exch-hint">Hover a line to preview it, or tap managers to compare as many runs as you like. Esc clears.</p>
   </section>
 
   {# --- Holdings blotter -------------------------------------------------- #}
@@ -205,7 +176,8 @@ eleventyComputed:
         </thead>
         <tbody>
           {% for r in market.holdings %}
-          <tr data-ticker="{{ r.ticker }}" data-row-key="{{ r.ticker }}" class="{{ 'is-absent' if r.absent }}">
+          <tr data-ticker="{{ r.ticker }}" data-row-key="{{ r.ticker }}" class="{{ 'is-absent' if r.absent }}"
+            style="--chip: {{ r.color }}">
             <td class="px-3 py-2" data-value="{{ r.ticker }}"><span class="exch-sym" style="--chip: {{ r.color }}">{{ r.symbol }}</span></td>
             <td class="px-3 py-2" data-value="{{ r.name }}">
               <span class="exch-holder">
@@ -273,7 +245,8 @@ eleventyComputed:
       <div class="exch-board">
         {% for r in board.rows %}
         {% set amount = r.props if board.key == "props" else r.highs %}
-        <div class="exch-board-row {{ 'is-absent' if amount == 0 }}" data-ticker="{{ r.ticker }}">
+        <div class="exch-board-row {{ 'is-absent' if amount == 0 }}" data-ticker="{{ r.ticker }}"
+          style="--chip: {{ r.color }}">
           <img src="{{ r.avatar }}" alt="" loading="lazy"
             onclick="window.expandAvatar && window.expandAvatar(this.src)">
           <span class="exch-sym" style="--chip: {{ r.color }}">{{ r.symbol }}</span>
@@ -287,6 +260,40 @@ eleventyComputed:
     {% endif %}
     {% endfor %}
   </div>
+
+  {# --- Market summary --------------------------------------------------- #}
+  {# Sits down here, above only the prospectus: the tape, curve and blotter are
+     what people come for, and these four are the footnotes to them. #}
+  <section class="exch-summary" aria-label="Market summary">
+    <div class="exch-stat">
+      <p class="exch-stat-label">Total Distributed</p>
+      <p class="exch-stat-value" data-stat="distributedText">{{ market.summary.distributedText }}</p>
+      <p class="exch-stat-sub">of <span data-stat="potText">{{ market.summary.potText }}</span> collected ·
+        <span data-stat="seasons">{{ market.summary.seasons }}</span> seasons</p>
+    </div>
+    <div class="exch-stat">
+      <p class="exch-stat-label"><span data-stat="latestYear">{{ market.summary.latestYear }}</span> Pot</p>
+      <p class="exch-stat-value" data-stat="latestPotText">{{ market.summary.latestPotText }}</p>
+      <p class="exch-stat-sub">
+        <span data-view-note="league">${{ market.buyIn }} buy-in per manager</span>
+        <span data-view-note="all" hidden>every league's buy-ins that season</span>
+      </p>
+    </div>
+    <div class="exch-stat">
+      <p class="exch-stat-label">All-Time Leader</p>
+      <p class="exch-stat-value exch-stat-value--sym" style="--chip: {{ market.summary.leader.color }}">
+        <img src="{{ market.summary.leader.avatar }}" alt="" data-stat-img="leaderAvatar"><span data-stat="leaderSymbol">{{ market.summary.leader.symbol }}</span>
+      </p>
+      <p class="exch-stat-sub"><span data-stat="leaderTotalText">{{ market.summary.leader.totalText }}</span> ·
+        <span data-stat="leaderName">{{ market.summary.leader.name }}</span></p>
+    </div>
+    <div class="exch-stat">
+      <p class="exch-stat-label">Biggest Single Year</p>
+      <p class="exch-stat-value" data-stat="biggestAmountText">{{ market.summary.biggest.amountText }}</p>
+      <p class="exch-stat-sub"><span data-stat="biggestSymbol">{{ market.summary.biggest.symbol }}</span> in
+        <span data-stat="biggestYear">{{ market.summary.biggest.year }}</span></p>
+    </div>
+  </section>
 
   {# --- Prospectus --------------------------------------------------------- #}
   {% if league.earnings.payoutStructure %}

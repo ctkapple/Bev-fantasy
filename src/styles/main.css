@@ -1371,8 +1371,17 @@
   .exch-tape-item {
     @apply flex flex-shrink-0 items-center gap-2 border-r border-border/70 px-4 text-sm;
   }
+  /* Every avatar on this page wears its manager's own color as a thin ring, so
+     the face and the ticker next to it are obviously the same person. `--line`
+     is preferred where it's set (the legend rail, beside the curve) because
+     that's the color actually drawn on the chart; `--chip` is the poll hex
+     everywhere else. Accent orange is the fallback for the rare avatar with no
+     manager attached. */
+  .exchange img[src] {
+    border-color: var(--line, var(--chip, rgb(var(--color-accent-500) / 0.5)));
+  }
   .exch-tape-item img {
-    @apply w-7 h-7 rounded-full object-cover;
+    @apply w-7 h-7 rounded-full object-cover border;
   }
   /* Ticker symbols carry the manager's own color — the same one the AP Poll
      gives them (see manager-colors.js) — so a symbol identifies a person at a
@@ -1389,6 +1398,9 @@
   }
   .exch-tape-delta.is-up {
     @apply text-win;
+  }
+  .exch-tape-delta.is-down {
+    @apply text-loss;
   }
   .exch-tape-delta.is-flat {
     @apply text-text-muted;
@@ -1410,9 +1422,10 @@
   }
   .exch-stat-value--sym {
     @apply flex items-center gap-2 font-mono text-xl sm:text-2xl tracking-wider;
+    color: var(--chip, rgb(var(--color-accent-400)));
   }
   .exch-stat-value--sym img {
-    @apply w-7 h-7 rounded-full object-cover border border-accent-500/60;
+    @apply w-7 h-7 rounded-full object-cover border;
   }
   .exch-stat-sub {
     @apply mt-1.5 text-[0.7rem] text-text-secondary;
@@ -1557,10 +1570,15 @@
       hover:border-border-hover hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400;
   }
   .exch-legend-chip img {
-    @apply w-5 h-5 rounded-full object-cover;
+    @apply w-5 h-5 rounded-full object-cover border;
+  }
+  /* The symbol carries the manager's own color on every chip, not just the
+     top three — it's the same color as their line, which is the whole point of
+     reading the legend. Rank still shows in the chip's border and value. */
+  .exch-legend-sym {
+    color: var(--line);
   }
   .exch-legend-chip.is-top {
-    color: var(--line);
     border-color: color-mix(in srgb, var(--line) 45%, transparent);
   }
   .exch-legend-chip[aria-pressed="true"] {
@@ -1632,7 +1650,7 @@
     @apply flex items-center gap-2 min-w-0 font-semibold whitespace-nowrap;
   }
   .exch-holder img {
-    @apply w-9 h-9 flex-shrink-0 rounded-full object-cover border border-accent-500/50 cursor-pointer
+    @apply w-9 h-9 flex-shrink-0 rounded-full object-cover border cursor-pointer
       transition-transform hover:scale-110;
   }
   .exch-spark-bar {
@@ -1653,7 +1671,7 @@
     @apply grid-cols-[1fr_auto] border-b border-border/60 py-2 last:border-b-0;
   }
   .exch-board-row img {
-    @apply w-7 h-7 rounded-full object-cover border border-accent-500/50 cursor-pointer transition-transform hover:scale-110;
+    @apply w-7 h-7 rounded-full object-cover border cursor-pointer transition-transform hover:scale-110;
   }
   .exch-board-bar {
     @apply block h-2 min-w-0 rounded-full bg-bg overflow-hidden;
