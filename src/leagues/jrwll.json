@@ -98,6 +98,20 @@
     "note": "2025's weekly-prop pool is $15 short of a full $1,200 payout — one prop bet had no winner and that $15 rolls over into 2026's prop pool.",
     "buyIn": 100,
     "payoutStructure": { "champion": 650, "runnerUp": 150, "thirdPlace": 35, "weeklyHighScore": 10, "weeklyProp": 15 },
+    "tickers": {
+      "Will Dooling": "WILL",
+      "Kevin Flaherty": "FLTZ",
+      "Malcolm Zeroka": "ZERO",
+      "Brian Harty": "HART",
+      "Matt Manzo": "MANZ",
+      "Matt Pitman": "PMAN",
+      "Sean Richardson": "RICH",
+      "Andrew Johnstone": "ANDY",
+      "Connor Cademartori": "CADS",
+      "Johnny Jones": "JPJ",
+      "Adam Ellis": "ADAM",
+      "Patrick Gavin": "PGAV"
+    },
     "ledger": {
       "Will Dooling": { "byYear": { "2021": 50, "2022": 35, "2023": 740, "2024": 57.5, "2025": 705 }, "props": 11.5, "highs": 7 },
       "Connor Cademartori": { "byYear": { "2021": 35, "2022": 35, "2023": 17.5, "2024": 30, "2025": 25 }, "props": 4.5, "highs": 7 },
