@@ -1,22 +1,5 @@
-// League switcher dropdown, avatar expand modal, and punishment-gallery modal.
+// Avatar expand modal and punishment-gallery modal.
 // Shared across every league page instead of copy-pasted per file.
-
-function setupSwitcher() {
-  const btn = document.getElementById("switcher-button");
-  const menu = document.getElementById("switcher-menu");
-  if (!btn || !menu) return;
-
-  btn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    const isOpen = !menu.classList.contains("hidden");
-    menu.classList.toggle("hidden");
-    btn.setAttribute("aria-expanded", String(!isOpen));
-  });
-  document.addEventListener("click", () => {
-    menu.classList.add("hidden");
-    btn.setAttribute("aria-expanded", "false");
-  });
-}
 
 function setupAvatarModal() {
   const modal = document.getElementById("avatar-modal");
@@ -84,7 +67,6 @@ function setupPunishmentGallery() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  setupSwitcher();
   setupAvatarModal();
   setupPunishmentGallery();
 });

@@ -13,6 +13,15 @@
   <link rel="manifest" href="/resources/site.webmanifest">
 </head>
 <body class="min-h-screen">
+  <nav class="league-nav" aria-label="Leagues">
+    {% for slug, abbr in { "sb3": "SB3L", "jrwll": "JRWLL", "bb": "BB" } %}
+      {% if league and league.slug == slug %}
+      <span class="league-nav-link is-active" aria-current="page">{{ abbr }}</span>
+      {% else %}
+      <a href="/{{ slug }}/" class="league-nav-link">{{ abbr }}</a>
+      {% endif %}
+    {% endfor %}
+  </nav>
   {{ content | safe }}
 </body>
 </html>

@@ -60,6 +60,20 @@
       hover:bg-accent-500 hover:text-black;
   }
 
+  /* Site-wide top-right league nav (base.njk). Fixed 3-item set, not a
+     dropdown - the league you're currently on fades out rather than
+     linking to itself, so the two you'd actually navigate to stay crisp. */
+  .league-nav {
+    @apply flex items-center justify-end gap-5 sm:gap-7 px-4 md:px-8 pt-5 pb-1
+      text-xs sm:text-sm font-semibold tracking-[0.2em] uppercase;
+  }
+  .league-nav-link {
+    @apply text-text-secondary transition-colors duration-150 hover:text-accent-500;
+  }
+  .league-nav-link.is-active {
+    @apply text-text-primary opacity-40 cursor-default pointer-events-none;
+  }
+
   .icon {
     @apply w-4 h-4 inline-block align-[-2px];
   }
