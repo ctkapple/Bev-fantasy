@@ -1,11 +1,25 @@
-// Reference implementation of the live current-season merge (see merge.js's
-// file header for the full pattern). Other all-time views (Records, My Team,
-// Legends) follow the same three calls - fetch static aggregate, fetch live
-// season, mergeAggregates() - and are the natural next pages to wire up the
-// same way.
+// Rankings tab ("the standings desk") behavior:
+//
+//   1. chart isolation — click a legend chip or a line to bring one manager
+//      forward and push the pack back
+//   2. the live current-season merge — fold the in-progress season on top of
+//      the frozen aggregate and redraw
+//
+// The redraw calls the exact same lib/rankings-markup.js functions .eleventy.js
+// used to render the page, so the live view and the frozen view cannot diverge.
+// The previous version kept its own copy of the standings markup and a lesser
+// copy of the trophy case, which silently dropped the Toilet King block and
+// every identity-colored ring the moment a season went live.
 import { getCurrentSeasonData } from "./sleeper-client.js";
 import { mergeAggregates } from "./merge.js";
-import { ICON_CROWN, ICON_TROPHY } from "./icons.js";
+import { buildRankingsView } from "../../lib/rankings-model.js";
+import {
+  climbLegendMarkup,
+  climbMarkup,
+  raftersMarkup,
+  standingsMarkup,
+} from "../../lib/rankings-markup.js";
+import { PEOPLE } from "../../lib/people.js";
 
 function readLeagueConfig() {
   const el = document.getElementById("dashboard-league-config");
@@ -17,44 +31,78 @@ function readLeagueConfig() {
   }
 }
 
-function renderStandings(aggregate) {
-  const tbody = document.getElementById("power-rankings-body");
-  if (!tbody) return;
-  tbody.innerHTML = aggregate.standings
-    .map(
-      (m) => `<tr>
-        <td class="px-4 py-3 font-semibold">${m.rank}</td>
-        <td class="px-4 py-3 flex items-center gap-2">
-          <img src="${m.avatar}" alt="" class="w-7 h-7 rounded-full cursor-pointer" onclick="window.expandAvatar && window.expandAvatar(this.src)">
-          ${m.displayName}${m.userId === aggregate.reigningChampionId ? ` <span title="Reigning Champ">${ICON_CROWN}</span>` : ""}
-        </td>
-        <td class="px-4 py-3"><span class="win">${m.wins}</span>-<span class="loss">${m.losses}</span>${m.ties ? "-" + m.ties : ""}</td>
-        <td class="px-4 py-3">${(m.winPct * 100).toFixed(1)}%</td>
-        <td class="px-4 py-3"><span class="win">${m.pf.toFixed(2)}</span> / <span class="loss">${m.pa.toFixed(2)}</span></td>
-      </tr>`
-    )
-    .join("");
+// --- Isolation -------------------------------------------------------------
+// One manager forward, everyone else dimmed. Driven by a class on the card so
+// the whole cascade lives in CSS (see .rank-climb-card.is-isolating).
+function setupIsolation(root) {
+  const card = root.querySelector("[data-climb]");
+  if (!card) return;
+  const svg = card.querySelector("[data-climb-svg]");
+  const legend = card.querySelector("[data-climb-legend]");
+  let pinned = null;
+
+  const apply = (managerId) => {
+    card.classList.toggle("is-isolating", Boolean(managerId));
+    for (const el of card.querySelectorAll("[data-manager]")) {
+      el.classList.toggle("is-active", el.dataset.manager === managerId);
+      if (el.tagName === "BUTTON") {
+        el.setAttribute("aria-pressed", String(el.dataset.manager === managerId));
+      }
+    }
+  };
+
+  legend?.addEventListener("click", (event) => {
+    const chip = event.target.closest("[data-manager]");
+    if (!chip) return;
+    pinned = pinned === chip.dataset.manager ? null : chip.dataset.manager;
+    apply(pinned);
+  });
+
+  svg?.addEventListener("click", (event) => {
+    const series = event.target.closest("[data-manager]");
+    if (!series) return;
+    pinned = pinned === series.dataset.manager ? null : series.dataset.manager;
+    apply(pinned);
+  });
+
+  // Hover previews the isolation without committing to it, but never fights a
+  // pinned selection.
+  svg?.addEventListener("mouseover", (event) => {
+    if (pinned) return;
+    const series = event.target.closest("[data-manager]");
+    if (series) apply(series.dataset.manager);
+  });
+  svg?.addEventListener("mouseleave", () => {
+    if (!pinned) apply(null);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && pinned) {
+      pinned = null;
+      apply(null);
+    }
+  });
 }
 
-function renderTrophyCase(aggregate) {
-  const card = document.getElementById("trophy-case-card");
-  if (!card) return;
-  const row = (m) =>
-    `<div class="flex items-center justify-between gap-2 text-sm">
-      <span class="flex items-center gap-2"><img src="${m.avatar}" alt="" class="w-6 h-6 rounded-full">${m.displayName}</span>
-      <span class="text-text-secondary">${m.years.join(", ")}</span>
-    </div>`;
-  const champs = aggregate.trophyCase.champions;
-  const runnerUps = aggregate.trophyCase.runnerUps;
-  card.innerHTML = `
-    <h2 class="text-xl font-bold mb-4 text-yellow-400">${ICON_TROPHY} Trophy Case</h2>
-    ${champs.length > 0 ? `<div class="space-y-3"><p class="text-xs uppercase tracking-wider text-text-secondary">Champions</p>${champs.map(row).join("")}</div>` : ""}
-    ${runnerUps.length > 0 ? `<div class="space-y-3 mt-6"><p class="text-xs uppercase tracking-wider text-text-secondary">Runner-Ups</p>${runnerUps.map(row).join("")}</div>` : ""}
-    ${champs.length === 0 ? '<p class="text-text-secondary text-sm">No champions crowned yet.</p>' : ""}
-  `;
+// --- Live season -----------------------------------------------------------
+function render(root, view) {
+  root.querySelector("[data-rafters]").innerHTML = raftersMarkup(view.rafters);
+  root.querySelector("[data-standings]").innerHTML = standingsMarkup(view.rows);
+
+  const svg = root.querySelector("[data-climb-svg]");
+  if (svg && view.hasClimb) {
+    // The merged season adds a column, so the viewBox itself has to move.
+    svg.setAttribute("viewBox", `0 0 ${view.climb.width} ${view.climb.height}`);
+    svg.innerHTML = climbMarkup(view.climb);
+    root.querySelector("[data-climb-legend]").innerHTML = climbLegendMarkup(view.rows);
+  }
 }
 
 async function run() {
+  const root = document.getElementById("dashboard-root");
+  if (!root) return;
+  setupIsolation(root);
+
   const league = readLeagueConfig();
   if (!league) return;
 
@@ -62,17 +110,18 @@ async function run() {
   try {
     staticAggregate = await fetch(`/leagues/${league.slug}/data/aggregates.json`).then((r) => r.json());
   } catch {
-    return; // No static data yet (fetch-sleeper.js hasn't run) - leave the (empty) server-rendered state as-is.
+    return; // No static data yet (fetch-sleeper.js hasn't run) — leave the server-rendered state as-is.
   }
 
   const liveCurrentSeasonData = await getCurrentSeasonData(league);
   const merged = mergeAggregates(staticAggregate, liveCurrentSeasonData);
+  if (merged === staticAggregate) return; // Nothing live to add.
 
-  if (merged !== staticAggregate) {
-    renderStandings(merged);
-    renderTrophyCase(merged);
-    document.getElementById("live-season-note")?.classList.remove("hidden");
-  }
+  const view = buildRankingsView(league, merged, PEOPLE);
+  if (!view) return;
+
+  render(root, view);
+  document.getElementById("live-season-note")?.classList.remove("hidden");
 }
 
 document.addEventListener("DOMContentLoaded", run);

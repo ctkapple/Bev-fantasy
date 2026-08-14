@@ -1,6 +1,9 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ["./src/**/*.{njk,md,js}"],
+  // lib/ is in scope because the Rankings tab's markup lives in
+  // lib/rankings-markup.js (shared by the build and the live-season redraw) —
+  // without it Tailwind purges every `rank-*` component rule in main.css.
+  content: ["./src/**/*.{njk,md,js}", "./lib/**/*.js"],
   darkMode: "class",
   // Position classes are built dynamically (`pos-pill-{{ p.position }}`), so
   // Tailwind's content scanner never sees the literal class names and would

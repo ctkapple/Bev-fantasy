@@ -1298,6 +1298,379 @@
     }
   }
 
+  /* --- Rankings tab: "the standings desk" -------------------------------
+     Sibling to the Earnings exchange below, built from the same grammar: an
+     orange eyebrow over a display title, cards for sections, manager identity
+     color for who someone is, and semantic green/red for whether they're good.
+     Where the exchange ramps green by *money*, this page ramps green by *win
+     rate*, and gold/silver/bronze is reserved for hardware — a banner, a medal
+     on a rank, a ring count. Numbers everywhere are tabular. */
+  .rankings {
+    @apply space-y-5 pt-1;
+    font-variant-numeric: tabular-nums;
+  }
+  .rank-eyebrow {
+    @apply text-[0.68rem] font-bold uppercase tracking-[0.2em] text-accent-400;
+  }
+  .rank-title {
+    @apply text-2xl md:text-3xl font-bold leading-tight;
+  }
+  .rank-section-head {
+    @apply flex flex-wrap items-end justify-between gap-x-6 gap-y-1 mb-4;
+  }
+  .rank-section-note {
+    @apply text-xs text-text-muted max-w-sm;
+  }
+  .rank-hint {
+    @apply mt-3 text-[0.7rem] text-text-muted;
+  }
+  .rank-empty {
+    @apply text-sm text-text-secondary;
+  }
+  /* Inline key for the chart's gold championship marker. */
+  .rank-title-key {
+    @apply font-semibold text-yellow-400;
+  }
+
+  /* The Rafters. Banners hang in one horizontally-scrolling rail rather than
+     the three stacked lists the old trophy case used, so a league's whole
+     history reads left to right in one pass. Tier (gold / silver / toilet)
+     says what the banner is; the avatar's ring says who it belongs to. */
+  .rank-rafters {
+    @apply flex gap-2.5 overflow-x-auto pb-2;
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--color-border-hover)) transparent;
+  }
+  .rank-rafters::-webkit-scrollbar {
+    height: 5px;
+  }
+  .rank-rafters::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .rank-rafters::-webkit-scrollbar-thumb {
+    @apply rounded-full;
+    background-color: rgb(var(--color-border-hover));
+  }
+  .rank-banner {
+    @apply relative flex w-[6.5rem] flex-none flex-col items-center gap-1.5 rounded-t-md bg-bg/60
+      px-2 pt-2.5 pb-6 text-center transition-transform duration-200;
+    border-top: 3px solid var(--tier);
+    /* The notch is what makes it a pennant instead of a card. */
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), 50% 100%, 0 calc(100% - 14px));
+    background-image: linear-gradient(180deg, color-mix(in srgb, var(--tier) 16%, transparent), transparent 60%);
+  }
+  .rank-banner:hover {
+    @apply -translate-y-1;
+  }
+  .rank-banner.is-champion {
+    --tier: #facc15;
+  }
+  .rank-banner.is-runnerUp {
+    --tier: #9ca3af;
+  }
+  .rank-banner.is-toilet {
+    --tier: #b45309;
+  }
+  .rank-banner-year {
+    @apply font-display text-base font-bold leading-none;
+    color: var(--tier);
+  }
+  .rank-banner-face {
+    @apply w-9 h-9 rounded-full object-cover border-2 cursor-pointer transition-transform;
+    border-color: var(--chip, var(--tier));
+  }
+  .rank-banner-face:hover {
+    @apply scale-110;
+  }
+  .rank-banner-name {
+    @apply w-full truncate text-[0.68rem] font-semibold leading-tight text-text-primary;
+  }
+  .rank-banner-label {
+    @apply text-[0.55rem] font-bold uppercase tracking-[0.12em] text-text-muted;
+  }
+
+  /* The Climb. Same machinery as the equity curve — fixed viewBox scaled by
+     CSS, one <g> per manager, a fat invisible hit line, click to isolate —
+     with rank on Y instead of dollars, so up is literally better. */
+  .rank-climb-card {
+    background-image: radial-gradient(circle at 88% 0%, rgb(var(--color-accent-500) / 0.08), transparent 45%);
+  }
+  .rank-climb-body {
+    @apply flex flex-col gap-4;
+  }
+  .rank-climb-scroll {
+    @apply -mx-4 overflow-x-auto sm:mx-0;
+  }
+  .rank-chart {
+    @apply w-full;
+  }
+  @media (min-width: 640px) {
+    .rank-chart {
+      min-width: 560px;
+    }
+  }
+  @media (min-width: 1024px) {
+    .rank-climb-body {
+      @apply flex-row items-stretch gap-5;
+    }
+    .rank-climb-scroll {
+      @apply flex-1 min-w-0;
+    }
+  }
+  .rank-gridline line {
+    stroke: rgb(var(--color-border));
+    stroke-width: 1;
+  }
+  /* First place gets a brighter rule — the line everyone is climbing toward. */
+  .rank-gridline.is-crown line {
+    stroke: rgb(250 204 21 / 0.35);
+  }
+  .rank-gridline.is-crown text {
+    fill: #facc15;
+  }
+  .rank-gridline text,
+  .rank-axis-x {
+    fill: rgb(var(--color-text-muted));
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .rank-axis-x {
+    letter-spacing: 0.08em;
+  }
+  .rank-series {
+    transition: opacity 0.15s ease-out;
+  }
+  .rank-line {
+    fill: none;
+    stroke: var(--line);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.5;
+    vector-effect: non-scaling-stroke;
+    transition: stroke-width 0.15s ease-out, opacity 0.15s ease-out;
+  }
+  .rank-series.is-top .rank-line {
+    stroke-width: 3;
+    opacity: 1;
+  }
+  .rank-line-hit {
+    fill: none;
+    stroke: transparent;
+    stroke-width: 18;
+    cursor: pointer;
+    vector-effect: non-scaling-stroke;
+  }
+  .rank-dot {
+    fill: rgb(var(--color-bg));
+    stroke: var(--line);
+    stroke-width: 2;
+    opacity: 0;
+    cursor: pointer;
+    vector-effect: non-scaling-stroke;
+    transition: opacity 0.15s ease-out;
+  }
+  .rank-series.is-top .rank-dot {
+    opacity: 1;
+  }
+  /* Championship years. Gold, filled, and always on — Y is the regular-season
+     standing, so without this a 6th-place line that won the title looks like it
+     contradicts the banner in the Rafters. */
+  .rank-dot.is-title {
+    fill: #facc15;
+    stroke: #facc15;
+    opacity: 1;
+  }
+  .rank-end-label {
+    fill: var(--line);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    opacity: 0;
+    transition: opacity 0.15s ease-out;
+  }
+  .rank-series.is-top .rank-end-label {
+    opacity: 1;
+  }
+  /* Isolation: one manager forward, the pack pushed back. */
+  .rank-climb-card.is-isolating .rank-series {
+    opacity: 0.14;
+  }
+  .rank-climb-card.is-isolating .rank-series.is-active {
+    opacity: 1;
+  }
+  .rank-climb-card.is-isolating .rank-series.is-active .rank-line {
+    stroke-width: 3.5;
+    opacity: 1;
+  }
+  .rank-climb-card.is-isolating .rank-series.is-active .rank-dot,
+  .rank-climb-card.is-isolating .rank-series.is-active .rank-end-label {
+    opacity: 1;
+  }
+  /* Below 640px the chart scales fluidly to the viewport rather than forcing a
+     horizontal scroll, which shrinks the effective viewBox scale enough that
+     strokes and text would read thin — compensate, exactly as the equity curve
+     does at the same breakpoint. */
+  @media (max-width: 639px) {
+    .rank-line {
+      stroke-width: 2.75;
+    }
+    .rank-series.is-top .rank-line {
+      stroke-width: 4.5;
+    }
+    .rank-dot {
+      r: 7;
+    }
+    .rank-gridline text,
+    .rank-axis-x,
+    .rank-end-label {
+      font-size: 26px;
+    }
+  }
+
+  .rank-legend {
+    @apply mt-4 flex flex-wrap gap-1.5 border-t border-border pt-4;
+  }
+  .rank-legend-chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-border bg-bg/50 py-1 pl-1 pr-2.5
+      font-mono text-[0.68rem] font-bold tracking-wider text-text-secondary transition-colors duration-150
+      hover:border-border-hover hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400;
+  }
+  .rank-legend-chip img {
+    @apply w-5 h-5 rounded-full object-cover border-2;
+    border-color: var(--line, var(--chip));
+  }
+  .rank-legend-sym {
+    color: var(--line);
+  }
+  .rank-legend-chip.is-top {
+    border-color: color-mix(in srgb, var(--line) 45%, transparent);
+  }
+  .rank-legend-chip[aria-pressed="true"] {
+    background-color: color-mix(in srgb, var(--line) 18%, transparent);
+    border-color: var(--line);
+    color: var(--line);
+  }
+  .rank-legend-val {
+    @apply ml-0.5 font-semibold normal-case tracking-normal text-text-muted;
+  }
+  /* Desktop rail: ranked best-to-worst top to bottom beside the chart, kept
+     narrow so the curve stays the larger element on screen. */
+  @media (min-width: 1024px) {
+    .rank-legend {
+      @apply mt-0 w-48 flex-none flex-col flex-nowrap gap-1.5 overflow-y-auto border-t-0 border-l
+        border-border pl-4 pt-0;
+      max-height: 440px;
+      scrollbar-width: thin;
+      scrollbar-color: rgb(var(--color-border-hover)) transparent;
+    }
+    .rank-legend::-webkit-scrollbar {
+      width: 5px;
+    }
+    .rank-legend::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .rank-legend::-webkit-scrollbar-thumb {
+      @apply rounded-full;
+      background-color: rgb(var(--color-border-hover));
+    }
+    .rank-legend-chip {
+      @apply w-full gap-2 rounded-lg py-1.5 pl-1.5 pr-2.5 text-xs;
+    }
+    .rank-legend-chip img {
+      @apply w-6 h-6;
+    }
+    .rank-legend-val {
+      @apply ml-auto;
+    }
+  }
+
+  /* The Table. Blotter-class: an identity stripe per row, heat on win rate,
+     and a form sparkline, in the same idiom as the Holdings table. */
+  .rank-table tbody tr {
+    @apply transition-colors;
+  }
+  .rank-table tbody tr:hover {
+    @apply bg-surface-hover/60;
+  }
+  /* An inset shadow rather than a border-left, which border-collapse would
+     drop on the first cell. */
+  .rank-table tbody td:first-child {
+    box-shadow: inset 3px 0 0 var(--chip);
+  }
+  .rank-pos {
+    @apply inline-block min-w-[1.5rem] text-center font-mono text-sm font-bold text-text-secondary;
+  }
+  .rank-pos.is-gold {
+    color: #facc15;
+  }
+  .rank-pos.is-silver {
+    color: #cbd5e1;
+  }
+  .rank-pos.is-bronze {
+    color: #d97706;
+  }
+  .rank-holder {
+    @apply flex items-center gap-2 min-w-0 font-semibold whitespace-nowrap;
+  }
+  .rank-holder img {
+    @apply w-9 h-9 flex-shrink-0 rounded-full object-cover border-2 cursor-pointer
+      transition-transform hover:scale-110;
+    border-color: var(--chip, rgb(var(--color-accent-500) / 0.5));
+  }
+  .rank-crown {
+    @apply flex-none text-yellow-400;
+  }
+  /* Win rate shades green across the league's *actual* spread, so a tight
+     league still shows a gradient instead of a column of identical cells. */
+  .rank-pct[style*="--heat"] {
+    background-color: rgb(var(--color-win) / calc(var(--heat) * 0.3));
+  }
+  .rank-rings {
+    @apply font-mono text-xs tracking-[0.15em] text-yellow-400;
+  }
+  .rank-rings i {
+    @apply ml-0.5 not-italic text-[0.6rem] text-text-muted;
+  }
+  .rank-rings.is-empty {
+    @apply tracking-normal text-text-muted/50;
+  }
+  .rank-form {
+    @apply overflow-visible;
+  }
+  .rank-form-bar {
+    fill: var(--chip);
+    opacity: 0.85;
+  }
+  .rank-form-gap {
+    fill: rgb(var(--color-border));
+  }
+  /* Secondary columns fold away on phones rather than pushing the table into a
+     long horizontal scroll. */
+  @media (max-width: 767px) {
+    .rank-col-opt {
+      display: none;
+    }
+  }
+
+  .rank-live {
+    @apply flex items-center gap-2;
+  }
+  .rank-live-dot {
+    @apply block w-1.5 h-1.5 flex-none rounded-full bg-accent-500;
+    animation: exch-pulse 2s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rank-live-dot {
+      animation: none !important;
+    }
+    .rank-banner:hover {
+      transform: none;
+    }
+  }
+
   /* --- Earnings tab: "the exchange" -------------------------------------
      The league's money page, dressed as a trading desk. Orange stays the
      exchange's chrome brand (frame, live dot, eyebrows); every ticker symbol,

@@ -9,98 +9,98 @@ currentTab: dashboard
 eleventyComputed:
   title: "{{ league.name }} — Rankings"
 ---
-{% set aggregate = leagueStats[league.slug].aggregates %}
+{# The Rankings tab, dressed as a standings desk. Three sections, all built
+   from one pass over the aggregate (lib/rankings-model.js):
 
-<div id="dashboard-root" data-league="{{ league.slug }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
-  <div class="card lg:col-span-2">
-    <h2 class="text-xl font-bold mb-4 text-accent-500">All-Time Standings</h2>
-    {% if aggregate and aggregate.standings.length > 0 %}
+     The Rafters — every banner on the wall, newest first
+     The Climb   — where everyone finished, season by season
+     The Table   — the all-time standings blotter
+
+   The three data-driven regions are rendered by lib/rankings-markup.js rather
+   than by loops here, because src/scripts/dashboard.js has to redraw them from
+   the same functions once the live current season is merged in. This file owns
+   the page: cards, section heads, table head, notes, empty states. #}
+{% set view = league | rankingsView(leagueStats, people) %}
+
+{% if not view %}
+<p class="text-text-secondary text-sm">No completed seasons yet — the desk opens once the first season is frozen into history.</p>
+{% else %}
+
+<div id="dashboard-root" class="rankings" data-league="{{ league.slug }}">
+
+  {# --- The Rafters ------------------------------------------------------- #}
+  <section class="card rank-rafters-card">
+    <header class="rank-section-head">
+      <div>
+        <p class="rank-eyebrow">Hardware</p>
+        <h2 class="rank-title">The Rafters</h2>
+      </div>
+      <p class="rank-section-note">Every banner {{ league.name }} has raised, newest first.</p>
+    </header>
+    <div class="rank-rafters" data-rafters>{{ view.rafters | raftersMarkup | safe }}</div>
+  </section>
+
+  {# --- The Climb --------------------------------------------------------- #}
+  {# Gated on two seasons: one column of dots is not a chart. A young league
+     gets the rafters and the table until it has a second year to plot. #}
+  {% if view.hasClimb %}
+  <section class="card rank-climb-card" data-climb>
+    <header class="rank-section-head">
+      <div>
+        <p class="rank-eyebrow">Season by Season</p>
+        <h2 class="rank-title">The Climb</h2>
+      </div>
+      <p class="rank-section-note">Regular-season finish each year, best at the top. A <span class="rank-title-key">gold dot</span> is a season they went on to win it all. Click a manager to isolate them; Esc clears.</p>
+    </header>
+
+    <div class="rank-climb-body">
+      <div class="rank-climb-scroll">
+        <svg class="rank-chart" data-climb-svg viewBox="0 0 {{ view.climb.width }} {{ view.climb.height }}"
+          role="img" aria-label="Finishing position for every manager, season by season">{{ view.climb | climbMarkup | safe }}</svg>
+      </div>
+
+      {# Ranked all-time, so the rail doubles as a standings preview. On desktop
+         it sits as a right-hand rail beside the chart; on mobile it wraps below
+         like a normal legend — same pattern as the Earnings equity curve. #}
+      <div class="rank-legend" data-climb-legend role="group" aria-label="Isolate a manager on the chart">{{ view.rows | climbLegendMarkup | safe }}</div>
+    </div>
+  </section>
+  {% endif %}
+
+  {# --- The Table --------------------------------------------------------- #}
+  <section class="card rank-table-card">
+    <header class="rank-section-head">
+      <div>
+        <p class="rank-eyebrow">All-Time</p>
+        <h2 class="rank-title">The Table</h2>
+      </div>
+      <p class="rank-section-note">Every season this league has played, summed. Click a column to sort.</p>
+    </header>
     <div class="overflow-x-auto">
-      <table class="stat-table">
+      <table class="stat-table rank-table">
         <thead>
           <tr>
-            <th class="px-4 py-3">Rank</th>
-            <th class="px-4 py-3">Manager</th>
-            <th class="px-4 py-3">Record (<span class="win">W</span>-<span class="loss">L</span>)</th>
-            <th class="px-4 py-3">Win %</th>
-            <th class="px-4 py-3"><span class="win">PF</span> / <span class="loss">PA</span></th>
+            <th class="px-3 py-3" data-sort="rank">#<span class="sort-arrow"></span></th>
+            <th class="px-3 py-3" data-sort="manager">Manager <span class="sort-arrow"></span></th>
+            <th class="px-3 py-3 text-center rank-col-opt" data-sort="seasons" title="Seasons played">Sn <span class="sort-arrow"></span></th>
+            <th class="px-3 py-3" data-sort="record">Record (<span class="win">W</span>-<span class="loss">L</span>) <span class="sort-arrow"></span></th>
+            <th class="px-3 py-3 text-right" data-sort="pct">Win % <span class="sort-arrow"></span></th>
+            <th class="px-3 py-3 text-right" data-sort="pf">PF <span class="sort-arrow"></span></th>
+            <th class="px-3 py-3 text-right rank-col-opt" data-sort="pa">PA <span class="sort-arrow"></span></th>
+            <th class="px-3 py-3 text-right" data-sort="diff">Diff <span class="sort-arrow"></span></th>
+            <th class="px-3 py-3 text-center" data-sort="titles" title="Championships">Rings <span class="sort-arrow"></span></th>
+            <th class="px-3 py-3 rank-col-opt" data-sort="best" title="Best regular-season finish">Best <span class="sort-arrow"></span></th>
+            <th class="px-3 py-3" data-sort="form" title="Regular-season finish each season, oldest to newest">Form <span class="sort-arrow"></span></th>
           </tr>
         </thead>
-        <tbody id="power-rankings-body">
-          {% for m in aggregate.standings %}
-          <tr>
-            <td class="px-4 py-3 font-semibold">{{ m.rank }}</td>
-            <td class="px-4 py-3 flex items-center gap-2">
-              <img src="{{ m.avatar }}" alt="" class="w-7 h-7 rounded-full cursor-pointer" onclick="window.expandAvatar && window.expandAvatar(this.src)">
-              {{ m.displayName }}{% if m.userId == aggregate.reigningChampionId %} <span title="Reigning Champ">{% icon "crown", "icon" %}</span>{% endif %}
-            </td>
-            <td class="px-4 py-3"><span class="win">{{ m.wins }}</span>-<span class="loss">{{ m.losses }}</span>{% if m.ties %}-{{ m.ties }}{% endif %}</td>
-            <td class="px-4 py-3">{{ (m.winPct * 100) | decimal1 }}%</td>
-            <td class="px-4 py-3"><span class="win">{{ m.pf | decimal2 }}</span> / <span class="loss">{{ m.pa | decimal2 }}</span></td>
-          </tr>
-          {% endfor %}
-        </tbody>
+        <tbody data-standings>{{ view.rows | standingsMarkup | safe }}</tbody>
       </table>
     </div>
-    {% else %}
-    <p class="text-text-secondary text-sm">No completed seasons yet — standings will appear once the first season is frozen into history.</p>
-    {% endif %}
-  </div>
-
-  <div class="card" id="trophy-case-card">
-    <h2 class="text-xl font-bold mb-4 text-yellow-400">{% icon "trophy", "icon mr-1" %}Trophy Case</h2>
-
-    <div class="space-y-4">
-      {% for c in aggregate.trophyCase.champions if aggregate %}
-      <div class="flex items-center gap-3">
-        <img src="{{ c.avatar }}" alt="{{ c.displayName }}" class="w-10 h-10 rounded-full object-cover border-2 border-yellow-400 cursor-pointer hover:scale-110 transition-transform" onclick="window.expandAvatar && window.expandAvatar(this.src)">
-        <div>
-          <p class="font-semibold">{{ c.displayName }}{% if c.userId == aggregate.reigningChampionId %} <span title="Reigning Champ">{% icon "crown", "icon" %}</span>{% endif %}</p>
-          {% for y in c.years %}<p class="text-sm text-yellow-400">{% icon "trophy", "icon mr-1" %}{{ y }}</p>{% endfor %}
-        </div>
-      </div>
-      {% else %}
-      <p class="text-text-secondary text-sm">No champions yet!</p>
-      {% endfor %}
-    </div>
-
-    {% if aggregate and aggregate.trophyCase.runnerUps.length > 0 %}
-    <div class="space-y-4 mt-6">
-      <h3 class="text-lg font-semibold text-text-secondary mb-2 border-t border-border pt-4">{% icon "medal", "icon mr-1" %}Runner Ups</h3>
-      {% for r in aggregate.trophyCase.runnerUps %}
-      <div class="flex items-center gap-3">
-        <img src="{{ r.avatar }}" alt="{{ r.displayName }}" class="w-10 h-10 rounded-full object-cover border-2 border-gray-400 cursor-pointer hover:scale-110 transition-transform" onclick="window.expandAvatar && window.expandAvatar(this.src)">
-        <div>
-          <p class="font-semibold">{{ r.displayName }}</p>
-          {% for y in r.years %}<p class="text-sm text-text-secondary">😢 {{ y }}</p>{% endfor %}
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-    {% endif %}
-
-    {# Toilet Kings are hand-curated in league config - Sleeper has no notion of them. #}
-    {% if league.toiletKings and league.toiletKings.length > 0 and aggregate %}
-    <div class="space-y-4 mt-6">
-      <h3 class="text-lg font-semibold text-amber-700 mb-2 border-t border-border pt-4">{% icon "toilet", "icon mr-1" %}Toilet King</h3>
-      {% for king in league.toiletKings | groupToiletKings %}
-        {% set m = aggregate.managers | managerByName(king.manager) %}
-        {% if m %}
-        <div class="flex items-center gap-3">
-          <img src="{{ m.avatar }}" alt="{{ m.displayName }}" class="w-10 h-10 rounded-full object-cover border-2 border-amber-700 cursor-pointer hover:scale-110 transition-transform" onclick="window.expandAvatar && window.expandAvatar(this.src)">
-          <div>
-            <p class="font-semibold">{{ m.displayName }}</p>
-            {% for y in king.years %}<p class="text-sm text-text-secondary">💩 {{ y }}</p>{% endfor %}
-          </div>
-        </div>
-        {% endif %}
-      {% endfor %}
-    </div>
-    {% endif %}
-  </div>
+    <p class="rank-hint">Rings counts championships; Best and Form are regular-season finishes, oldest season to newest — a tall bar is a good year, a flat one a season this manager wasn't here for.</p>
+    <p id="live-season-note" class="rank-hint rank-live hidden"><span class="rank-live-dot"></span>Includes the live current season, refreshed about hourly per visitor.</p>
+  </section>
 </div>
-
-<p id="live-season-note" class="text-xs text-text-muted mt-6 hidden">Standings above include the live current season (updates ~hourly per visitor).</p>
 
 <script id="dashboard-league-config" type="application/json">{{ league | dump | safe }}</script>
 <script type="module" src="/assets/js/dashboard.js"></script>
+{% endif %}

@@ -1,5 +1,12 @@
 import { readFileSync } from "node:fs";
 import { buildEarningsView } from "./lib/earnings-model.js";
+import { buildRankingsView } from "./lib/rankings-model.js";
+import {
+  climbLegendMarkup,
+  climbMarkup,
+  raftersMarkup,
+  standingsMarkup,
+} from "./lib/rankings-markup.js";
 
 export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({ "src/assets": "assets" });
@@ -107,6 +114,18 @@ export default function (eleventyConfig) {
   eleventyConfig.addFilter("earningsView", (league, leagues, leagueStats, people) =>
     buildEarningsView(league, leagues, leagueStats, people)
   );
+
+  // --- Rankings tab ("the standings desk") ---------------------------------
+  // The view model and the markup for its three data-driven regions both live
+  // in lib/ because src/scripts/dashboard.js re-renders them against the
+  // live-merged aggregate; see lib/rankings-markup.js for why that matters.
+  eleventyConfig.addFilter("rankingsView", (league, leagueStats, people) =>
+    buildRankingsView(league, leagueStats[league.slug]?.aggregates, people)
+  );
+  eleventyConfig.addFilter("raftersMarkup", raftersMarkup);
+  eleventyConfig.addFilter("climbMarkup", climbMarkup);
+  eleventyConfig.addFilter("climbLegendMarkup", climbLegendMarkup);
+  eleventyConfig.addFilter("standingsMarkup", standingsMarkup);
 
   // Trades tab filter bar: precompute the searchable/filterable facets for one
   // trade (participant ids, positions moved, "season:round" pick tokens, and
