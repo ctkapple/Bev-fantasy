@@ -1285,10 +1285,11 @@
   }
 
   /* --- Earnings tab: "the exchange" -------------------------------------
-     The league's money page, dressed as a trading desk. Orange is the
-     exchange's own brand (chrome, ticker symbols, the leader's line);
-     green/red stay reserved for whether a manager is actually up or down on
-     their buy-ins. Numbers everywhere are tabular so columns line up. */
+     The league's money page, dressed as a trading desk. Orange stays the
+     exchange's chrome brand (frame, live dot, leader's line); ticker symbols
+     use the site's win-green so they read like a market ticker. Red is still
+     reserved for whether a manager is actually down on their buy-ins.
+     Numbers everywhere are tabular so columns line up. */
   .exchange {
     @apply space-y-5 pt-1;
     font-variant-numeric: tabular-nums;
@@ -1309,7 +1310,7 @@
     @apply mt-3 text-[0.7rem] text-text-muted;
   }
   .exch-sym {
-    @apply inline-block font-mono text-xs font-bold tracking-wider text-accent-400;
+    @apply inline-block font-mono text-xs font-bold tracking-wider text-win;
   }
   .exch-total {
     @apply font-semibold text-text-primary;
@@ -1359,7 +1360,7 @@
     @apply w-5 h-5 rounded-full object-cover;
   }
   .exch-tape-item b {
-    @apply font-mono text-xs font-bold tracking-wider text-accent-400;
+    @apply font-mono text-xs font-bold tracking-wider text-win;
   }
   .exch-tape-price {
     @apply font-semibold;
