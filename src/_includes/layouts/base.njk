@@ -13,15 +13,28 @@
   <link rel="manifest" href="/resources/site.webmanifest">
 </head>
 <body class="min-h-screen">
-  <nav class="league-nav" aria-label="Leagues">
-    {% for slug, abbr in { "sb3": "SB3L", "jrwll": "JRWLL", "bb": "BB" } %}
-      {% if league and league.slug == slug %}
-      <span class="league-nav-link is-active" aria-current="page">{{ abbr }}</span>
-      {% else %}
-      <a href="/{{ slug }}/" class="league-nav-link">{{ abbr }}</a>
-      {% endif %}
-    {% endfor %}
-  </nav>
+  <header class="site-banner">
+    <div class="site-banner-inner">
+      <a href="{{ '/' + league.slug + '/' if league else '/' }}" class="site-banner-brand">
+        <img src="/assets/bev-fantasy-logo.png" alt="Bev Fantasy" class="site-banner-logo">
+        <span class="site-banner-text">
+          <span class="site-banner-name">{{ league.name or "Bev Fantasy" }}</span>
+          {% if league and league.tagline %}
+          <span class="site-banner-tagline">{{ league.tagline }}</span>
+          {% endif %}
+        </span>
+      </a>
+      <nav class="league-nav" aria-label="Leagues">
+        {% for slug, abbr in { "sb3": "SB3L", "jrwll": "JRWLL", "bb": "BB" } %}
+          {% if league and league.slug == slug %}
+          <span class="league-nav-link is-active" aria-current="page">{{ abbr }}</span>
+          {% else %}
+          <a href="/{{ slug }}/" class="league-nav-link">{{ abbr }}</a>
+          {% endif %}
+        {% endfor %}
+      </nav>
+    </div>
+  </header>
   {{ content | safe }}
 </body>
 </html>

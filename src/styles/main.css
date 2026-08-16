@@ -60,18 +60,53 @@
       hover:bg-accent-500 hover:text-black;
   }
 
-  /* Site-wide top-right league nav (base.njk). Fixed 3-item set, not a
-     dropdown - the league you're currently on fades out rather than
-     linking to itself, so the two you'd actually navigate to stay crisp. */
+  /* Site-wide banner (base.njk): brand mark + league name on the left,
+     league-switcher pills on the right, over a dark surface with a faint
+     orange tint so the logo stays readable rather than fighting a loud
+     gradient. Appears on every page, including the league-less home hub. */
+  .site-banner {
+    @apply relative border-b border-border;
+    background:
+      radial-gradient(ellipse 70% 130% at 0% 0%, rgb(var(--color-accent-500) / 0.14), transparent 60%),
+      rgb(var(--color-surface));
+  }
+  .site-banner-inner {
+    @apply container mx-auto max-w-7xl px-4 md:px-8 py-3 flex items-center justify-between gap-4;
+  }
+  .site-banner-brand {
+    @apply flex items-center gap-3 min-w-0 shrink;
+  }
+  .site-banner-logo {
+    @apply h-10 w-10 sm:h-12 sm:w-12 object-contain shrink-0;
+  }
+  .site-banner-text {
+    @apply flex flex-col leading-tight min-w-0;
+  }
+  .site-banner-name {
+    @apply font-display font-bold text-lg sm:text-xl text-text-primary tracking-wide truncate;
+  }
+  .site-banner-tagline {
+    @apply text-[10px] sm:text-xs text-text-secondary uppercase tracking-[0.2em] truncate;
+  }
+
+  /* League-switcher pills, right-aligned in the banner. Fixed 3-item set,
+     not a dropdown - the league you're currently on becomes a glowing solid
+     pill rather than linking to itself, so it reads as "you are here"
+     instead of just a dimmed no-op. */
   .league-nav {
-    @apply flex items-center justify-end gap-5 sm:gap-7 px-4 md:px-8 pt-5 pb-1
-      text-xs sm:text-sm font-semibold tracking-[0.2em] uppercase;
+    @apply flex items-center gap-1.5 sm:gap-2 shrink-0;
   }
   .league-nav-link {
-    @apply text-text-secondary transition-colors duration-150 hover:text-accent-500;
+    @apply px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-full border border-transparent
+      text-[11px] sm:text-sm font-semibold tracking-[0.15em] uppercase
+      text-text-secondary transition-all duration-200
+      hover:text-text-primary hover:border-border-hover;
   }
   .league-nav-link.is-active {
-    @apply text-text-primary opacity-40 cursor-default pointer-events-none;
+    @apply bg-accent-500 text-black border-accent-500 cursor-default pointer-events-none;
+    box-shadow:
+      0 0 10px 1px rgb(var(--color-accent-500) / 0.7),
+      0 0 24px 6px rgb(var(--color-accent-500) / 0.4);
   }
 
   .icon {
