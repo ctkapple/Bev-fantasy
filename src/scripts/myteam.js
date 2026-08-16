@@ -3,6 +3,11 @@
 // this is all pre-computed at build time.
 
 import { ICON_CROWN } from "./icons.js";
+import { NAME_COLORS } from "../../lib/people.js";
+
+// Anyone the person registry has never heard of draws in neutral slate rather
+// than borrowing someone else's identity color — matches lib/rankings-model.js.
+const FALLBACK_CHIP = "#64748b";
 
 function readJson(id) {
   const el = document.getElementById(id);
@@ -24,6 +29,7 @@ function renderManager(managers, reigningChampId, userId) {
   if (!m || !container) return;
 
   const crown = userId === reigningChampId ? ` <span title="Reigning Champ">${ICON_CROWN}</span>` : "";
+  const chip = NAME_COLORS[m.displayName] || FALLBACK_CHIP;
   const yearlyRows = m.yearlyStandings
     .map((y) => {
       const stats = m.yearlyStats[y.year] || {};
@@ -69,8 +75,8 @@ function renderManager(managers, reigningChampId, userId) {
 
   container.innerHTML = `
     <div class="card text-center mb-6">
-      <img src="${m.avatar}" alt="${m.displayName}" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-accent-500 object-cover shadow-lg cursor-pointer hover:scale-110 transition-transform" onclick="window.expandAvatar && window.expandAvatar(this.src)">
-      <h2 class="text-2xl sm:text-3xl font-bold">${m.displayName}${crown}</h2>
+      <img src="${m.avatar}" alt="${m.displayName}" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 object-cover shadow-lg cursor-pointer hover:scale-110 transition-transform" style="border-color:${chip}" onclick="window.expandAvatar && window.expandAvatar(this.src)">
+      <h2 class="text-2xl sm:text-3xl font-bold" style="color:${chip}">${m.displayName}${crown}</h2>
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div class="lg:col-span-2 space-y-6">
@@ -121,6 +127,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const reigningChampId = readJson("myteam-reigning-champ");
   const buttons = [...document.querySelectorAll("[data-my-team-id]")];
   if (!managers || !buttons.length) return;
+
+  buttons.forEach((button) => {
+    const m = managers[button.dataset.myTeamId];
+    const chip = (m && NAME_COLORS[m.displayName]) || FALLBACK_CHIP;
+    const avatar = button.querySelector(".poll-voter-avatar");
+    if (avatar) avatar.style.borderColor = chip;
+    const name = button.querySelector(".poll-pick-copy strong");
+    if (name) name.style.color = chip;
+  });
 
   buttons.forEach((button) => {
     button.addEventListener("click", () => {

@@ -4,6 +4,11 @@
 // all-time record and the closest game between them.
 
 import { ICON_CROWN } from "./icons.js";
+import { NAME_COLORS } from "../../lib/people.js";
+
+// Anyone the person registry has never heard of draws in neutral slate rather
+// than borrowing someone else's identity color — matches lib/rankings-model.js.
+const FALLBACK_CHIP = "#64748b";
 
 function readJson(id) {
   const el = document.getElementById(id);
@@ -30,12 +35,14 @@ function topPlayer(pointsById, playerInfo) {
 }
 
 function managerCard(m, stats, opponentName, nemesis, hasWin, isReigning) {
+  const chip = NAME_COLORS[m.displayName] || FALLBACK_CHIP;
   return `
     <div class="lg:col-span-2 bg-bg/40 p-4 rounded-xl border border-border flex flex-col items-center space-y-3">
       <img src="${m.avatar}" alt="${m.displayName}"
-        class="w-24 h-24 rounded-full object-cover border-4 border-accent-500 cursor-pointer hover:scale-110 transition-transform"
+        class="w-24 h-24 rounded-full object-cover border-4 cursor-pointer hover:scale-110 transition-transform"
+        style="border-color:${chip}"
         onclick="window.expandAvatar && window.expandAvatar(this.src)">
-      <p class="font-extrabold text-xl lg:text-2xl text-accent-500">${m.displayName}${isReigning ? ` <span title="Reigning Champ">${ICON_CROWN}</span>` : ""}</p>
+      <p class="font-extrabold text-xl lg:text-2xl" style="color:${chip}">${m.displayName}${isReigning ? ` <span title="Reigning Champ">${ICON_CROWN}</span>` : ""}</p>
       <div class="text-sm text-text-secondary space-y-2 text-left w-full">
         <p class="flex justify-between"><span>Total Points:</span> <span class="font-bold text-text-primary">${stats.totalPoints.toFixed(2)}</span></p>
         <p class="flex justify-between"><span>Avg Points:</span> <span class="font-bold text-text-primary">${stats.avgPoints.toFixed(2)}</span></p>
