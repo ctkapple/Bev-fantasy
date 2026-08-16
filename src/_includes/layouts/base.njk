@@ -16,8 +16,8 @@
   {% if not hideTopBanner %}
   <header class="site-banner">
     <div class="site-banner-inner">
-      <a href="{{ '/' + league.slug + '/' if league else '/' }}" class="site-banner-brand">
-        <img src="/assets/bev-fantasy-logo.png" alt="{{ league.name or 'Bev Fantasy' }}" class="site-banner-logo">
+      <a href="/" class="site-banner-brand">
+        <img src="/assets/bev-fantasy-logo.png" alt="Bev Fantasy" class="site-banner-logo">
       </a>
       <nav class="league-nav" aria-label="Leagues">
         {% for slug, abbr in { "sb3": "SB3L", "jrwll": "JRWLL", "bb": "BB" } %}
