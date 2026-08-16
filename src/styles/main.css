@@ -34,7 +34,10 @@
      Large glowing wordmark above the league cards, replacing the old plain
      h1. The shimmer layer is mask-clipped to the logo's own silhouette (via
      mask-image: url(same png)) so the white highlight only sweeps across the
-     lettering itself, not a rectangle around it. */
+     lettering itself, not a rectangle around it. It plays once on load
+     (animation-iteration-count: 1, held in place before/after via `both`),
+     then the logo settles into a slow ambient "breathing" glow that loops
+     forever, timed to start right as the sweep finishes. */
   .home-hero {
     @apply flex flex-col items-center text-center pb-10 md:pb-14;
   }
@@ -48,6 +51,22 @@
       drop-shadow(0 0 10px rgb(var(--color-accent-500) / 0.6))
       drop-shadow(0 0 34px rgb(var(--color-accent-500) / 0.45))
       drop-shadow(0 0 80px rgb(var(--color-accent-500) / 0.3));
+    animation: home-hero-breathe 4s ease-in-out 2s infinite;
+  }
+  @keyframes home-hero-breathe {
+    0%,
+    100% {
+      filter:
+        drop-shadow(0 0 10px rgb(var(--color-accent-500) / 0.6))
+        drop-shadow(0 0 34px rgb(var(--color-accent-500) / 0.45))
+        drop-shadow(0 0 80px rgb(var(--color-accent-500) / 0.3));
+    }
+    50% {
+      filter:
+        drop-shadow(0 0 15px rgb(var(--color-accent-500) / 0.78))
+        drop-shadow(0 0 48px rgb(var(--color-accent-500) / 0.62))
+        drop-shadow(0 0 112px rgb(var(--color-accent-500) / 0.42));
+    }
   }
   .home-hero-shimmer {
     @apply absolute inset-0 pointer-events-none;
@@ -62,17 +81,13 @@
     background: linear-gradient(115deg, transparent 42%, rgb(255 255 255 / 0.95) 50%, transparent 58%);
     background-size: 300% 300%;
     background-position: -140% 0;
-    animation: home-hero-shimmer 5.5s ease-in-out infinite;
+    animation: home-hero-shimmer-sweep 1.6s cubic-bezier(0.4, 0, 0.2, 1) 0.4s 1 both;
   }
-  @keyframes home-hero-shimmer {
-    0%,
-    62% {
+  @keyframes home-hero-shimmer-sweep {
+    from {
       background-position: -140% 0;
     }
-    82% {
-      background-position: 240% 0;
-    }
-    100% {
+    to {
       background-position: 240% 0;
     }
   }
@@ -83,6 +98,9 @@
     .home-hero-shimmer {
       animation: none;
       background-position: 240% 0;
+    }
+    .home-hero-logo {
+      animation: none;
     }
   }
 
