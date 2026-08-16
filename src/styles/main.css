@@ -30,6 +30,94 @@
     @apply -translate-y-1 scale-[1.01];
   }
 
+  /* --- Home hub hero -----------------------------------------------------
+     Large glowing wordmark above the league cards, replacing the old plain
+     h1. The shimmer layer is mask-clipped to the logo's own silhouette (via
+     mask-image: url(same png)) so the white highlight only sweeps across the
+     lettering itself, not a rectangle around it. */
+  .home-hero {
+    @apply flex flex-col items-center text-center pb-10 md:pb-14;
+  }
+  .home-hero-logo-wrap {
+    @apply relative inline-block;
+  }
+  .home-hero-logo {
+    @apply block w-full;
+    width: clamp(200px, 34vw, 380px);
+    filter:
+      drop-shadow(0 0 10px rgb(var(--color-accent-500) / 0.6))
+      drop-shadow(0 0 34px rgb(var(--color-accent-500) / 0.45))
+      drop-shadow(0 0 80px rgb(var(--color-accent-500) / 0.3));
+  }
+  .home-hero-shimmer {
+    @apply absolute inset-0 pointer-events-none;
+    -webkit-mask-image: url("/assets/bev-fantasy-logo.png");
+    mask-image: url("/assets/bev-fantasy-logo.png");
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    background: linear-gradient(115deg, transparent 42%, rgb(255 255 255 / 0.95) 50%, transparent 58%);
+    background-size: 300% 300%;
+    background-position: -140% 0;
+    animation: home-hero-shimmer 5.5s ease-in-out infinite;
+  }
+  @keyframes home-hero-shimmer {
+    0%,
+    62% {
+      background-position: -140% 0;
+    }
+    82% {
+      background-position: 240% 0;
+    }
+    100% {
+      background-position: 240% 0;
+    }
+  }
+  .home-hero-tagline {
+    @apply mt-6 text-base sm:text-lg text-text-secondary;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .home-hero-shimmer {
+      animation: none;
+      background-position: 240% 0;
+    }
+  }
+
+  /* League-select cards: plain and quiet at rest, orange bloom on hover or
+     keyboard focus so "pick a league" reads as the one interactive moment
+     on the page. */
+  .home-cards {
+    @apply mt-2 max-w-2xl mx-auto space-y-5;
+  }
+  .home-cards-row {
+    @apply grid grid-cols-1 sm:grid-cols-2 gap-5;
+  }
+  .home-card {
+    @apply flex flex-col items-center justify-center text-center gap-1 py-5 md:py-6;
+  }
+  .home-card-title {
+    @apply font-sport text-xl md:text-2xl font-normal text-accent-500 uppercase tracking-wide;
+  }
+  .home-card-subtitle {
+    @apply text-xs sm:text-sm text-text-secondary uppercase tracking-[0.2em];
+  }
+  .home-card-sm {
+    @apply max-w-xs mx-auto py-3 md:py-4;
+  }
+  .home-card-sm .home-card-title {
+    @apply text-lg md:text-xl;
+  }
+  .home-card:hover,
+  .home-card:focus-visible {
+    @apply border-accent-500 outline-none;
+    box-shadow:
+      0 0 18px 2px rgb(var(--color-accent-500) / 0.45),
+      0 0 44px 10px rgb(var(--color-accent-500) / 0.22);
+  }
+
   .stat-table {
     @apply w-full text-sm text-left tabular-nums;
   }

@@ -31,6 +31,7 @@ export default {
       fontFamily: {
         sans: ["Manrope", "Inter", "sans-serif"],
         display: ["'Barlow Condensed'", "sans-serif"],
+        sport: ["Anton", "'Barlow Condensed'", "sans-serif"],
       },
       borderRadius: {
         xl: "0.875rem",

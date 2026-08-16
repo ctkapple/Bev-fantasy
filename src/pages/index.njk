@@ -3,29 +3,38 @@ layout: layouts/base.njk
 title: Bev Fantasy League Hub
 description: Select a league to view all-time stats, records, and more.
 permalink: /index.html
+hideTopBanner: true
 ---
-<div class="container mx-auto max-w-2xl px-4 min-h-screen flex items-center justify-center">
+<div class="container mx-auto max-w-3xl px-4 min-h-screen flex items-center justify-center">
   <div class="w-full">
-    <header class="text-center mb-12">
-      <h1 class="text-4xl sm:text-5xl md:text-6xl font-display font-extrabold text-accent-500">
-        Bev Fantasy League Hub
-      </h1>
-      <p class="text-base sm:text-lg text-text-secondary mt-4">
-        Select a league to view all-time stats, records, and more.
-      </p>
-    </header>
+    <div class="home-hero">
+      <div class="home-hero-logo-wrap">
+        <img src="/assets/bev-fantasy-logo.png" alt="Bev Fantasy" class="home-hero-logo">
+        <div class="home-hero-shimmer" aria-hidden="true"></div>
+      </div>
+      <p class="home-hero-tagline">Select a league to view all-time stats, records, and more.</p>
+    </div>
 
-    <main class="space-y-6">
-      {% for lg in leagues %}
-      <a href="/{{ lg.slug }}/" class="card card-hub block text-center">
-        <p class="text-2xl font-display font-bold text-accent-500 mb-1">{{ lg.name }}</p>
-        <p class="text-sm text-text-secondary">{{ lg.tagline }}</p>
+    <main class="home-cards">
+      <div class="home-cards-row">
+        <a href="/jrwll/" class="card card-hub home-card">
+          <p class="home-card-title">Keeper</p>
+          <p class="home-card-subtitle">JRWLL</p>
+        </a>
+        <a href="/sb3/" class="card card-hub home-card">
+          <p class="home-card-title">Dynasty</p>
+          <p class="home-card-subtitle">SuperBeef</p>
+        </a>
+      </div>
+      <a href="/bb/" class="card card-hub home-card home-card-sm">
+        <p class="home-card-title">BestBall</p>
+        <p class="home-card-subtitle">Sidepot</p>
       </a>
-      {% endfor %}
     </main>
 
-    <footer class="text-center mt-12 py-6 border-t-2 border-accent-500 text-xs text-text-secondary">
+    <footer class="text-center mt-12 py-6 border-t-2 border-accent-500 text-xs text-text-secondary space-y-1.5">
       <p>Fantasy Football League Hub • Engineered and Maintained by Commissioner Dooling</p>
+      <p class="italic text-text-muted">Logo designed by GM Coluntino</p>
     </footer>
   </div>
 </div>
