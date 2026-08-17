@@ -16,9 +16,12 @@
   {% if not hideTopBanner %}
   <header class="site-banner">
     <div class="site-banner-inner">
-      <a href="/" class="site-banner-brand">
-        <img src="/assets/bev-fantasy-logo.png" alt="Bev Fantasy" class="site-banner-logo">
-      </a>
+      <div class="site-banner-brand-group">
+        <a href="/" class="site-banner-brand">
+          <img src="/assets/bev-fantasy-logo.png" alt="Bev Fantasy" class="site-banner-logo">
+        </a>
+        <a href="/sb3/poll/" class="live-poll-nav-link" data-live-poll-link hidden>Live Poll</a>
+      </div>
       <nav class="league-nav" aria-label="Leagues">
         {% for slug, abbr in { "sb3": "SB3L", "jrwll": "JRWLL", "bb": "BB" } %}
           {% if league and league.slug == slug %}
@@ -31,6 +34,8 @@
     </div>
   </header>
   {% endif %}
+  <aside id="live-poll-banner" class="live-poll-banner" hidden aria-label="Live AP Poll"></aside>
   {{ content | safe }}
+  <script type="module" src="/assets/js/live-poll-banner.js"></script>
 </body>
 </html>

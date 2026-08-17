@@ -180,11 +180,25 @@
   .site-banner-inner {
     @apply container mx-auto max-w-7xl px-4 md:px-8 py-1 flex items-center justify-between gap-4;
   }
+  .site-banner-brand-group {
+    @apply flex items-center gap-2 sm:gap-3 min-w-0 shrink-0;
+  }
   .site-banner-brand {
     @apply flex items-center min-w-0 shrink-0;
   }
   .site-banner-logo {
     @apply h-14 w-14 sm:h-16 sm:w-16 object-contain shrink-0;
+  }
+  .live-poll-nav-link {
+    @apply inline-flex items-center rounded-full bg-accent-500 px-3 py-1.5 text-[11px] sm:px-4 sm:py-2 sm:text-sm font-bold uppercase tracking-[0.12em] text-black transition-colors hover:bg-accent-400;
+  }
+  .live-poll-nav-link[hidden] {
+    display: none;
+  }
+  .live-poll-nav-link:focus-visible,
+  .live-poll-banner-action:focus-visible,
+  .live-poll-banner-dismiss:focus-visible {
+    @apply outline-none ring-2 ring-accent-400 ring-offset-2 ring-offset-bg;
   }
 
   /* League-switcher pills, right-aligned in the banner. Fixed 3-item set,
@@ -205,6 +219,48 @@
     box-shadow:
       0 0 10px 1px rgb(var(--color-accent-500) / 0.7),
       0 0 24px 6px rgb(var(--color-accent-500) / 0.4);
+  }
+
+  /* A single public, aggregate-only poll prompt sits above every page while
+     voting is open. It is populated by live-poll-banner.js rather than baked
+     into the static build, so closing the poll removes it everywhere at once. */
+  .live-poll-banner {
+    @apply border-b border-accent-500/30 bg-accent-500/10;
+  }
+  .live-poll-banner-inner {
+    @apply container mx-auto max-w-7xl px-4 py-3 md:px-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between;
+  }
+  .live-poll-banner-copy {
+    @apply flex min-w-0 flex-col;
+  }
+  .live-poll-banner-eyebrow {
+    @apply flex items-center gap-1.5 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-accent-400;
+  }
+  .live-poll-banner-eyebrow span {
+    @apply h-2 w-2 rounded-full bg-accent-400;
+    box-shadow: 0 0 8px rgb(var(--color-accent-500) / 0.9);
+  }
+  .live-poll-banner-copy strong {
+    @apply truncate text-base font-bold text-text-primary;
+  }
+  .live-poll-banner-progress {
+    @apply grid min-w-40 grid-cols-[1fr_auto] items-center gap-x-3 text-xs text-text-secondary;
+  }
+  .live-poll-banner-progress strong {
+    @apply text-right text-sm text-text-primary;
+  }
+  .live-poll-banner-progress progress {
+    @apply col-span-2 mt-1 h-1.5 w-full overflow-hidden rounded-full;
+    accent-color: rgb(var(--color-accent-500));
+  }
+  .live-poll-banner-action {
+    @apply inline-flex shrink-0 items-center justify-center rounded-lg bg-accent-500 px-4 py-2 text-sm font-bold text-black transition-colors hover:bg-accent-400;
+  }
+  .live-poll-banner-actions {
+    @apply flex shrink-0 items-center gap-2;
+  }
+  .live-poll-banner-dismiss {
+    @apply inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border text-xl leading-none text-text-secondary transition-colors hover:border-accent-500/60 hover:text-text-primary;
   }
 
   .icon {
