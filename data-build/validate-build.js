@@ -120,8 +120,8 @@ for (const league of configs) {
 
   const teamIds = mappings.map(([teamId]) => teamId);
   const rosterIds = mappings.map(([, rosterId]) => Number(rosterId));
-  if (teamIds.length !== 14 || new Set(teamIds).size !== teamIds.length) {
-    errors.push(`Poll snapshot mapping for "${league.slug}" must contain 14 unique team ids.`);
+  if (new Set(teamIds).size !== teamIds.length) {
+    errors.push(`Poll snapshot mapping for "${league.slug}" must contain unique team ids.`);
   }
   if (rosterIds.some((id) => !Number.isInteger(id) || id < 1) || new Set(rosterIds).size !== rosterIds.length) {
     errors.push(`Poll snapshot mapping for "${league.slug}" must contain unique positive roster ids.`);

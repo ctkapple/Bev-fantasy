@@ -3,7 +3,21 @@
   "name": "JRWLL Memorial Cup",
   "tagline": "#ForTheCure",
   "footerTagline": "Beverly Fantasy Official Website • Established in 2025 • All Statistics Certified Accurate*",
-  "currentLeagueId": "1180633944818466816",
+  "currentLeagueId": "1312102228491780096",
+  "pollTeamRosterMap": {
+    "jrwll_franchise_01": 1,
+    "jrwll_franchise_02": 2,
+    "jrwll_franchise_03": 3,
+    "jrwll_franchise_04": 4,
+    "jrwll_franchise_05": 5,
+    "jrwll_franchise_06": 6,
+    "jrwll_franchise_07": 7,
+    "jrwll_franchise_08": 8,
+    "jrwll_franchise_09": 9,
+    "jrwll_franchise_10": 10,
+    "jrwll_franchise_11": 11,
+    "jrwll_franchise_12": 12
+  },
   "coOwnerConfig": {},
   "tabs": [
     { "id": "dashboard", "label": "Rankings", "template": "dashboard" },
