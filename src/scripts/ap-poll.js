@@ -9,7 +9,16 @@ if (root) {
   const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_DYoO_OPd_F9_HiXsiKFXpQ_xkjuimGy";
   const leagueSlug = root.dataset.league || "sb3";
   const leagueName = root.dataset.leagueName || "League";
+  const showAllPublishedResults = leagueSlug === "jrwll";
   const historyPreviewEnabled = new URLSearchParams(window.location.search).get("apPollPreview") === "third";
+
+  function publishedResultsTitle() {
+    return showAllPublishedResults ? "AP Poll Results" : "AP Poll Top 7";
+  }
+
+  function visiblePublishedResults(results) {
+    return showAllPublishedResults ? results : results.slice(0, 7);
+  }
 
   let pollState = null;
   let pollHistoryState = { status: "idle", data: null };
@@ -645,7 +654,7 @@ if (root) {
   function latestPublishedResultsMarkup() {
     if (pollHistoryState.status === "idle" || pollHistoryState.status === "loading") {
       return `<section class="card poll-results-card" aria-labelledby="latest-published-results-title">
-        <div class="poll-section-heading"><div><p class="poll-step">Latest published results</p><h2 id="latest-published-results-title">AP Poll Top 7</h2></div></div>
+        <div class="poll-section-heading"><div><p class="poll-step">Latest published results</p><h2 id="latest-published-results-title">${publishedResultsTitle()}</h2></div></div>
         <p class="poll-results-empty" role="status">Loading the latest published AP Poll&hellip;</p>
       </section>`;
     }
@@ -655,14 +664,13 @@ if (root) {
     if (!latestPoll) return "";
 
     const previousRanks = new Map((polls.at(-2)?.results || []).map((result) => [result.team_id, result.rank]));
-    const results = [...(latestPoll.results || [])]
-      .sort((left, right) => Number(left.rank) - Number(right.rank))
-      .slice(0, 7)
+    const results = visiblePublishedResults([...(latestPoll.results || [])]
+      .sort((left, right) => Number(left.rank) - Number(right.rank)))
       .map((result) => ({ ...result, previous_rank: previousRanks.get(result.team_id) ?? null }));
 
     return `<section class="card poll-results-card" aria-labelledby="latest-published-results-title">
       <div class="poll-section-heading">
-        <div><p class="poll-step">${escapeHtml(latestPoll.label)}</p><h2 id="latest-published-results-title">AP Poll Top 7</h2></div>
+        <div><p class="poll-step">${escapeHtml(latestPoll.label)}</p><h2 id="latest-published-results-title">${publishedResultsTitle()}</h2></div>
         <p>${Number(latestPoll.ballot_count) || 0} ballots</p>
       </div>
       <div class="poll-result-column-labels" aria-hidden="true"><span>Rank</span><span>Team</span><span>Trend</span><span>AP points</span></div>
@@ -997,7 +1005,7 @@ if (root) {
 
   function renderPublished() {
     const results = Array.isArray(pollState.results) ? pollState.results : [];
-    const topResults = results.slice(0, 7);
+    const displayedResults = visiblePublishedResults(results);
     const submissionCount = Number(pollState.submission_count) || 0;
     const showChampionship = hasResultField(results, "championship_votes");
     const showUnderrated = hasResultField(results, "underrated_votes");
@@ -1013,15 +1021,15 @@ if (root) {
         <div class="poll-section-heading">
           <div>
             <p class="poll-step">Official results</p>
-            <h2 id="poll-results-title">AP Poll Top 7</h2>
+            <h2 id="poll-results-title">${publishedResultsTitle()}</h2>
           </div>
           <p>${submissionCount} ballots counted</p>
         </div>
         <div class="poll-result-column-labels" aria-hidden="true">
           <span>Rank</span><span>Team</span><span>Trend</span><span>AP points</span>
         </div>
-        ${topResults.length > 0
-          ? `<ol class="poll-result-list">${topResults.map(resultRowMarkup).join("")}</ol>`
+        ${displayedResults.length > 0
+          ? `<ol class="poll-result-list">${displayedResults.map(resultRowMarkup).join("")}</ol>`
           : '<p class="poll-results-empty">No aggregate results were returned.</p>'}
       </section>
       ${historyDashboardMarkup()}
