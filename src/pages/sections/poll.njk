@@ -8,9 +8,9 @@ layout: layouts/league-shell.njk
 currentTab: poll
 eleventyComputed:
   title: "{{ league.name }} — AP Poll"
-  description: "Submit and view the Super Beef 3-Way AP Poll."
+  description: "Submit and view the {{ league.name }} AP Poll."
 ---
-<div id="ap-poll-root" class="ap-poll-page" data-league="{{ league.slug }}">
+<div id="ap-poll-root" class="ap-poll-page" data-league="{{ league.slug }}" data-league-name="{{ league.name }}">
   <section class="card" aria-labelledby="ap-poll-loading-title">
     <h1 id="ap-poll-loading-title" class="text-2xl font-bold text-accent-500">AP Poll</h1>
     <div class="bouncing-loader" aria-hidden="true"><div></div><div></div><div></div></div>

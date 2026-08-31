@@ -8,6 +8,7 @@ if (root) {
   // Publishable keys are intentionally browser-visible and carry only anon privileges.
   const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_DYoO_OPd_F9_HiXsiKFXpQ_xkjuimGy";
   const leagueSlug = root.dataset.league || "sb3";
+  const leagueName = root.dataset.leagueName || "League";
   const historyPreviewEnabled = new URLSearchParams(window.location.search).get("apPollPreview") === "third";
 
   let pollState = null;
@@ -461,7 +462,7 @@ if (root) {
       : "The current poll could not be loaded.";
     root.innerHTML = `${renderNotice()}
       <section class="card poll-state-card" aria-labelledby="ap-poll-error-title">
-        <p class="poll-eyebrow">Super Beef 3-Way</p>
+        <p class="poll-eyebrow">${escapeHtml(leagueName)}</p>
         <h1 id="ap-poll-error-title" class="text-2xl font-bold">AP Poll unavailable</h1>
         <p class="text-text-secondary">${escapeHtml(message)}</p>
         <button type="button" class="poll-primary-button" data-action="retry-load">Try again</button>
@@ -497,7 +498,7 @@ if (root) {
     const poll = state.poll;
     return `<header class="card poll-hero">
       <div>
-        <p class="poll-eyebrow">Super Beef 3-Way</p>
+        <p class="poll-eyebrow">${escapeHtml(leagueName)}</p>
         <h1>${escapeHtml(poll.label)}</h1>
         <p class="text-text-secondary">Rank every team and help set the league's official AP Poll.</p>
       </div>
@@ -510,7 +511,7 @@ if (root) {
     root.innerHTML = `${renderNotice()}
       ${historyDashboardMarkup()}
       <section class="card poll-state-card" aria-labelledby="no-poll-title">
-        <p class="poll-eyebrow">Super Beef 3-Way</p>
+        <p class="poll-eyebrow">${escapeHtml(leagueName)}</p>
         <h1 id="no-poll-title">No current AP Poll</h1>
         <p class="text-text-secondary">There is no open, closed, or published poll to show right now. Check back when the next ballot opens.</p>
         <button type="button" class="poll-secondary-button" data-action="retry-load">Check again</button>
@@ -577,7 +578,8 @@ if (root) {
     const activeMotion = rankMotion;
     rankMotion = null;
     scheduleRankMotionCleanup(activeMotion);
-    return `<ol class="poll-ranking" aria-label="Team ranking from first to fourteenth">
+    const teamCount = pollState?.teams?.length || 0;
+    return `<ol class="poll-ranking" aria-label="Team ranking from first to ${teamCount}">
       ${ranking.map((teamId, index) => {
         const team = teamsById.get(teamId);
         if (!team) return "";
@@ -611,7 +613,7 @@ if (root) {
       <div class="poll-section-heading">
         <div>
           <p class="poll-step">Step 2</p>
-          <h2 data-ballot-heading tabindex="-1">Rank all 14 teams</h2>
+          <h2 data-ballot-heading tabindex="-1">Rank all ${pollState.teams.length} teams</h2>
         </div>
         <p>Ballot for <strong>${escapeHtml(selectedVoter?.display_name)}</strong></p>
       </div>
@@ -1151,8 +1153,8 @@ if (root) {
     if (!selectedVoterId) return "Choose your name before submitting.";
     const eligibleIds = new Set(pollState.teams.map((team) => team.id));
     const rankedIds = new Set(ranking);
-    if (ranking.length !== 14 || rankedIds.size !== 14 || [...rankedIds].some((id) => !eligibleIds.has(id))) {
-      return "Your ranking must contain all 14 teams exactly once. Reload the poll if the list looks incomplete.";
+    if (ranking.length !== eligibleIds.size || rankedIds.size !== eligibleIds.size || [...rankedIds].some((id) => !eligibleIds.has(id))) {
+      return `Your ranking must contain all ${eligibleIds.size} teams exactly once. Reload the poll if the list looks incomplete.`;
     }
     if (!championshipTeamId || !underratedTeamId || !overratedTeamId) {
       return "Answer all three final-pick questions before submitting.";
