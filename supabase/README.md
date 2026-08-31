@@ -45,6 +45,21 @@ const { data, error } = await supabase.rpc("ap_poll_get_state", {
 });
 ```
 
+Read one submitted JRWLL voter's published ballot history:
+
+```js
+const { data, error } = await supabase.rpc("ap_poll_get_published_voter_history", {
+  p_league_slug: "jrwll",
+  p_voter_id: "jrwll_voter_608930747402739712",
+});
+```
+
+This is deliberately limited to published, non-demo JRWLL polls where the
+requested voter was included and submitted a ballot. Each returned poll contains
+the voter snapshot, saved team/owner labels in rank order, and the three final
+picks. It returns no raw ballot IDs, no open or closed ballots, and no data for
+other leagues.
+
 Submit an open-poll ballot:
 
 ```js

@@ -10,6 +10,7 @@ if (root) {
   const leagueSlug = root.dataset.league || "sb3";
   const leagueName = root.dataset.leagueName || "League";
   const showAllPublishedResults = leagueSlug === "jrwll";
+  const publishedVoterViewsEnabled = leagueSlug === "jrwll";
   const historyPreviewEnabled = new URLSearchParams(window.location.search).get("apPollPreview") === "third";
 
   function publishedResultsTitle() {
@@ -23,6 +24,9 @@ if (root) {
   let pollState = null;
   let pollHistoryState = { status: "idle", data: null };
   let pollHistoryPromise = null;
+  let publishedVoterHistoryById = new Map();
+  let publishedVoterHistoryPromises = new Map();
+  let selectedPublishedVoterId = null;
   let selectedHistoryTeamId = null;
   let hoveredHistoryTeamId = null;
   let ballotRevealed = false;
@@ -767,6 +771,113 @@ if (root) {
     </li>`;
   }
 
+  function publishedVoterControlsMarkup() {
+    if (!publishedVoterViewsEnabled) return "";
+
+    const submittedVoters = (pollState?.voters || []).filter((voter) => voter.submitted);
+    if (submittedVoters.length === 0) return "";
+
+    return `<nav class="poll-published-view-toggle" aria-label="Published poll view">
+      <button type="button" data-action="select-published-view" aria-pressed="${selectedPublishedVoterId === null}">League Results</button>
+      ${submittedVoters.map((voter) => `<button type="button" data-action="select-published-view" data-voter-id="${escapeHtml(voter.id)}" aria-pressed="${voter.id === selectedPublishedVoterId}">${escapeHtml(voter.display_name)}'s Ballot</button>`).join("")}
+    </nav>`;
+  }
+
+  function selectedPublishedVoterHistoryState() {
+    return selectedPublishedVoterId
+      ? publishedVoterHistoryById.get(selectedPublishedVoterId) || { status: "idle", data: null }
+      : null;
+  }
+
+  function selectedPublishedVoterName() {
+    return pollState?.voters?.find((voter) => voter.id === selectedPublishedVoterId)?.display_name || "Voter";
+  }
+
+  function voterBallotRankingsMarkup(rankings) {
+    return `<ol class="space-y-2 p-4 pt-3 md:p-6 md:pt-4" aria-label="Power ranking from first to ${rankings.length}">
+      ${rankings.map((result) => `<li class="flex min-h-16 items-center gap-3 rounded-xl border border-border/70 bg-bg/55 px-3 py-2.5" aria-label="Rank ${escapeHtml(result.rank)}: ${escapeHtml(result.display_name)}, ${escapeHtml(result.owner_label)}">
+        <span class="poll-result-rank" aria-hidden="true">${escapeHtml(result.rank)}</span>
+        <span class="poll-results-team">
+          ${portraitMarkup(result.owner_label, "poll-team-avatar")}
+          <span class="poll-result-team-copy"><strong>${escapeHtml(result.display_name)}${reigningChampionMarkup(result.owner_label)}</strong><small>${escapeHtml(result.owner_label)}</small></span>
+        </span>
+      </li>`).join("")}
+    </ol>`;
+  }
+
+  function voterFinalPickMarkup(title, pick) {
+    if (!pick) return "";
+    return `<article class="poll-award-card">
+      <p class="poll-award-label">${escapeHtml(title)}</p>
+      <div class="poll-award-winner">
+        <span class="poll-results-team">
+          ${portraitMarkup(pick.owner_label, "poll-team-avatar")}
+          <span class="poll-result-team-copy"><strong>${escapeHtml(pick.display_name)}</strong><small>${escapeHtml(pick.owner_label)}</small></span>
+        </span>
+      </div>
+    </article>`;
+  }
+
+  function voterBallotHistoryMarkup(voterHistory) {
+    if (voterHistory.status === "loading" || voterHistory.status === "idle") {
+      return `<section class="card poll-history-card" aria-labelledby="poll-history-title">
+        <div class="poll-section-heading"><div><p class="poll-step">Ballot history</p><h2 id="poll-history-title">${escapeHtml(selectedPublishedVoterName())}'s Power Rankings</h2></div></div>
+        <p class="poll-history-empty" role="status">Loading published ballot history&hellip;</p>
+      </section>`;
+    }
+
+    const polls = Array.isArray(voterHistory.data?.polls) ? voterHistory.data.polls : [];
+    if (voterHistory.status !== "ready" || polls.length === 0) return "";
+
+    const rankings = polls.flatMap((poll) => poll.rankings || []);
+    const teams = historyTeams(polls.map((poll) => ({ ...poll, results: poll.rankings || [] })));
+    const teamCount = Math.max(1, ...polls.map((poll) => (poll.rankings || []).length));
+    const viewBox = mobileHistoryQuery.matches
+      ? { width: 520, height: 540, left: 62, right: 24, top: 30, bottom: 78 }
+      : { width: 920, height: 460, left: 62, right: 24, top: 30, bottom: 62 };
+    const plotWidth = viewBox.width - viewBox.left - viewBox.right;
+    const plotHeight = viewBox.height - viewBox.top - viewBox.bottom;
+    const xForIndex = (index) => viewBox.left + (polls.length === 1 ? plotWidth / 2 : (plotWidth * index) / (polls.length - 1));
+    const yForRank = (rank) => viewBox.top + ((Math.max(1, Number(rank)) - 1) / Math.max(teamCount - 1, 1)) * plotHeight;
+    const rankTicks = Array.from({ length: teamCount }, (_, index) => index + 1);
+    const ballotPath = (team) => {
+      const points = polls.flatMap((poll, index) => {
+        const result = team.resultsByPoll.get(poll.id);
+        return result ? [{ x: xForIndex(index), y: yForRank(result.rank) }] : [];
+      });
+      if (points.length < 2) return "";
+      return points.map((point, index) => `${index === 0 ? "M" : "L"}${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(" ");
+    };
+
+    return `<section class="card poll-history-card" aria-labelledby="poll-history-title">
+      <div class="poll-section-heading">
+        <div><p class="poll-step">Ballot history</p><h2 id="poll-history-title">${escapeHtml(selectedPublishedVoterName())}'s Power Rankings</h2></div>
+        <p>${polls.length === 1 ? "1 published poll" : `${polls.length} published polls`}</p>
+      </div>
+      <div class="poll-history-layout">
+        <div class="poll-history-chart-wrap">
+          <svg class="poll-history-chart" viewBox="0 0 ${viewBox.width} ${viewBox.height}" role="img" aria-label="${escapeHtml(selectedPublishedVoterName())}'s exact ballot ranks across published polls">
+            ${rankTicks.map((rank) => `<g class="poll-history-gridline"><line x1="${viewBox.left}" x2="${viewBox.width - viewBox.right}" y1="${yForRank(rank)}" y2="${yForRank(rank)}"></line><text x="${viewBox.left - 12}" y="${yForRank(rank) + 4}" text-anchor="end">${rank}</text></g>`).join("")}
+            <text class="poll-history-axis-label" x="18" y="${viewBox.top + plotHeight / 2}" transform="rotate(-90 18 ${viewBox.top + plotHeight / 2})" text-anchor="middle">Ballot rank</text>
+            ${polls.map((poll, index) => `<g class="poll-history-x-axis"><line x1="${xForIndex(index)}" x2="${xForIndex(index)}" y1="${viewBox.top + plotHeight}" y2="${viewBox.top + plotHeight + 6}"></line><text x="${xForIndex(index)}" y="${viewBox.top + plotHeight + 26}" text-anchor="middle">${escapeHtml(poll.label)}</text><text x="${xForIndex(index)}" y="${viewBox.top + plotHeight + 43}" text-anchor="middle">${(poll.rankings || []).length} teams ranked</text></g>`).join("")}
+            ${teams.map((team) => `<g class="poll-history-series" style="--poll-history-team-color: ${team.color}">
+              <path class="poll-history-line" d="${ballotPath(team)}"></path>
+              ${polls.map((poll, index) => {
+                const result = team.resultsByPoll.get(poll.id);
+                if (!result) return "";
+                return `<circle class="poll-history-point" cx="${xForIndex(index)}" cy="${yForRank(result.rank)}" r="4.5"><title>${escapeHtml(team.display_name)}: ${escapeHtml(poll.label)}, rank ${escapeHtml(result.rank)}</title></circle>`;
+              }).join("")}
+            </g>`).join("")}
+          </svg>
+        </div>
+        <div class="poll-history-legend" aria-label="Teams in this ballot">${teams.map((team) => {
+          const latestResult = team.resultsByPoll.get(polls.at(-1)?.id);
+          return `<div class="poll-history-team" style="--poll-history-team-color: ${team.color}"><span class="poll-history-swatch" aria-hidden="true"></span>${portraitMarkup(team.owner_label, "poll-history-avatar")}<span><strong>${escapeHtml(team.display_name)}</strong><small>${escapeHtml(team.owner_label)} &middot; Rank ${escapeHtml(latestResult?.rank)}</small></span></div>`;
+        }).join("")}</div>
+      </div>
+    </section>`;
+  }
+
   function reigningChampionMarkup(ownerLabel) {
     return ownerLabel === REIGNING_CHAMPION_OWNER
       ? ` <span class="poll-reigning-champion" role="img" aria-label="Reigning champion">${ICON_CROWN}</span>`
@@ -1003,10 +1114,49 @@ if (root) {
     updateHistoryFocus();
   }
 
+  function publishedVoterBallotMarkup() {
+    const voterHistory = selectedPublishedVoterHistoryState();
+    const voterName = selectedPublishedVoterName();
+    if (!voterHistory || voterHistory.status === "loading" || voterHistory.status === "idle") {
+      return `<section class="card poll-results-card" aria-labelledby="poll-results-title">
+        <div class="poll-section-heading"><div><p class="poll-step">Published ballot</p><h2 id="poll-results-title">${escapeHtml(voterName)}'s Power Rankings</h2></div></div>
+        <p class="poll-results-empty" role="status">Loading this published ballot&hellip;</p>
+      </section>`;
+    }
+
+    const currentBallot = voterHistory.data?.polls?.find((poll) => poll.id === pollState?.poll?.id);
+    if (voterHistory.status !== "ready" || !currentBallot) {
+      return `<section class="card poll-results-card" aria-labelledby="poll-results-title">
+        <div class="poll-section-heading"><div><p class="poll-step">Published ballot</p><h2 id="poll-results-title">${escapeHtml(voterName)}'s Power Rankings</h2></div></div>
+        <p class="poll-results-empty">This published ballot is unavailable right now.</p>
+      </section>`;
+    }
+
+    const rankings = [...(currentBallot.rankings || [])].sort((left, right) => Number(left.rank) - Number(right.rank));
+    const picks = currentBallot.final_picks || {};
+    return `<section class="card poll-results-card" aria-labelledby="poll-results-title">
+      <div class="poll-section-heading">
+        <div><p class="poll-step">Published ballot</p><h2 id="poll-results-title">${escapeHtml(voterName)}'s Power Rankings</h2></div>
+        <p>${rankings.length} teams ranked</p>
+      </div>
+      ${rankings.length > 0 ? voterBallotRankingsMarkup(rankings) : '<p class="poll-results-empty">No ranked teams were returned.</p>'}
+    </section>
+    <section class="poll-awards-section" aria-labelledby="poll-awards-title">
+      <div class="poll-section-heading"><div><p class="poll-step">Final picks</p><h2 id="poll-awards-title">${escapeHtml(voterName)}'s Final Picks</h2></div></div>
+      <div class="poll-awards-grid">
+        ${voterFinalPickMarkup("Championship Favorite", picks.championship)}
+        ${voterFinalPickMarkup("Most Underrated", picks.underrated)}
+        ${voterFinalPickMarkup("Most Overrated", picks.overrated)}
+      </div>
+    </section>
+    ${voterBallotHistoryMarkup(voterHistory)}`;
+  }
+
   function renderPublished() {
     const results = Array.isArray(pollState.results) ? pollState.results : [];
     const displayedResults = visiblePublishedResults(results);
     const submissionCount = Number(pollState.submission_count) || 0;
+    const viewingIndividualBallot = publishedVoterViewsEnabled && selectedPublishedVoterId !== null;
     const showChampionship = hasResultField(results, "championship_votes");
     const showUnderrated = hasResultField(results, "underrated_votes");
     const showOverrated = hasResultField(results, "overrated_votes");
@@ -1017,7 +1167,8 @@ if (root) {
         <strong>Demo / sample data</strong>
         <span>These results come from deterministic sample ballots, not real league votes.</span>
       </div>` : ""}
-      <section class="card poll-results-card" aria-labelledby="poll-results-title">
+      ${publishedVoterControlsMarkup()}
+      ${viewingIndividualBallot ? publishedVoterBallotMarkup() : `<section class="card poll-results-card" aria-labelledby="poll-results-title">
         <div class="poll-section-heading">
           <div>
             <p class="poll-step">Official results</p>
@@ -1045,7 +1196,7 @@ if (root) {
           ${showUnderrated ? resultAwardMarkup(results, "underrated_votes", "Most Underrated", submissionCount) : ""}
           ${showOverrated ? resultAwardMarkup(results, "overrated_votes", "Most Overrated", submissionCount) : ""}
         </div>
-      </section>` : ""}`;
+      </section>` : ""}`}`;
   }
 
   function renderState() {
@@ -1083,6 +1234,12 @@ if (root) {
         selectedHistoryTeamId = null;
         hoveredHistoryTeamId = null;
       }
+      if (previousPollId !== (pollState?.poll?.id || null)
+        || previousPollStatus !== (pollState?.poll?.status || null)) {
+        selectedPublishedVoterId = null;
+        publishedVoterHistoryById = new Map();
+        publishedVoterHistoryPromises = new Map();
+      }
       if (previousPollId && previousPollId !== pollState?.poll?.id) {
         deliberateSnapshotTeamId = null;
         hoveredSnapshotTeamId = null;
@@ -1119,6 +1276,49 @@ if (root) {
         renderState();
       });
     return pollHistoryPromise;
+  }
+
+  async function loadPublishedVoterHistory(voterId) {
+    if (!publishedVoterViewsEnabled || !voterId) return null;
+    const cached = publishedVoterHistoryById.get(voterId);
+    if (cached?.status === "ready") return cached.data;
+    if (publishedVoterHistoryPromises.has(voterId)) return publishedVoterHistoryPromises.get(voterId);
+
+    publishedVoterHistoryById.set(voterId, { status: "loading", data: null });
+    renderState();
+    const request = callRpc("ap_poll_get_published_voter_history", {
+      p_league_slug: leagueSlug,
+      p_voter_id: voterId,
+    })
+      .then((data) => {
+        if (!Array.isArray(data?.polls) || !data?.voter?.display_name) {
+          throw new Error("invalid published voter ballot response");
+        }
+        publishedVoterHistoryById.set(voterId, { status: "ready", data });
+        return data;
+      })
+      .catch(() => {
+        publishedVoterHistoryById.set(voterId, { status: "unavailable", data: null });
+        return null;
+      })
+      .finally(() => {
+        publishedVoterHistoryPromises.delete(voterId);
+        renderState();
+      });
+    publishedVoterHistoryPromises.set(voterId, request);
+    return request;
+  }
+
+  function selectPublishedView(voterId = null) {
+    if (!publishedVoterViewsEnabled || pollState?.poll?.status !== "published") return;
+    const voter = voterId ? pollState.voters.find((candidate) => candidate.id === voterId && candidate.submitted) : null;
+    selectedPublishedVoterId = voter ? voter.id : null;
+    renderPublished();
+    const selector = selectedPublishedVoterId
+      ? `[data-action="select-published-view"][data-voter-id="${CSS.escape(selectedPublishedVoterId)}"]`
+      : '[data-action="select-published-view"]:not([data-voter-id])';
+    root.querySelector(selector)?.focus({ preventScroll: true });
+    if (selectedPublishedVoterId) void loadPublishedVoterHistory(selectedPublishedVoterId);
   }
 
   function selectVoter(voterId) {
@@ -1298,6 +1498,8 @@ if (root) {
     if (action === "retry-load") {
       notice = null;
       loadPoll();
+    } else if (action === "select-published-view") {
+      selectPublishedView(button.dataset.voterId || null);
     } else if (action === "select-voter") {
       selectVoter(button.dataset.voterId);
     } else if (action === "move-up" || action === "move-down") {
