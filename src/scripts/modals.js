@@ -20,6 +20,7 @@ function setupAvatarModal() {
 function setupPunishmentGallery() {
   const modal = document.getElementById("gallery-modal");
   const modalImg = document.getElementById("gallery-modal-img");
+  const modalVideo = document.getElementById("gallery-modal-video");
   const closeBtn = document.getElementById("gallery-modal-close");
   const prevBtn = document.getElementById("gallery-prev");
   const nextBtn = document.getElementById("gallery-next");
@@ -27,25 +28,40 @@ function setupPunishmentGallery() {
   const ledgerEntries = document.querySelectorAll("[data-gallery]");
   if (!modal || ledgerEntries.length === 0) return;
 
-  let images = [];
+  let media = [];
   let index = 0;
 
   const show = (i) => {
     index = i;
-    modalImg.src = images[i];
-    counter.textContent = `${i + 1} / ${images.length}`;
+    const source = media[i];
+    const isVideo = /\.(mov|mp4|webm|ogv)(?:[?#]|$)/i.test(source);
+    modalImg.classList.toggle("hidden", isVideo);
+    modalVideo?.classList.toggle("hidden", !isVideo);
+    if (isVideo && modalVideo) {
+      modalImg.src = "";
+      modalVideo.src = source;
+      modalVideo.load();
+    } else {
+      modalVideo?.pause();
+      if (modalVideo) {
+        modalVideo.removeAttribute("src");
+        modalVideo.load();
+      }
+      modalImg.src = source;
+    }
+    counter.textContent = `${i + 1} / ${media.length}`;
     prevBtn.style.display = i > 0 ? "flex" : "none";
-    nextBtn.style.display = i < images.length - 1 ? "flex" : "none";
-    counter.style.display = images.length > 1 ? "block" : "none";
+    nextBtn.style.display = i < media.length - 1 ? "flex" : "none";
+    counter.style.display = media.length > 1 ? "block" : "none";
   };
 
   const open = (galleryJson) => {
     try {
-      images = JSON.parse(galleryJson);
+      media = JSON.parse(galleryJson);
     } catch {
-      images = [];
+      media = [];
     }
-    if (images.length === 0) return;
+    if (media.length === 0) return;
     modal.classList.remove("hidden");
     show(0);
   };
@@ -53,12 +69,17 @@ function setupPunishmentGallery() {
   const close = () => {
     modal.classList.add("hidden");
     modalImg.src = "";
+    modalVideo?.pause();
+    if (modalVideo) {
+      modalVideo.removeAttribute("src");
+      modalVideo.load();
+    }
   };
 
   ledgerEntries.forEach((entry) => {
     entry.addEventListener("click", () => open(entry.dataset.gallery));
   });
-  nextBtn?.addEventListener("click", () => index < images.length - 1 && show(index + 1));
+  nextBtn?.addEventListener("click", () => index < media.length - 1 && show(index + 1));
   prevBtn?.addEventListener("click", () => index > 0 && show(index - 1));
   closeBtn?.addEventListener("click", close);
   modal.addEventListener("click", (e) => {

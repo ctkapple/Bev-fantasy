@@ -38,7 +38,8 @@
     "2021": ["/assets/anchoradam1.jpeg", "/assets/anchoradam2.jpeg", "/assets/anchoradam3.jpeg"],
     "2022": ["/assets/adam2anchor.jpeg"],
     "2023": ["/assets/andyanchor.jpeg", "/assets/andyanchor2.jpeg"],
-    "2024": ["/assets/johnanchor.jpeg", "/assets/johnanchor2.jpeg", "/assets/johnanchor3.jpeg"]
+    "2024": ["/assets/johnanchor.jpeg", "/assets/johnanchor2.jpeg", "/assets/johnanchor3.jpeg"],
+    "2025": ["/assets/toilet-bowl-2025/1.MOV", "/assets/toilet-bowl-2025/2.JPEG", "/assets/toilet-bowl-2025/3.JPEG", "/assets/toilet-bowl-2025/4.JPEG", "/assets/toilet-bowl-2025/5.JPEG"]
   },
   "championshipOverrides": {
     "2021": { "winnerScore": 282.55, "loserScore": 218.84 },
@@ -92,7 +93,8 @@
     { "year": "2021", "name": "Adam", "detail": "11🍺 + 1🌿", "leftAt": "10:00 PM" },
     { "year": "2022", "name": "Adam", "detail": "14🍺", "leftAt": "9:30 PM" },
     { "year": "2023", "name": "Andrew", "detail": "17🍺", "leftAt": "8:45 PM" },
-    { "year": "2024", "name": "Johnny", "detail": "13🍺", "leftAt": "7:15pm" }
+    { "year": "2024", "name": "Johnny", "detail": "13🍺", "leftAt": "7:15pm" },
+    { "year": "2025", "name": "Patrick", "detail": "14🍺", "leftAt": "6:30pm" }
   ],
   "earnings": {
     "note": "2025's weekly-prop pool is $15 short of a full $1,200 payout — one prop bet had no winner and that $15 rolls over into 2026's prop pool.",
