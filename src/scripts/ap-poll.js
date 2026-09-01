@@ -15,7 +15,7 @@ if (root) {
     && new URLSearchParams(window.location.search).get("apPollPreview") === "third";
 
   function publishedResultsTitle() {
-    return showAllPublishedResults ? "AP Poll Results" : "AP Poll Top 7";
+    return showAllPublishedResults ? "Power Rankings" : "AP Poll Top 7";
   }
 
   function historyDashboardTitle() {

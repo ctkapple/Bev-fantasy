@@ -32,7 +32,7 @@
     { "id": "faab", "label": "FAAB", "template": "faab" },
     { "id": "rules", "label": "Rules", "template": "rules" },
     { "id": "keepers", "label": "Keeper Assistant", "template": "keeper-assistant" },
-    { "id": "poll", "label": "AP Poll", "template": "poll" }
+    { "id": "poll", "label": "Power Rankings", "template": "poll" }
   ],
   "keeperOverrides": {},
   "managerInfoMap": {
