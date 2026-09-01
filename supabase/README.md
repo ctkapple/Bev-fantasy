@@ -60,6 +60,9 @@ the voter snapshot, saved team/owner labels in rank order, and the three final
 picks. It returns no raw ballot IDs, no open or closed ballots, and no data for
 other leagues.
 
+Published aggregate-history results also include `average_rank`, the mean of
+each team's submitted ranking positions for that poll.
+
 Submit an open-poll ballot:
 
 ```js

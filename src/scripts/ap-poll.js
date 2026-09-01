@@ -11,10 +11,19 @@ if (root) {
   const leagueName = root.dataset.leagueName || "League";
   const showAllPublishedResults = leagueSlug === "jrwll";
   const publishedVoterViewsEnabled = leagueSlug === "jrwll";
-  const historyPreviewEnabled = new URLSearchParams(window.location.search).get("apPollPreview") === "third";
+  const historyPreviewEnabled = leagueSlug !== "jrwll"
+    && new URLSearchParams(window.location.search).get("apPollPreview") === "third";
 
   function publishedResultsTitle() {
     return showAllPublishedResults ? "AP Poll Results" : "AP Poll Top 7";
+  }
+
+  function historyDashboardTitle() {
+    return showAllPublishedResults ? "Keeper Power Rankings" : "AP Power Rankings";
+  }
+
+  function historyDashboardEyebrow() {
+    return showAllPublishedResults ? "Power ranking history" : "AP Poll history";
   }
 
   function visiblePublishedResults(results) {
@@ -677,7 +686,7 @@ if (root) {
         <div><p class="poll-step">${escapeHtml(latestPoll.label)}</p><h2 id="latest-published-results-title">${publishedResultsTitle()}</h2></div>
         <p>${Number(latestPoll.ballot_count) || 0} ballots</p>
       </div>
-      <div class="poll-result-column-labels" aria-hidden="true"><span>Rank</span><span>Team</span><span>Trend</span><span>AP points</span></div>
+      <div class="poll-result-column-labels" aria-hidden="true"><span>Rank</span><span>Team</span><span>Trend</span><span>${showAllPublishedResults ? "Avg. rank" : "AP points"}</span></div>
       ${results.length > 0 ? `<ol class="poll-result-list">${results.map(resultRowMarkup).join("")}</ol>` : '<p class="poll-results-empty">No aggregate results were returned.</p>'}
     </section>`;
   }
@@ -759,6 +768,10 @@ if (root) {
   function resultRowMarkup(result) {
     const rank = Number(result.rank);
     const rankClass = Number.isInteger(rank) && rank >= 1 && rank <= 3 ? ` is-rank-${rank}` : "";
+    const averageRank = Number(result.average_rank);
+    const resultMetric = showAllPublishedResults && Number.isFinite(averageRank)
+      ? `<span class="poll-result-points"><strong>${averageRank.toFixed(1)}</strong><small>avg. rank</small></span>`
+      : `<span class="poll-result-points"><strong>${escapeHtml(result.ap_points)}</strong><small>AP</small></span>`;
 
     return `<li class="poll-result-row${rankClass}">
       <span class="poll-result-rank" aria-label="Rank ${escapeHtml(result.rank)}">${escapeHtml(result.rank)}</span>
@@ -767,7 +780,7 @@ if (root) {
         <span class="poll-result-team-copy"><strong>${escapeHtml(result.display_name)}${reigningChampionMarkup(result.owner_label)}</strong><small>${escapeHtml(result.owner_label)}</small></span>
       </span>
       ${resultTrendMarkup(result)}
-      <span class="poll-result-points"><strong>${escapeHtml(result.ap_points)}</strong><small>AP</small></span>
+      ${resultMetric}
     </li>`;
   }
 
@@ -972,6 +985,9 @@ if (root) {
   }
 
   function historyLegendMarkup(teams) {
+    if (showAllPublishedResults) {
+      return teams.map(historyLegendTeamMarkup).join("");
+    }
     return HISTORY_DIVISIONS.map((division) => {
       const divisionTeams = teams.filter((team) => HISTORY_DIVISION_BY_OWNER[team.owner_label] === division.id);
       return `<section class="poll-history-division" aria-labelledby="poll-history-${division.id}-title">
@@ -983,33 +999,42 @@ if (root) {
   }
 
   function historyFocusMarkup(team, polls) {
+    const keeperHistory = showAllPublishedResults;
     if (!team) {
-      return '<p class="poll-history-focus-copy">Hover or tap a team to bring its AP-points path forward.</p>';
+      return `<p class="poll-history-focus-copy">Hover or tap a team to bring its ${keeperHistory ? "average-rank" : "AP-points"} path forward.</p>`;
     }
 
     const currentPoll = polls.at(-1);
     const currentResult = team.resultsByPoll.get(currentPoll?.id);
     const previousPoll = polls.at(-2);
     const previousResult = team.resultsByPoll.get(previousPoll?.id);
-    const currentPoints = Number(currentResult?.ap_points) || 0;
-    const pointChange = previousResult ? currentPoints - (Number(previousResult.ap_points) || 0) : null;
-    const changeLabel = pointChange === null
+    const currentValue = keeperHistory
+      ? Number(currentResult?.average_rank)
+      : Number(currentResult?.ap_points);
+    const previousValue = keeperHistory
+      ? Number(previousResult?.average_rank)
+      : Number(previousResult?.ap_points);
+    const metricChange = previousResult ? currentValue - previousValue : null;
+    const changeLabel = metricChange === null
       ? "First published result"
-      : pointChange === 0
-        ? "No AP-point change"
-        : `${pointChange > 0 ? "+" : ""}${pointChange} from ${escapeHtml(previousPoll.label)}`;
+      : metricChange === 0
+        ? `No ${keeperHistory ? "average-rank" : "AP-point"} change`
+        : `${metricChange > 0 ? "+" : ""}${metricChange.toFixed(1)} from ${escapeHtml(previousPoll.label)}`;
+    const metricLabel = keeperHistory
+      ? `${Number.isFinite(currentValue) ? currentValue.toFixed(1) : "—"} avg. rank`
+      : `${currentValue} AP`;
 
     return `<span class="poll-history-focus-team" style="--poll-history-team-color: ${team.color}">
       ${portraitMarkup(team.owner_label, "poll-history-focus-avatar")}
       <span><strong>${escapeHtml(team.display_name)}</strong><small>${escapeHtml(team.owner_label)}</small></span>
     </span>
-    <span class="poll-history-focus-metric"><strong>${currentPoints} AP</strong><small>${escapeHtml(currentPoll?.label || "Latest poll")} &middot; ${changeLabel}</small></span>`;
+    <span class="poll-history-focus-metric"><strong>${metricLabel}</strong><small>${escapeHtml(currentPoll?.label || "Latest poll")} &middot; ${changeLabel}</small></span>`;
   }
 
   function historyDashboardMarkup() {
     if (pollHistoryState.status === "idle" || pollHistoryState.status === "loading") {
       return `<section class="card poll-history-card" aria-labelledby="poll-history-title">
-        <div class="poll-section-heading"><div><p class="poll-step">AP Poll history</p><h2 id="poll-history-title">AP Power Rankings</h2></div></div>
+        <div class="poll-section-heading"><div><p class="poll-step">${historyDashboardEyebrow()}</p><h2 id="poll-history-title">${historyDashboardTitle()}</h2></div></div>
         <p class="poll-history-empty" role="status">Loading published AP Poll history&hellip;</p>
       </section>`;
     }
@@ -1021,27 +1046,35 @@ if (root) {
     const polls = historyPolls();
     if (polls.length === 0) {
       return `<section class="card poll-history-card" aria-labelledby="poll-history-title">
-        <div class="poll-section-heading"><div><p class="poll-step">AP Poll history</p><h2 id="poll-history-title">AP Power Rankings</h2></div></div>
+        <div class="poll-section-heading"><div><p class="poll-step">${historyDashboardEyebrow()}</p><h2 id="poll-history-title">${historyDashboardTitle()}</h2></div></div>
         <p class="poll-history-empty">Published AP Poll results will appear here once the league has history to compare.</p>
       </section>`;
     }
 
     const teams = historyTeams(polls);
     const activeTeam = teams.find((team) => team.id === activeHistoryTeamId()) || null;
+    const keeperHistory = showAllPublishedResults;
+    const teamCount = Math.max(1, ...polls.map((poll) => (poll.results || []).length));
     const maxPoints = Math.max(1, ...teams.flatMap((team) => polls.map((poll) => Number(team.resultsByPoll.get(poll.id)?.ap_points) || 0)));
-    const yMax = Math.max(10, Math.ceil(maxPoints / 10) * 10);
+    const yMax = keeperHistory ? teamCount : Math.max(10, Math.ceil(maxPoints / 10) * 10);
     const viewBox = mobileHistoryQuery.matches
       ? { width: 520, height: 540, left: 62, right: 24, top: 30, bottom: 78 }
       : { width: 920, height: 460, left: 62, right: 24, top: 30, bottom: 62 };
     const plotWidth = viewBox.width - viewBox.left - viewBox.right;
     const plotHeight = viewBox.height - viewBox.top - viewBox.bottom;
     const xForIndex = (index) => viewBox.left + (polls.length === 1 ? plotWidth / 2 : (plotWidth * index) / (polls.length - 1));
-    const yForValue = (value) => viewBox.top + plotHeight - ((Number(value) || 0) / yMax) * plotHeight;
-    const yTicks = Array.from({ length: 5 }, (_, index) => Math.round((yMax * index) / 4));
+    const yForValue = (value) => keeperHistory
+      ? viewBox.top + ((Math.max(1, Number(value)) - 1) / Math.max(yMax - 1, 1)) * plotHeight
+      : viewBox.top + plotHeight - ((Number(value) || 0) / yMax) * plotHeight;
+    const yTicks = keeperHistory
+      ? Array.from({ length: yMax }, (_, index) => index + 1)
+      : Array.from({ length: 5 }, (_, index) => Math.round((yMax * index) / 4));
+    const metricKey = keeperHistory ? "average_rank" : "ap_points";
+    const metricLabel = keeperHistory ? "Average rank" : "AP points";
     const historyPath = (team) => {
       const points = polls.flatMap((poll, index) => {
         const result = team.resultsByPoll.get(poll.id);
-        return result ? [{ x: xForIndex(index), y: yForValue(result.ap_points) }] : [];
+        return result ? [{ x: xForIndex(index), y: yForValue(result[metricKey]) }] : [];
       });
       if (points.length === 0) return "";
 
@@ -1066,21 +1099,24 @@ if (root) {
 
     return `<section class="card poll-history-card" data-poll-history aria-labelledby="poll-history-title">
       <div class="poll-section-heading">
-        <div><p class="poll-step">AP Poll history</p><h2 id="poll-history-title">AP Power Rankings</h2></div>
+        <div><p class="poll-step">${historyDashboardEyebrow()}</p><h2 id="poll-history-title">${historyDashboardTitle()}</h2></div>
         <p>${pollHistoryState.data.polls.length === 1 ? "1 published poll" : `${pollHistoryState.data.polls.length} published polls`}${historyPreviewEnabled ? " + preview" : ""}</p>
       </div>
       <div class="poll-history-layout">
         <div class="poll-history-chart-wrap">
-          <svg class="poll-history-chart" viewBox="0 0 ${viewBox.width} ${viewBox.height}" role="img" aria-label="AP points for all teams across published polls">
+          <svg class="poll-history-chart" viewBox="0 0 ${viewBox.width} ${viewBox.height}" role="img" aria-label="${metricLabel} for all teams across published polls">
             ${yTicks.map((value) => `<g class="poll-history-gridline"><line x1="${viewBox.left}" x2="${viewBox.width - viewBox.right}" y1="${yForValue(value)}" y2="${yForValue(value)}"></line><text x="${viewBox.left - 12}" y="${yForValue(value) + 4}" text-anchor="end">${value}</text></g>`).join("")}
-            <text class="poll-history-axis-label" x="18" y="${viewBox.top + plotHeight / 2}" transform="rotate(-90 18 ${viewBox.top + plotHeight / 2})" text-anchor="middle">AP points</text>
+            <text class="poll-history-axis-label" x="18" y="${viewBox.top + plotHeight / 2}" transform="rotate(-90 18 ${viewBox.top + plotHeight / 2})" text-anchor="middle">${metricLabel}</text>
             ${polls.map((poll, index) => `<g class="poll-history-x-axis"><line x1="${xForIndex(index)}" x2="${xForIndex(index)}" y1="${viewBox.top + plotHeight}" y2="${viewBox.top + plotHeight + 6}"></line><text x="${xForIndex(index)}" y="${viewBox.top + plotHeight + 26}" text-anchor="middle">${escapeHtml(poll.label)}</text><text x="${xForIndex(index)}" y="${viewBox.top + plotHeight + 43}" text-anchor="middle">${Number(poll.ballot_count) || 0} ballots</text></g>`).join("")}
-            ${teams.map((team) => `<g class="poll-history-series" data-history-team-id="${escapeHtml(team.id)}" tabindex="0" role="button" aria-label="Focus ${escapeHtml(team.display_name)} AP-points history" style="--poll-history-team-color: ${team.color}">
+            ${teams.map((team) => `<g class="poll-history-series" data-history-team-id="${escapeHtml(team.id)}" tabindex="0" role="button" aria-label="Focus ${escapeHtml(team.display_name)} ${keeperHistory ? "average-rank" : "AP-points"} history" style="--poll-history-team-color: ${team.color}">
               <path class="poll-history-line" d="${historyPath(team)}"></path>
               ${polls.map((poll, index) => {
                 const result = team.resultsByPoll.get(poll.id);
                 if (!result) return "";
-                return `<circle class="poll-history-point" cx="${xForIndex(index)}" cy="${yForValue(result.ap_points)}" r="4.5"><title>${escapeHtml(team.display_name)}: ${escapeHtml(poll.label)}, ${escapeHtml(result.ap_points)} AP, rank ${escapeHtml(result.rank)}</title></circle>`;
+                const metricValue = keeperHistory
+                  ? `${Number(result.average_rank).toFixed(1)} average rank`
+                  : `${escapeHtml(result.ap_points)} AP`;
+                return `<circle class="poll-history-point" cx="${xForIndex(index)}" cy="${yForValue(result[metricKey])}" r="4.5"><title>${escapeHtml(team.display_name)}: ${escapeHtml(poll.label)}, ${metricValue}, rank ${escapeHtml(result.rank)}</title></circle>`;
               }).join("")}
             </g>`).join("")}
           </svg>
@@ -1177,7 +1213,7 @@ if (root) {
           <p>${submissionCount} ballots counted</p>
         </div>
         <div class="poll-result-column-labels" aria-hidden="true">
-          <span>Rank</span><span>Team</span><span>Trend</span><span>AP points</span>
+          <span>Rank</span><span>Team</span><span>Trend</span><span>${showAllPublishedResults ? "Avg. rank" : "AP points"}</span>
         </div>
         ${displayedResults.length > 0
           ? `<ol class="poll-result-list">${displayedResults.map(resultRowMarkup).join("")}</ol>`
