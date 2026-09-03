@@ -1,0 +1,20 @@
+{
+  "slug": "unaffiliated/dd",
+  "name": "DD",
+  "tagline": "Unaffiliated",
+  "footerTagline": "Unaffiliated Fantasy Stats • All Statistics Certified Accurate*",
+  "currentLeagueId": "1385781108498518016",
+  "coOwnerConfig": {},
+  "tabs": [
+    { "id": "dashboard", "label": "Rankings", "template": "dashboard" },
+    { "id": "myteam", "label": "My Team", "template": "myteam" },
+    { "id": "h2h", "label": "H2H", "template": "h2h" },
+    { "id": "rosters", "label": "Championships", "template": "championships" },
+    { "id": "records", "label": "Records", "template": "records" },
+    { "id": "legacies", "label": "Legends", "template": "legends" },
+    { "id": "trades", "label": "Trades", "template": "trades" },
+    { "id": "faab", "label": "FAAB", "template": "faab" }
+  ],
+  "managerInfoMap": {},
+  "punishmentGalleries": {}
+}

@@ -15,11 +15,15 @@ const leaguesDir = path.join(__dirname, "..", "leagues");
  * (e.g. local preview before `npm run fetch-data`, or this dev sandbox where
  * api.sleeper.app is network-blocked) - templates should render an empty/
  * "no data yet" state rather than crash in that case.
+ *
+ * Keyed by each config's own `slug` field (not its filename) so a league's
+ * config file can live anywhere in this directory while its `slug` (and
+ * therefore its data dir / URL) nests under a subpath, e.g. "unaffiliated/dd".
  */
 export default function () {
   const slugs = readdirSync(leaguesDir)
     .filter((f) => f.endsWith(".json"))
-    .map((f) => f.replace(/\.json$/, ""));
+    .map((f) => JSON.parse(readFileSync(path.join(leaguesDir, f), "utf-8")).slug);
 
   const result = {};
   for (const slug of slugs) {
