@@ -433,6 +433,18 @@
       transition-colors hover:text-accent-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 rounded;
   }
 
+  /* List-style H2H picker (opt-in via league config `h2hPickerStyle: "list"`):
+     reuses the My Team roster-row look (.poll-voter-*) instead of the icon
+     grid, one column per side. Dimming the avatar on top of the shared
+     disabled:* text/background treatment is scoped to this wrapper so it
+     doesn't bleed into the AP Poll ballot, which also disables .poll-voter-button. */
+  .h2h-list-grid {
+    @apply grid grid-cols-1 gap-2;
+  }
+  .h2h-list-grid .poll-voter-button:disabled .poll-voter-avatar {
+    @apply grayscale opacity-40;
+  }
+
   @media (max-width: 339px) {
     .h2h-face-grid {
       @apply gap-1;

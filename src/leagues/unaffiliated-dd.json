@@ -4,6 +4,7 @@
   "tagline": "Unaffiliated",
   "footerTagline": "Unaffiliated Fantasy Stats • All Statistics Certified Accurate*",
   "currentLeagueId": "1385781108498518016",
+  "h2hPickerStyle": "list",
   "coOwnerConfig": {},
   "tabs": [
     { "id": "dashboard", "label": "Rankings", "template": "dashboard" },

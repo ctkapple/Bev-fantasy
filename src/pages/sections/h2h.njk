@@ -20,6 +20,23 @@ eleventyComputed:
   <div class="h2h-picker" aria-label="Choose two managers to compare">
     <section class="h2h-picker-side" data-h2h-side-panel="1" aria-labelledby="h2h-side-1-label">
       <h3 id="h2h-side-1-label" class="h2h-picker-label">Side A</h3>
+      {% if league.h2hPickerStyle == "list" %}
+      <div class="h2h-list-grid" data-h2h-face-grid>
+        {% for id, m in aggregate.managers %}
+        {% set latestTeam = m.teamNameHistory | last %}
+        <button type="button" class="poll-voter-button" data-h2h-manager-id="{{ id }}" data-h2h-side="1" data-manager-name="{{ m.displayName }}" aria-label="Select {{ m.displayName }} for side A" aria-pressed="false">
+          <span class="poll-voter-identity">
+            <img src="{{ m.avatar }}" alt="" class="poll-voter-avatar">
+            <span class="poll-pick-copy">
+              <strong>{{ latestTeam.name if latestTeam and latestTeam.name else m.displayName }}</strong>
+              <small>{{ m.displayName }}</small>
+            </span>
+          </span>
+          <span class="poll-voter-state" aria-hidden="true"></span>
+        </button>
+        {% endfor %}
+      </div>
+      {% else %}
       <div class="h2h-face-grid" data-h2h-face-grid>
         {% for id, m in aggregate.managers %}
         <button type="button" class="h2h-face-button" data-h2h-manager-id="{{ id }}" data-h2h-side="1" data-manager-name="{{ m.displayName }}" aria-label="Select {{ m.displayName }} for side A" aria-pressed="false" title="{{ m.displayName }}">
@@ -27,12 +44,30 @@ eleventyComputed:
         </button>
         {% endfor %}
       </div>
+      {% endif %}
     </section>
 
     <div class="h2h-picker-vs" aria-hidden="true">VS</div>
 
     <section class="h2h-picker-side" data-h2h-side-panel="2" aria-labelledby="h2h-side-2-label">
       <h3 id="h2h-side-2-label" class="h2h-picker-label">Side B</h3>
+      {% if league.h2hPickerStyle == "list" %}
+      <div class="h2h-list-grid" data-h2h-face-grid>
+        {% for id, m in aggregate.managers %}
+        {% set latestTeam = m.teamNameHistory | last %}
+        <button type="button" class="poll-voter-button" data-h2h-manager-id="{{ id }}" data-h2h-side="2" data-manager-name="{{ m.displayName }}" aria-label="Select {{ m.displayName }} for side B" aria-pressed="false">
+          <span class="poll-voter-identity">
+            <img src="{{ m.avatar }}" alt="" class="poll-voter-avatar">
+            <span class="poll-pick-copy">
+              <strong>{{ latestTeam.name if latestTeam and latestTeam.name else m.displayName }}</strong>
+              <small>{{ m.displayName }}</small>
+            </span>
+          </span>
+          <span class="poll-voter-state" aria-hidden="true"></span>
+        </button>
+        {% endfor %}
+      </div>
+      {% else %}
       <div class="h2h-face-grid" data-h2h-face-grid>
         {% for id, m in aggregate.managers %}
         <button type="button" class="h2h-face-button" data-h2h-manager-id="{{ id }}" data-h2h-side="2" data-manager-name="{{ m.displayName }}" aria-label="Select {{ m.displayName }} for side B" aria-pressed="false" title="{{ m.displayName }}">
@@ -40,6 +75,7 @@ eleventyComputed:
         </button>
         {% endfor %}
       </div>
+      {% endif %}
     </section>
   </div>
   <div class="h2h-picker-actions">

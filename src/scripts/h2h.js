@@ -190,6 +190,17 @@ document.addEventListener("DOMContentLoaded", () => {
       .forEach((button) => grid.append(button));
   });
 
+  // List-style rows only (no-op on the icon grid, which has neither element):
+  // color the avatar border and team name the same way My Team's picker does.
+  faceButtons.forEach((button) => {
+    const m = aggregate.managers[button.dataset.h2hManagerId];
+    const chip = (m && NAME_COLORS[m.displayName]) || FALLBACK_CHIP;
+    const avatar = button.querySelector(".poll-voter-avatar");
+    if (avatar) avatar.style.borderColor = chip;
+    const name = button.querySelector(".poll-pick-copy strong");
+    if (name) name.style.color = chip;
+  });
+
   function updatePicker() {
     faceButtons.forEach((button) => {
       const side = button.dataset.h2hSide;
@@ -210,6 +221,11 @@ document.addEventListener("DOMContentLoaded", () => {
           ? `Clear ${button.dataset.managerName} from ${sideLabel}`
           : `Select ${button.dataset.managerName} for ${sideLabel}`
       );
+
+      // List-style rows carry a .poll-voter-state tag (mirrors My Team's
+      // picker); the icon grid has no such element, so this is a no-op there.
+      const state = button.querySelector(".poll-voter-state");
+      if (state) state.textContent = isSelected ? "Selected" : "";
     });
 
     document.querySelectorAll("[data-h2h-side-panel]").forEach((panel) => {
