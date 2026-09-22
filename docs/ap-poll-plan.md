@@ -7,7 +7,24 @@ made during implementation and verification.
 Continuation checklist:
 [`ap-poll-dashboard-testing-handover.md`](./ap-poll-dashboard-testing-handover.md).
 
-## Current production status (August 11, 2026)
+## Official poll reset (August 17, 2026)
+
+The retained test fixtures are retired. Migration
+`20260817000000_replace_dummy_polls_with_official_preseason_poll.sql` performs
+one guarded transaction that:
+
+- Verifies the only SB3 polls are the documented demo and fake preseason poll.
+- Verifies their exact ballot and ranking counts before deleting anything.
+- Deletes both dummy poll histories while preserving permanent voters and teams.
+- Recreates `sb3_2026_preseason` as a clean, non-demo, open official poll.
+- Requires the official snapshot to contain exactly 16 active voters and 14
+  active franchises, or rolls the entire reset back.
+
+The official poll intentionally has no automatic closing timestamp. Close and
+publish it with the reviewed administration statements in `supabase/README.md`
+when voting is complete.
+
+## Previous production test status (August 11, 2026)
 
 V1 and the approved V2 results presentation are implemented and deployed. The
 production poll `sb3_2026_preseason` is intentionally left **published with
@@ -37,8 +54,8 @@ Production verification passed for:
   and winner-only/tie-aware superlative cards on mobile and desktop.
 - The production build and GitHub Pages deployment for commit `33bdc38`.
 
-Do not delete these three fake ballots or reset the poll. They are now the
-required previous-poll fixture for the next controlled fake poll.
+These fake results were retained temporarily for dashboard verification and
+are removed by the August 17 official-poll reset above.
 
 ## Co-managed franchises (August 12, 2026)
 
@@ -183,7 +200,7 @@ The deterministic demo must not be treated as genuine previous-poll history.
 Meaningful movement charts and historical team profiles should wait for either
 multiple real polls or an explicitly approved historical-data fixture/import.
 
-## Current decision
+## Superseded testing decision
 
 V2 current-results polish is live and verified. The next proposed testing slice
 is a second fake poll whose ballots deliberately reverse the preseason order.
@@ -202,16 +219,15 @@ This document approves the direction, not a production database mutation:
 creating the new poll, applying a migration, publishing results, cleanup,
 commit, push, and deployment each still require an explicit execution request.
 
-## Deferred cleanup
+## Completed cleanup decision
 
-After the second-poll dashboard verification, clean up both temporary real-flow
-fixtures in one reviewed operation. The exact final choice is still open:
+The approved cleanup deletes both fake poll histories, then recreates and opens
+the real preseason poll. The former alternatives were:
 
 - Delete only the second test poll and retain the fake preseason baseline for
   further dashboard work; or
 - Delete both fake poll histories, then recreate/reopen the real preseason poll
   with an explicitly approved deadline.
 
-Any deletion must preview and assert the exact poll IDs and dependent row
-counts first. Preserve the permanent voter/team registries and
-`sb3_2026_v1_demo` unless separately approved.
+The reset migration previews and asserts the exact poll IDs and dependent row
+counts before deletion and preserves the permanent voter/team registries.

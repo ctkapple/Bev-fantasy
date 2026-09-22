@@ -32,8 +32,10 @@ site source.
   holds the combined public label ("Kevin & Chris"), independent of the voter
   named in `teams.current_owner_voter_id`.
 
-The initial poll `sb3_2026_v1_demo` is explicitly marked `is_demo = true`. Its
-14 complete ballots are deterministic sample data, not real votes.
+Migration `20260817000000_replace_dummy_polls_with_official_preseason_poll.sql`
+removes both documented dummy poll histories and opens a clean official
+`sb3_2026_preseason` poll. It snapshots the 16 active voters and 14 active
+franchises without changing the permanent voter or franchise registries.
 
 ## Browser RPCs
 
@@ -167,16 +169,17 @@ set status = 'published', published_at = now(), updated_at = now()
 where id = 'sb3_2026_preseason' and status = 'closed';
 ```
 
-Remove the V1 sample poll immediately before loading the supplied real results:
+The historical one-off command for removing only the V1 sample poll was:
 
 ```sql
 delete from poll_private.polls
 where id = 'sb3_2026_v1_demo' and is_demo;
 ```
 
-Migration `20260811022729_add_ap_poll_poll_delete_cascades.sql` makes this delete
-cascade only through that poll's snapshots, ballots, and rankings; it does not
-delete the permanent SB3 voter or franchise registry.
+Migration `20260811022729_add_ap_poll_poll_delete_cascades.sql` makes poll
+deletion cascade only through that poll's snapshots, ballots, and rankings; it
+does not delete the permanent SB3 voter or franchise registry. Do not run the
+historical command against the official poll.
 
 ## Updating league membership
 
