@@ -34,11 +34,13 @@ eleventyComputed:
     </button>
     {% endfor %}
   </div>
+  <p id="my-team-live-note" class="rank-hint rank-live hidden"><span class="rank-live-dot"></span>Includes the live current season, refreshed about hourly per visitor.</p>
 </div>
 
 <div id="my-team-data" class="hidden"></div>
 
 <script id="myteam-data" type="application/json">{{ aggregate.managers | dump | safe }}</script>
 <script id="myteam-reigning-champ" type="application/json">{{ aggregate.reigningChampionId | dump | safe }}</script>
+<script id="myteam-league-config" type="application/json">{{ league | dump | safe }}</script>
 <script type="module" src="/assets/js/myteam.js"></script>
 {% endif %}

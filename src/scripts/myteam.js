@@ -4,6 +4,8 @@
 
 import { ICON_CROWN } from "./icons.js";
 import { NAME_COLORS } from "../../lib/people.js";
+import { getCurrentSeasonData } from "./sleeper-client.js";
+import { mergeAggregates } from "./merge.js";
 
 // Anyone the person registry has never heard of draws in neutral slate rather
 // than borrowing someone else's identity color — matches lib/rankings-model.js.
@@ -21,6 +23,20 @@ function readJson(id) {
 
 function fmtPct(p) {
   return `${(p * 100).toFixed(1)}%`;
+}
+
+function latestTeamName(m) {
+  const latest = m.teamNameHistory.at(-1);
+  return (latest && latest.name) || m.displayName;
+}
+
+function updateButtonLabel(button, m) {
+  const chip = NAME_COLORS[m.displayName] || FALLBACK_CHIP;
+  const name = button.querySelector(".poll-pick-copy strong");
+  if (name) {
+    name.textContent = latestTeamName(m);
+    name.style.color = chip;
+  }
 }
 
 function renderManager(managers, reigningChampId, userId) {
@@ -123,8 +139,9 @@ function renderManager(managers, reigningChampId, userId) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const managers = readJson("myteam-data");
-  const reigningChampId = readJson("myteam-reigning-champ");
+  let managers = readJson("myteam-data");
+  let reigningChampId = readJson("myteam-reigning-champ");
+  const league = readJson("myteam-league-config");
   const buttons = [...document.querySelectorAll("[data-my-team-id]")];
   if (!managers || !buttons.length) return;
 
@@ -148,4 +165,36 @@ document.addEventListener("DOMContentLoaded", () => {
       renderManager(managers, reigningChampId, button.dataset.myTeamId);
     });
   });
+
+  // Static `managers` above is baked in at the last full build, which never
+  // includes the in-progress season (see data-build/fetch-sleeper.js) - fold
+  // the live current season on top, exactly like dashboard.js does, so a
+  // mid-season rename or this year's stats show up without waiting on a build.
+  if (!league) return;
+
+  (async () => {
+    let staticAggregate;
+    try {
+      staticAggregate = await fetch(`/leagues/${league.slug}/data/aggregates.json`).then((r) => r.json());
+    } catch {
+      return;
+    }
+
+    const liveCurrentSeasonData = await getCurrentSeasonData(league);
+    const merged = mergeAggregates(staticAggregate, liveCurrentSeasonData);
+    if (merged === staticAggregate) return;
+
+    managers = merged.managers;
+    reigningChampId = merged.reigningChampionId;
+
+    buttons.forEach((button) => {
+      const m = managers[button.dataset.myTeamId];
+      if (m) updateButtonLabel(button, m);
+    });
+
+    const selectedButton = buttons.find((button) => button.getAttribute("aria-pressed") === "true");
+    if (selectedButton) renderManager(managers, reigningChampId, selectedButton.dataset.myTeamId);
+
+    document.getElementById("my-team-live-note")?.classList.remove("hidden");
+  })();
 });
