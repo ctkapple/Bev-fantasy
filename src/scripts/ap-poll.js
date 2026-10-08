@@ -1210,7 +1210,6 @@ if (root) {
             <p class="poll-step">Official results</p>
             <h2 id="poll-results-title">${publishedResultsTitle()}</h2>
           </div>
-          <p>${submissionCount} ballots counted</p>
         </div>
         <div class="poll-result-column-labels" aria-hidden="true">
           <span>Rank</span><span>Team</span><span>Trend</span><span>${showAllPublishedResults ? "Avg. rank" : "AP points"}</span>
