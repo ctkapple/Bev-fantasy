@@ -9,20 +9,30 @@ currentTab: draft-odds
 eleventyComputed:
   title: "{{ league.name }} — Draft Odds"
 ---
-<div class="card">
-  <h2 id="draft-odds-title" class="text-xl font-bold mb-4 text-accent-500">Projected Rookie Draft Order</h2>
-  <p class="text-xs text-text-secondary mb-4">Live projection based on the current in-progress season - fetched from Sleeper on this page load (~1hr cache).</p>
-  <div class="overflow-x-auto">
-    <table class="stat-table">
-      <thead>
-        <tr><th class="px-4 py-3">Pick</th><th class="px-4 py-3">Manager</th><th class="px-4 py-3">Record</th><th class="px-4 py-3">Max PF</th></tr>
-      </thead>
-      <tbody id="draft-odds-body">
-        <tr><td colspan="4" class="text-center py-4 text-text-secondary">Loading current standings…</td></tr>
-      </tbody>
-    </table>
+<section class="draft-board" aria-labelledby="draft-odds-title">
+  <header class="draft-board-header">
+    <h2 id="draft-odds-title">Rookie Draft Odds</h2>
+    <div class="draft-board-meta"><strong>Round 1</strong><span id="draft-odds-week"></span></div>
+  </header>
+  <p id="draft-odds-status" role="status" class="draft-board-status">Loading Sleeper standings and pick ownership…</p>
+  <div id="draft-odds-content" hidden>
+    <section id="draft-odds-spotlight" class="draft-spotlight" aria-labelledby="draft-odds-spotlight-title" hidden>
+      <div>
+        <h3 id="draft-odds-spotlight-title">No. 1 overall odds</h3>
+        <div id="draft-odds-favorite" class="draft-favorite"></div>
+      </div>
+      <ul id="draft-odds-challengers" class="draft-challengers" aria-label="Other contenders"></ul>
+    </section>
+    <h3 id="draft-odds-order-title" class="draft-order-title">Projected first-round order</h3>
+    <div id="draft-odds-body"></div>
+    <details class="draft-methodology">
+      <summary>How the order and odds work</summary>
+      <p>The seven non-playoff teams pick first, starting with the lowest Max PF. Before the playoffs, the top seven are ranked by record and then higher PF, with the strongest seed projected to pick last. Actual playoff results determine their final slots, including 1.14 for the champion. When teams exit in the same round without a placement game, the stronger regular-season seed picks later.</p>
+      <p>Pick slots follow the original franchise. Sleeper’s trade ledger determines who holds each pick. For exact Max PF ties, the projection puts the weaker regular-season seed first.</p>
+      <p>Estimates come from 5,000 simulations of the remaining schedule and playoff bracket. The model resamples each team’s weekly scores and estimates future Max PF from its season-to-date gap between PF and Max PF.</p>
+    </details>
   </div>
-</div>
+</section>
 
 <script id="draft-odds-league-config" type="application/json">{{ league | dump | safe }}</script>
 <script type="module" src="/assets/js/draft-odds.js"></script>

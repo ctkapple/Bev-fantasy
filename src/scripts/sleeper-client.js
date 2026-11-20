@@ -149,3 +149,61 @@ export async function getCurrentSeasonData(leagueConfig) {
     return cached ? cached.payload : null; // stale-on-failure beats a blank page
   }
 }
+
+// Draft Odds uses the same roster/manager normalization, but needs the future
+// schedule and trade ledger instead of transactions or the NFL player database.
+export async function getDraftOddsData(leagueConfig) {
+  const { slug, currentLeagueId: leagueId } = leagueConfig;
+  const cacheSlug = `${slug}:draft-odds`;
+  const cached = readCache(cacheSlug, leagueId);
+  if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
+    return { ...cached.payload, fetchedAt: cached.fetchedAt };
+  }
+
+  try {
+    const leagueUrl = `${SLEEPER_BASE}/league/${leagueId}`;
+    const [leagueObj, users, rosters, tradedPicks, winnersBracket] = await Promise.all([
+      fetchWithRetry(leagueUrl),
+      fetchWithRetry(`${leagueUrl}/users`),
+      fetchWithRetry(`${leagueUrl}/rosters`),
+      fetchWithRetry(`${leagueUrl}/traded_picks`).catch(() => null),
+      fetchWithRetry(`${leagueUrl}/winners_bracket`).catch(() => null),
+    ]);
+    const { season, managers, rosterSnapshots } = processSeason({
+      leagueObj,
+      users,
+      rosters,
+      matchupsByWeek: {},
+      nflPlayers: {},
+      managerInfoMap: leagueConfig.managerInfoMap,
+      primaryUserIdMap: buildPrimaryUserIdMap(leagueConfig.coOwnerConfig, users),
+    });
+    const settings = leagueObj.settings || {};
+    const firstWeek = settings.start_week || 1;
+    const lastRegularWeek = (settings.playoff_week_start || 15) - 1;
+    const gamesPlayed = Math.max(0, ...rosterSnapshots.map(r => r.wins + r.losses + r.ties));
+    const completedWeek = leagueObj.status === "complete" ? lastRegularWeek
+      : Math.min(lastRegularWeek, settings.last_scored_leg ?? firstWeek - 1 + gamesPlayed);
+    const weeks = completedWeek >= firstWeek + 2
+      ? await fetchWeeklyMap(leagueId, "matchups", lastRegularWeek) : {};
+    const matchupsByWeek = Object.fromEntries(Object.entries(weeks).map(([week, matchups]) => [
+      week, matchups.map(({ roster_id, matchup_id, points }) => ({ roster_id, matchup_id, points })),
+    ]));
+    const payload = {
+      season, managers, rosterSnapshots, firstWeek, lastRegularWeek, completedWeek, matchupsByWeek,
+      rosterCount: leagueObj.total_rosters || settings.num_teams,
+      playoffTeams: settings.playoff_teams || 7,
+      medianGame: Boolean(settings.league_average_match),
+      maxPfAvailable: rosters.every(roster => Number.isFinite(roster.settings?.ppts)),
+      tradedPicks: Array.isArray(tradedPicks) ? tradedPicks : null,
+      winnersBracket: Array.isArray(winnersBracket) ? winnersBracket : null,
+    };
+    // Retry an incomplete feed on the next visit. A missing ledger must never
+    // be treated as proof that every team controls its original pick.
+    if (payload.tradedPicks && payload.winnersBracket) writeCache(cacheSlug, leagueId, payload);
+    return { ...payload, fetchedAt: Date.now() };
+  } catch (err) {
+    console.warn(`[sleeper-client] Draft odds fetch failed for ${slug}:`, err);
+    return cached ? { ...cached.payload, fetchedAt: cached.fetchedAt, stale: true } : null;
+  }
+}

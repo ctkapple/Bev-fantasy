@@ -15,6 +15,187 @@
 }
 
 @layer components {
+  .draft-board {
+    @apply mx-auto max-w-5xl rounded-2xl border border-border bg-bg px-3 py-4 sm:px-6 sm:py-6;
+  }
+  .draft-board-header {
+    @apply flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4;
+  }
+  .draft-board-header h2 {
+    @apply text-3xl font-bold leading-none sm:text-4xl;
+  }
+  .draft-board-meta {
+    @apply flex flex-wrap items-center gap-2 text-xs font-medium text-text-secondary;
+  }
+  .draft-board-meta strong {
+    @apply rounded bg-accent-500/10 px-2 py-1 font-semibold text-accent-400;
+  }
+  .draft-board-status {
+    @apply mt-3 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-secondary;
+  }
+  .draft-spotlight {
+    @apply mt-4 grid items-center gap-4 rounded-xl border border-border bg-surface px-4 py-4 sm:px-5;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    background: linear-gradient(106deg, color-mix(in srgb, var(--franchise) 12%, rgb(var(--color-surface))), rgb(var(--color-surface)) 62%);
+  }
+  .draft-spotlight[hidden] {
+    @apply hidden;
+  }
+  .draft-spotlight h3 {
+    @apply mb-2 text-xs font-semibold uppercase tracking-widest text-text-secondary;
+  }
+  .draft-favorite {
+    @apply flex flex-wrap items-center gap-3;
+  }
+  .draft-favorite-value {
+    @apply text-5xl font-bold leading-none tracking-tighter tabular-nums sm:text-6xl;
+  }
+  .draft-favorite .draft-avatar {
+    @apply h-11 w-11;
+  }
+  .draft-challengers {
+    @apply space-y-2 border-l border-border pl-4;
+  }
+  .draft-challengers li {
+    @apply grid items-center gap-2;
+    grid-template-columns: minmax(0, 1fr) minmax(2rem, 0.6fr) auto;
+  }
+  .draft-challengers li > strong {
+    @apply min-w-9 text-right text-xs tabular-nums;
+  }
+  .draft-challengers .draft-avatar {
+    @apply h-6 w-6 border;
+  }
+  .draft-order-title {
+    @apply mb-2 mt-6 text-xl font-semibold;
+  }
+  .draft-columns {
+    @apply grid items-center gap-3 pl-3 pr-2 sm:pr-4;
+    grid-template-columns: 3.5rem minmax(8rem, 1.7fr) minmax(4.25rem, 0.7fr) minmax(4rem, 0.7fr) minmax(4rem, 0.9fr);
+  }
+  .draft-column-labels {
+    @apply mb-1.5 border-l-[3px] border-transparent text-xs font-medium text-text-secondary;
+  }
+  .draft-group + .draft-group {
+    @apply mt-3;
+  }
+  .draft-group-header {
+    @apply flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-t-lg border border-border bg-surface-hover px-3 py-2;
+  }
+  .draft-group-header h4 {
+    @apply text-sm font-semibold text-accent-400;
+  }
+  .draft-group-header > span {
+    @apply text-xs text-text-secondary;
+  }
+  .draft-picks {
+    @apply divide-y divide-border overflow-hidden rounded-b-lg border-x border-b border-border;
+  }
+  .draft-row {
+    @apply min-h-[3.4rem] border-l-[3px] bg-surface py-2;
+    border-left-color: var(--franchise);
+  }
+  .draft-row.is-traded {
+    background: linear-gradient(102deg, color-mix(in srgb, var(--franchise) 12%, rgb(var(--color-surface))), rgb(var(--color-surface)) 52%);
+  }
+  .draft-slot {
+    @apply font-mono text-base font-bold tabular-nums;
+  }
+  .draft-identity, .draft-original {
+    @apply flex min-w-0 items-center gap-2 leading-tight;
+  }
+  .draft-identity strong {
+    @apply text-sm font-semibold;
+  }
+  .draft-avatar {
+    @apply h-8 w-8 shrink-0 rounded-full border-2 object-cover;
+    border-color: var(--franchise);
+  }
+  .draft-avatar-fallback {
+    @apply grid place-items-center bg-surface-hover text-xs font-semibold;
+  }
+  .draft-original {
+    @apply mt-1.5 text-xs text-text-primary;
+  }
+  .draft-original .draft-avatar {
+    @apply h-5 w-5 border;
+  }
+  .draft-subline {
+    @apply block text-xs leading-tight text-text-secondary;
+  }
+  .draft-role {
+    @apply text-text-secondary;
+  }
+  .draft-champion {
+    @apply mt-1 font-medium text-accent-400;
+  }
+  .draft-record, .draft-points, .draft-slot-odds {
+    @apply text-sm leading-tight tabular-nums;
+  }
+  .draft-slot-odds {
+    @apply grid items-center gap-x-2 gap-y-0.5;
+    grid-template-columns: 2.6rem minmax(1rem, 1fr);
+  }
+  .draft-slot-odds .draft-subline {
+    @apply col-span-2;
+  }
+  .draft-slot-odds .draft-mobile-odds {
+    @apply hidden;
+  }
+  .draft-meter {
+    @apply block h-1.5 overflow-hidden rounded-full bg-white/10;
+  }
+  .draft-meter > span {
+    @apply block h-full rounded-full;
+    background: color-mix(in srgb, var(--franchise) 78%, rgb(var(--color-text-primary)));
+  }
+  .draft-methodology {
+    @apply mt-4 max-w-3xl text-sm text-text-secondary;
+  }
+  .draft-methodology summary {
+    @apply cursor-pointer font-medium text-text-primary;
+  }
+  .draft-methodology p {
+    @apply mt-2;
+  }
+  @media (max-width: 639px) {
+    .draft-spotlight {
+      @apply grid-cols-1;
+    }
+    .draft-challengers {
+      @apply border-l-0 border-t pl-0 pt-3;
+    }
+    .draft-column-labels {
+      @apply hidden;
+    }
+    .draft-columns {
+      grid-template-columns: 2.6rem minmax(0, 1fr) minmax(3.6rem, 0.53fr) minmax(2.7rem, 0.43fr);
+      column-gap: 0.45rem;
+    }
+    .draft-slot {
+      grid-area: 1 / 1;
+    }
+    .draft-owner {
+      grid-area: 1 / 2 / 2 / 4;
+    }
+    .draft-record {
+      grid-area: 2 / 2;
+    }
+    .draft-points {
+      grid-area: 2 / 3;
+    }
+    .draft-slot-odds {
+      @apply grid-cols-1;
+      grid-area: 1 / 4 / 3;
+    }
+    .draft-slot-odds .draft-subline {
+      @apply col-span-1;
+    }
+    .draft-slot-odds .draft-mobile-odds {
+      @apply block;
+    }
+  }
+
   /* Restrained "Clean SaaS" card: subtle ring instead of a flat hard border,
      gentle lift on hover rather than the old translateY(-5px) scale(1.02). */
   .card {
