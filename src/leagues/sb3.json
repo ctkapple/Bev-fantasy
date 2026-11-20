@@ -26,6 +26,7 @@
   },
   "tabs": [
     { "id": "dashboard", "label": "Rankings", "template": "dashboard" },
+    { "id": "playoff-odds", "label": "Playoff Odds", "template": "playoff-odds" },
     { "id": "poll", "label": "AP Poll", "template": "poll" },
     { "id": "draft-odds", "label": "Draft Odds", "template": "draft-odds" },
     { "id": "myteam", "label": "My Team", "template": "myteam" },

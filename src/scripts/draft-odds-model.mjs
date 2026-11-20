@@ -1,3 +1,5 @@
+import { addResult, schedulePairings, seededOddsRandom } from "./odds-simulation.mjs";
+
 const SIMULATIONS = 5000;
 
 function winPct({ wins, losses, ties }) {
@@ -72,26 +74,6 @@ function playoffOrder(seeds, plan, winner, useResults) {
   return finishingOrder.map(roster => roster || unplaced.shift()).reverse();
 }
 
-function schedulePairings(data, standings) {
-  const remaining = [];
-  const rosterIds = new Set(standings.map(roster => roster.rosterId));
-  for (let week = data.completedWeek + 1; week <= data.lastRegularWeek; week += 1) {
-    const groups = new Map();
-    const scheduled = new Set();
-    for (const matchup of data.matchupsByWeek[week] || []) {
-      const { roster_id: rosterId, matchup_id: matchupId } = matchup;
-      if (matchupId == null || !rosterIds.has(rosterId) || scheduled.has(rosterId)) continue;
-      scheduled.add(rosterId);
-      if (!groups.has(matchupId)) groups.set(matchupId, []);
-      groups.get(matchupId).push(rosterId);
-    }
-    const pairs = [...groups.values()];
-    if (scheduled.size !== rosterIds.size || pairs.some(pair => pair.length !== 2)) return null;
-    remaining.push(pairs);
-  }
-  return remaining;
-}
-
 function simulate(data, standings, projected, seeds, plan, regularComplete) {
   const schedule = schedulePairings(data, standings);
   const history = new Map(standings.map(roster => [roster.rosterId, []]));
@@ -109,19 +91,10 @@ function simulate(data, standings, projected, seeds, plan, regularComplete) {
   const slots = new Map(projected.map((roster, slot) => [roster.rosterId, slot]));
   const exact = new Map(standings.map(roster => [roster.rosterId, 0]));
   const first = new Map(exact);
-  let seed = 48619;
-  function random() {
-    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
-    return seed / 4294967296;
-  }
+  const random = seededOddsRandom();
   function weeklyScore(rosterId) {
     const scores = history.get(rosterId);
     return scores[Math.floor(random() * scores.length)];
-  }
-  function addResult(roster, score, opponentScore) {
-    if (score > opponentScore) roster.wins += 1;
-    else if (score < opponentScore) roster.losses += 1;
-    else roster.ties += 1;
   }
   function simulatedWinner(a, b, seedIndex) {
     const margin = weeklyScore(a) - weeklyScore(b);

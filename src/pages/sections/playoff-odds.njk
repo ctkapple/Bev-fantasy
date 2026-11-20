@@ -1,0 +1,54 @@
+---
+pagination:
+  data: "leaguesByTab['playoff-odds']"
+  size: 1
+  alias: league
+permalink: "/{{ league.slug }}/playoff-odds/"
+layout: layouts/league-shell.njk
+currentTab: playoff-odds
+eleventyComputed:
+  title: "{{ league.name }} — Playoff Odds"
+---
+<section class="playoff-odds" aria-labelledby="playoff-odds-title">
+  <header class="playoff-heading">
+    <div>
+      <p class="playoff-league">{{ league.name }}</p>
+      <h1 id="playoff-odds-title">Playoff Odds</h1>
+    </div>
+    <p id="playoff-odds-week" class="playoff-week" hidden></p>
+  </header>
+  <p id="playoff-odds-status" class="playoff-status" role="status">Loading Sleeper standings…</p>
+  <div id="playoff-odds-content" hidden>
+    <div class="playoff-desktop">
+      <section class="playoff-inspector" aria-labelledby="playoff-odds-inspect-title">
+        <div>
+          <h2 id="playoff-odds-inspect-title">1st round bye odds</h2>
+          <p id="playoff-odds-inspect-note"></p>
+        </div>
+        <ul id="playoff-odds-leaders" class="playoff-leaders" aria-live="polite"></ul>
+      </section>
+      <h2 id="playoff-odds-grid-title" class="playoff-grid-title">Seed probabilities</h2>
+      <div class="playoff-grid-wrap">
+        <table class="playoff-grid" aria-labelledby="playoff-odds-grid-title">
+          <colgroup span="1"></colgroup>
+          <colgroup id="playoff-odds-seed-columns"></colgroup>
+          <colgroup span="2"></colgroup>
+          <thead id="playoff-odds-grid-head"></thead>
+          <tbody id="playoff-odds-grid-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <section class="playoff-mobile" aria-label="Playoff outcomes by team">
+      <div class="playoff-mobile-head" aria-hidden="true"><span>Team</span><span>Make playoffs</span></div>
+      <div id="playoff-odds-team-list"></div>
+    </section>
+    <details class="playoff-method">
+      <summary>How playoff spots are decided</summary>
+      <p id="playoff-odds-rules"></p>
+      <p id="playoff-odds-method"></p>
+    </details>
+  </div>
+</section>
+
+<script id="playoff-odds-league-config" type="application/json">{{ league | dump | safe }}</script>
+<script type="module" src="/assets/js/playoff-odds.js"></script>

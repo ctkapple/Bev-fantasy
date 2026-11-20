@@ -15,6 +15,159 @@
 }
 
 @layer components {
+  .playoff-odds {
+    --playoff-green: #20382c;
+    --playoff-green-text: #b8efc6;
+    --playoff-red: #261a1e;
+    --playoff-red-text: #eeb0b1;
+    --playoff-selected: #2e2521;
+    @apply mx-auto max-w-6xl py-5;
+  }
+  .playoff-heading { @apply flex flex-wrap items-end justify-between gap-2; }
+  .playoff-heading h1 { @apply mt-1 text-4xl font-bold leading-none sm:text-5xl; }
+  .playoff-league { @apply text-xs font-extrabold uppercase tracking-widest text-accent-400; }
+  .playoff-week {
+    @apply rounded-md border px-2 py-1 text-xs font-semibold;
+    background: #2b201a;
+    border-color: #5b3c28;
+    color: #ffb17e;
+  }
+  .playoff-status { @apply mt-4 rounded-lg border border-border bg-surface p-3 text-sm text-text-secondary; }
+  .playoff-inspector {
+    @apply mt-4 grid items-center gap-3 rounded-xl border border-border bg-surface p-4;
+    grid-template-columns: minmax(10rem, 1fr) minmax(0, 3fr);
+  }
+  .playoff-inspector h2, .playoff-grid-title { @apply font-sans text-base font-extrabold tracking-normal; }
+  .playoff-inspector p { @apply mt-1 text-xs text-text-secondary; }
+  .playoff-leaders { @apply grid grid-cols-3 gap-2.5; }
+  .playoff-leaders li { @apply min-w-0 border-l-2 pl-2; border-color: var(--team-color); }
+  .playoff-leader-odds { @apply mb-1 block text-2xl font-bold leading-none tabular-nums; }
+  .playoff-leaders .playoff-avatar { @apply h-6 w-6; }
+  .playoff-grid-title { @apply mb-2 mt-4; }
+  .playoff-grid-wrap { @apply overflow-hidden rounded-xl border border-border bg-surface; }
+  .playoff-grid { @apply w-full table-fixed border-collapse text-center tabular-nums; }
+  .playoff-grid tr > * { @apply border-b border-border; }
+  .playoff-grid tbody tr:last-child > * { @apply border-b-0; }
+  .playoff-grid thead th { @apply h-10 bg-surface-hover text-xs font-bold text-text-secondary; }
+  .playoff-grid .playoff-team-column { @apply w-[23%] pl-2.5 text-left; }
+  .playoff-grid .playoff-seed-group { @apply relative h-7; background: #302723; color: #e8c9ae; }
+  .playoff-grid .playoff-seed-header { background: #292321; color: #eed1ba; }
+  .playoff-grid th button { @apply w-[calc(100%-6px)] rounded border border-transparent px-0.5 py-1 leading-tight; }
+  .playoff-grid .playoff-bye-toggle { @apply absolute left-0.5 top-0.5 w-auto px-1.5 py-0.5 text-[11px]; }
+  .playoff-grid th button:hover, .playoff-grid th button[aria-pressed="true"] {
+    border-color: #ce9369;
+    background: #3b2c24;
+    color: #f4d4b9;
+  }
+  .playoff-grid th button:focus-visible, .playoff-mobile-team summary:focus-visible {
+    outline: 2px solid #ffb17e;
+    outline-offset: -2px;
+  }
+  .playoff-grid th.playoff-miss button:hover, .playoff-grid th.playoff-miss button[aria-pressed="true"] {
+    border-color: #c17982;
+    background: #492b32;
+    color: #ffcdcd;
+  }
+  .playoff-bye { @apply mt-0.5 block text-[10px]; }
+  .playoff-grid th.playoff-miss { @apply w-[12%]; }
+  .playoff-grid th.playoff-make { @apply w-[14%]; }
+  .playoff-grid .playoff-miss {
+    border-left: 1px solid #523037;
+    background: var(--playoff-red);
+    color: var(--playoff-red-text);
+  }
+  .playoff-grid .playoff-make {
+    border-left: 1px solid #39614a;
+    background: var(--playoff-green);
+    color: var(--playoff-green-text);
+  }
+  .playoff-grid tbody th {
+    @apply border-l-[3px] px-2 py-1.5 text-left;
+    border-left-color: var(--team-color);
+  }
+  .playoff-grid tbody td { @apply h-12 px-0.5 py-0.5; }
+  .playoff-grid .playoff-seed { background: #1c1a1a; }
+  .playoff-grid .playoff-selected { background: var(--playoff-selected); }
+  .playoff-grid .playoff-miss.playoff-selected { background: #36232a; }
+  .playoff-team { @apply flex min-w-0 items-center gap-2 text-left leading-tight; }
+  .playoff-avatar {
+    @apply relative grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-full border-2 text-[10px] font-bold;
+    border-color: var(--team-color);
+    background: color-mix(in srgb, var(--team-color) 25%, rgb(var(--color-surface)));
+  }
+  .playoff-avatar img { @apply absolute inset-0 h-full w-full object-cover; }
+  .playoff-team-text { @apply min-w-0 text-xs text-text-primary; overflow-wrap: anywhere; }
+  .playoff-record { @apply mt-0.5 block text-[11px] font-medium text-text-secondary; }
+  .playoff-record > span:last-child { @apply whitespace-nowrap tabular-nums; }
+  .playoff-total { @apply font-extrabold tabular-nums; }
+  .playoff-total-missed { @apply text-text-secondary; }
+  .playoff-cell {
+    --playoff-band-1: #302923;
+    --playoff-band-2: #493328;
+    --playoff-band-3: #653f2d;
+    --playoff-band-4: #8d5033;
+    --playoff-band-5: #d08a5b;
+    --playoff-band-6: #e5a275;
+    --playoff-band-7: #eeb887;
+    --playoff-band-8: #f5c993;
+    --playoff-band-9: #fed8a5;
+    --playoff-strong-ink: #21150e;
+    @apply grid min-h-8 place-items-center whitespace-nowrap rounded text-[11px] font-extrabold tabular-nums text-text-primary;
+  }
+  .playoff-miss .playoff-cell, .playoff-mobile-miss .playoff-cell {
+    --playoff-band-1: #302326;
+    --playoff-band-2: #3d272d;
+    --playoff-band-3: #4e2b33;
+    --playoff-band-4: #61343e;
+    --playoff-band-5: #773a45;
+    --playoff-band-6: #913f4c;
+    --playoff-band-7: #a24a55;
+    --playoff-strong-ink: #fff2f1;
+  }
+  .playoff-cell[data-band="1"] { background: var(--playoff-band-1); }
+  .playoff-cell[data-band="2"] { background: var(--playoff-band-2); }
+  .playoff-cell[data-band="3"] { background: var(--playoff-band-3); }
+  .playoff-cell[data-band="4"] { background: var(--playoff-band-4); }
+  .playoff-cell[data-band="5"] { background: var(--playoff-band-5); }
+  .playoff-cell[data-band="6"] { background: var(--playoff-band-6); }
+  .playoff-cell[data-band="7"] { background: var(--playoff-band-7); }
+  .playoff-cell[data-band="8"] { background: var(--playoff-band-8); }
+  .playoff-cell[data-band="9"] { background: var(--playoff-band-9); }
+  .playoff-cell:is([data-band="5"], [data-band="6"], [data-band="7"], [data-band="8"], [data-band="9"]) {
+    color: var(--playoff-strong-ink);
+  }
+  .playoff-zero { @apply text-text-secondary; }
+  .playoff-mobile { @apply hidden; }
+  .playoff-method { @apply mt-4 text-sm text-text-secondary; }
+  .playoff-method summary { @apply w-fit cursor-pointer font-medium text-text-primary; }
+  .playoff-method p { @apply mt-2; }
+  @media (max-width: 739px) {
+    .playoff-heading h1 { font-size: clamp(1.875rem, 8vw, 2.25rem); }
+    .playoff-desktop { @apply hidden; }
+    .playoff-mobile { @apply mt-4 block overflow-hidden rounded-lg border border-border bg-surface; }
+    .playoff-mobile-head { @apply flex justify-between bg-surface-hover py-2 pl-3 pr-8 text-xs font-bold text-text-secondary; }
+    .playoff-mobile-team { @apply border-t border-border; }
+    .playoff-mobile-team summary {
+      @apply grid min-h-[51px] cursor-pointer list-none items-center gap-2 border-l-[3px] py-1.5 pl-2 pr-2.5;
+      grid-template-columns: minmax(0, 1fr) auto 0.75rem;
+      border-left-color: var(--team-color);
+    }
+    .playoff-mobile-team summary::-webkit-details-marker { display: none; }
+    .playoff-mobile-team summary .playoff-total {
+      @apply rounded px-1.5 py-0.5 text-sm;
+      background: var(--playoff-green);
+      color: var(--playoff-green-text);
+    }
+    .playoff-mobile-team summary .playoff-total-missed { @apply bg-surface-hover text-text-secondary; }
+    .playoff-chevron { @apply -mt-0.5 h-1.5 w-1.5 rotate-45 justify-self-center border-b border-r border-text-secondary; }
+    .playoff-mobile-team[open] summary { background: #25211f; }
+    .playoff-mobile-team[open] .playoff-chevron { @apply mt-0.5 rotate-[225deg]; }
+    .playoff-outcomes { @apply grid grid-cols-4 gap-1.5 p-2; background: #1c1919; }
+    .playoff-outcomes > div { @apply grid min-w-0 gap-0.5 text-center; grid-template-rows: auto 2rem; }
+    .playoff-outcomes dt { @apply self-end text-[11px]; color: #eed1ba; }
+    .playoff-mobile-miss dt { color: var(--playoff-red-text); }
+  }
+
   .draft-board {
     @apply mx-auto max-w-5xl rounded-2xl border border-border bg-bg px-3 py-4 sm:px-6 sm:py-6;
   }

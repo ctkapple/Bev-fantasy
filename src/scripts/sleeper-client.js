@@ -150,6 +150,18 @@ export async function getCurrentSeasonData(leagueConfig) {
   }
 }
 
+function normalizeOddsSeason(leagueConfig, leagueObj, users, rosters) {
+  return processSeason({
+    leagueObj,
+    users,
+    rosters,
+    matchupsByWeek: {},
+    nflPlayers: {},
+    managerInfoMap: leagueConfig.managerInfoMap,
+    primaryUserIdMap: buildPrimaryUserIdMap(leagueConfig.coOwnerConfig, users),
+  });
+}
+
 // Draft Odds uses the same roster/manager normalization, but needs the future
 // schedule and trade ledger instead of transactions or the NFL player database.
 export async function getDraftOddsData(leagueConfig) {
@@ -169,15 +181,7 @@ export async function getDraftOddsData(leagueConfig) {
       fetchWithRetry(`${leagueUrl}/traded_picks`).catch(() => null),
       fetchWithRetry(`${leagueUrl}/winners_bracket`).catch(() => null),
     ]);
-    const { season, managers, rosterSnapshots } = processSeason({
-      leagueObj,
-      users,
-      rosters,
-      matchupsByWeek: {},
-      nflPlayers: {},
-      managerInfoMap: leagueConfig.managerInfoMap,
-      primaryUserIdMap: buildPrimaryUserIdMap(leagueConfig.coOwnerConfig, users),
-    });
+    const { season, managers, rosterSnapshots } = normalizeOddsSeason(leagueConfig, leagueObj, users, rosters);
     const settings = leagueObj.settings || {};
     const firstWeek = settings.start_week || 1;
     const lastRegularWeek = (settings.playoff_week_start || 15) - 1;
@@ -204,6 +208,85 @@ export async function getDraftOddsData(leagueConfig) {
     return { ...payload, fetchedAt: Date.now() };
   } catch (err) {
     console.warn(`[sleeper-client] Draft odds fetch failed for ${slug}:`, err);
+    return cached ? { ...cached.payload, fetchedAt: cached.fetchedAt, stale: true } : null;
+  }
+}
+
+// Sleeper stores a count of hundredths, so a decimal field of 5 contributes .05.
+function pointsInCents(whole, hundredths = 0) {
+  return Number.isInteger(whole) && Number.isInteger(hundredths) ? whole * 100 + hundredths : null;
+}
+
+export async function getPlayoffOddsData(leagueConfig) {
+  const { slug, currentLeagueId: leagueId } = leagueConfig;
+  const cacheSlug = `${slug}:playoff-odds`;
+  const cached = readCache(cacheSlug, leagueId);
+  if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
+    return { ...cached.payload, fetchedAt: cached.fetchedAt };
+  }
+
+  try {
+    const leagueUrl = `${SLEEPER_BASE}/league/${leagueId}`;
+    const [league, users, rosters] = await Promise.all([
+      fetchWithRetry(leagueUrl),
+      fetchWithRetry(`${leagueUrl}/users`),
+      fetchWithRetry(`${leagueUrl}/rosters`),
+    ]);
+    const { season, managers, rosterSnapshots } = normalizeOddsSeason(leagueConfig, league, users, rosters);
+    const settings = league.settings || {};
+    const firstWeek = settings.start_week || 1;
+    const lastRegularWeek = settings.playoff_week_start - 1;
+    const medianGame = Boolean(settings.league_average_match);
+    const maxGames = Math.max(0, ...rosterSnapshots.map(r => r.wins + r.losses + r.ties));
+    const inferredWeek = firstWeek - 1 + Math.floor(maxGames / (medianGame ? 2 : 1));
+    const completedWeek = league.status === "complete" ? lastRegularWeek :
+      Math.min(lastRegularWeek, settings.last_scored_leg ?? inferredWeek);
+    const regularComplete = completedWeek >= lastRegularWeek;
+    const enoughWeeks = completedWeek >= firstWeek + 2;
+    const [weeks, winnersBracket] = await Promise.all([
+      !regularComplete && enoughWeeks ? fetchWeeklyMap(leagueId, "matchups", lastRegularWeek) : {},
+      regularComplete ? fetchWithRetry(`${leagueUrl}/winners_bracket`).catch(() => null) : null,
+    ]);
+    const matchupsByWeek = Object.fromEntries(Object.entries(weeks).map(([week, matchups]) => [
+      week, matchups.map(({ roster_id, matchup_id, points, custom_points }) => ({
+        roster_id, matchup_id, points: custom_points ?? points,
+      })),
+    ]));
+    const userById = new Map(users.map(user => [user.user_id, user]));
+    const rawById = new Map(rosters.map(roster => [roster.roster_id, roster]));
+    const standings = rosterSnapshots.map(({ rosterId, ownerId, wins, losses, ties }) => {
+      const raw = rawById.get(rosterId);
+      const scores = raw.settings || {};
+      const user = userById.get(raw.owner_id);
+      const manager = managers[ownerId];
+      return {
+        rosterId, wins, losses, ties,
+        pf: pointsInCents(scores.fpts, scores.fpts_decimal),
+        pa: pointsInCents(scores.fpts_against, scores.fpts_against_decimal),
+        division: scores.division,
+        avatar: manager?.avatar,
+        managerName: manager?.displayName,
+        teamName: user?.metadata?.team_name?.trim() || manager?.displayName,
+      };
+    });
+    const payload = {
+      season, standings, firstWeek, lastRegularWeek, completedWeek, matchupsByWeek,
+      rosterCount: league.total_rosters || settings.num_teams, playoffTeams: settings.playoff_teams,
+      divisions: settings.divisions ?? 0, medianGame, reseeds: settings.playoff_seed_type === 1,
+      winnersBracket: Array.isArray(winnersBracket) ? winnersBracket : null,
+    };
+    const expectedGames = (completedWeek - firstWeek + 1) * (medianGame ? 2 : 1);
+    const validStandings = standings.length === payload.rosterCount && standings.every(roster =>
+      roster.pf != null && roster.pa != null && roster.wins + roster.losses + roster.ties === expectedGames
+    );
+    const validWeeks = Array.from({ length: lastRegularWeek - firstWeek + 1 }, (_, i) => matchupsByWeek[firstWeek + i])
+      .every(week => week?.length === payload.rosterCount);
+    if (validStandings && (regularComplete ? payload.winnersBracket?.length : enoughWeeks && validWeeks)) {
+      writeCache(cacheSlug, leagueId, payload);
+    }
+    return { ...payload, fetchedAt: Date.now() };
+  } catch (err) {
+    console.warn(`[sleeper-client] Playoff odds fetch failed for ${slug}:`, err);
     return cached ? { ...cached.payload, fetchedAt: cached.fetchedAt, stale: true } : null;
   }
 }

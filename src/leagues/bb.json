@@ -7,6 +7,7 @@
   "coOwnerConfig": {},
   "tabs": [
     { "id": "dashboard", "label": "Rankings", "template": "dashboard" },
+    { "id": "playoff-odds", "label": "Playoff Odds", "template": "playoff-odds" },
     { "id": "myteam", "label": "My Team", "template": "myteam" },
     { "id": "h2h", "label": "H2H", "template": "h2h" },
     { "id": "rosters", "label": "Championships", "template": "championships" },
