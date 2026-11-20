@@ -171,7 +171,6 @@ export function projectDraftBoard(data) {
   const chooseHigherSeed = (a, b, seedIndex) => seedIndex.get(a) < seedIndex.get(b) ? a : b;
   const playoff = regularComplete && plan ? playoffOrder(seeds, plan, chooseHigherSeed, true) : [...seeds].reverse();
   const projected = [...nonPlayoff, ...playoff];
-  const rankById = new Map(standings.map(({ rosterId }, rank) => [rosterId, rank + 1]));
   const byRosterId = new Map(standings.map(roster => [roster.rosterId, roster]));
   const owners = data.tradedPicks && new Map(data.tradedPicks
     .filter(pick => Number(pick.season) === Number(data.season) + 1 && pick.round === 1)
@@ -197,7 +196,7 @@ export function projectDraftBoard(data) {
     const isLocked = locked.has(rosterId);
     const holder = owners ? byRosterId.get(owners.get(rosterId) ?? rosterId) : null;
     return {
-      origin, holder, rank: rankById.get(rosterId), slot: index + 1, isPlayoff, isLocked,
+      origin, holder, slot: index + 1, isPlayoff, isLocked,
       isChampionPick: isLocked && index === projected.length - 1 && isPlayoff,
       slotOdds: isLocked ? 1 : estimates && (!isPlayoff || plan) ? estimates.exact.get(rosterId) / SIMULATIONS : null,
       firstOdds: regularComplete && plan ? Number(index === 0) : estimates ? estimates.first.get(rosterId) / SIMULATIONS : null,

@@ -20,9 +20,13 @@ function portrait(manager) {
     : `<span class="draft-avatar draft-avatar-fallback" aria-hidden="true">${escapeHtml(manager.name.charAt(0))}</span>`;
 }
 
+function managerName(manager) {
+  return `<span class="draft-manager-name" style="--franchise:${manager.color}">${escapeHtml(manager.name)}</span>`;
+}
+
 function identity(manager, context = "") {
   return `<div class="draft-identity" style="--franchise:${manager.color}">${portrait(manager)}
-    <div><strong>${escapeHtml(manager.name)}</strong>${context}</div>
+    <div><strong>${managerName(manager)}</strong>${context}</div>
   </div>`;
 }
 
@@ -45,7 +49,7 @@ function record({ wins, losses, ties }) {
 function holderNote(row, managers) {
   if (!row.holder) return '<span class="draft-subline">Ownership unavailable</span>';
   if (row.holder.rosterId === row.origin.rosterId) return "";
-  return `<span class="draft-subline">Held by ${escapeHtml(managerFor(row.holder, managers).name)}</span>`;
+  return `<span class="draft-subline">Held by ${managerName(managerFor(row.holder, managers))}</span>`;
 }
 
 function renderSpotlight(rows, managers) {
@@ -54,10 +58,9 @@ function renderSpotlight(rows, managers) {
   if (!favorite) return;
 
   const origin = managerFor(favorite.origin, managers);
-  byId("spotlight").style.setProperty("--franchise", origin.color);
   byId("favorite").innerHTML = `
     <strong class="draft-favorite-value">${escapeHtml(formatOdds(favorite.firstOdds, favorite.isLocked))}</strong>
-    ${identity(origin, `<span class="draft-subline">Original franchise · ${record(favorite.origin)} · ${points.format(favorite.origin.ppts)} Max PF</span>${holderNote(favorite, managers)}`)}`;
+    ${identity(origin, `<span class="draft-subline">Original franchise · ${record(favorite.origin)}</span>${holderNote(favorite, managers)}`)}`;
   byId("challengers").innerHTML = others.slice(0, 3).map(row => {
     const challenger = managerFor(row.origin, managers);
     return `<li style="--franchise:${challenger.color}">
@@ -70,40 +73,38 @@ function renderSpotlight(rows, managers) {
 }
 
 function renderRow(row, managers) {
-  const { origin, holder, rank, slot, isPlayoff, isLocked, isChampionPick, slotOdds } = row;
+  const { origin, holder, slot, isPlayoff, isLocked, isChampionPick, slotOdds } = row;
   const originalManager = managerFor(origin, managers);
   const currentManager = managerFor(holder, managers);
   const traded = holder && holder.rosterId !== origin.rosterId;
   const originMarkup = !holder || traded
     ? `<div class="draft-original" style="--franchise:${originalManager.color}">${portrait(originalManager)}
-        <span><span class="draft-role">Original franchise</span> ${escapeHtml(originalManager.name)}</span>
+        <span><span class="draft-role">Original franchise</span> ${managerName(originalManager)}</span>
       </div>` : "";
   const value = isPlayoff ? origin.pf : origin.ppts;
   const metric = isPlayoff ? "PF" : "Max PF";
   const oddsLabel = formatOdds(slotOdds, isLocked);
-  return `<li class="draft-row draft-columns${traded ? " is-traded" : ""}" style="--franchise:${holder ? currentManager.color : originalManager.color}">
+  return `<li class="draft-row${traded ? " is-traded" : ""}" style="--franchise:${holder ? currentManager.color : originalManager.color}">
     <strong class="draft-slot">${pickLabel(slot)}</strong>
     <div class="draft-owner">
       ${identity(currentManager, traded ? '<span class="draft-subline draft-role">Current holder</span>' : "")}${originMarkup}
       ${isChampionPick ? '<span class="draft-subline draft-champion">Champion’s pick</span>' : ""}
     </div>
-    <div class="draft-record"><span class="sr-only">Original franchise record</span><strong>${record(origin)}</strong><span class="draft-subline">${rank === 1 ? "1st" : rank === 2 ? "2nd" : rank === 3 ? "3rd" : `${rank}th`} in standings</span></div>
-    <div class="draft-points"><strong>${points.format(value)}</strong><span class="draft-subline">${metric}</span></div>
+    <div class="draft-record"><span class="sr-only">Original franchise record</span><strong>${record(origin)}</strong></div>
+    <div class="draft-points"><span class="sr-only">${metric}</span><strong>${points.format(value)}</strong></div>
     <div class="draft-slot-odds">
       <span class="sr-only">${slotOdds == null ? "Slot odds unavailable" : "Chance of this slot"}</span>
       <strong>${escapeHtml(oddsLabel)}</strong>${meter(slotOdds)}
-      ${isLocked ? '<span class="draft-subline">Locked</span>' : '<span class="draft-subline draft-mobile-odds" aria-hidden="true">Slot odds</span>'}
+      ${isLocked ? '<span class="draft-subline">Locked</span>' : ""}
     </div>
   </li>`;
 }
 
-function renderGroup(rows, label, rule, managers) {
+function renderGroup(rows, label, managers) {
   if (!rows.length) return "";
   const headingId = rows[0].isPlayoff ? "draft-playoff-picks" : "draft-non-playoff-picks";
   return `<section class="draft-group" aria-labelledby="${headingId}">
-    <header class="draft-group-header">
-      <h4 id="${headingId}">${label}</h4><span>${rule}</span>
-    </header>
+    <h4 id="${headingId}" class="draft-group-heading">${label}</h4>
     <ol start="${rows[0].slot}" class="draft-picks" role="list">${rows.map(row => renderRow(row, managers)).join("")}</ol>
   </section>`;
 }
@@ -142,14 +143,9 @@ async function render() {
   const playoff = rows.filter(row => row.isPlayoff);
   const regularLabel = regularComplete && hasBracket ? "Non-playoff teams" : "Projected non-playoff teams";
   const playoffLabel = regularComplete && hasBracket ? "Playoff teams" : "Projected playoff teams";
-  const playoffRule = final ? "Playoff results · Champion picks last"
-    : regularComplete && hasBracket ? "Playoff results · Seed projection for unplayed games" : "Reverse seed order · Higher PF wins record ties";
   byId("body").innerHTML = `
-    <div class="draft-columns draft-column-labels" aria-hidden="true">
-      <span>Pick</span><span>Pick ownership</span><span>Origin record</span><span>Origin points</span><span>Slot odds</span>
-    </div>
-    ${renderGroup(nonPlayoff, regularLabel, "Lowest Max PF picks first", data.managers)}
-    ${renderGroup(playoff, playoffLabel, playoffRule, data.managers)}`;
+    ${renderGroup(nonPlayoff, regularLabel, data.managers)}
+    ${renderGroup(playoff, playoffLabel, data.managers)}`;
   byId("content").hidden = false;
 }
 

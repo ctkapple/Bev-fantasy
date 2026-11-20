@@ -25,12 +25,15 @@ eleventyComputed:
     </section>
     <h3 id="draft-odds-order-title" class="draft-order-title">Projected first-round order</h3>
     <div id="draft-odds-body"></div>
-    <details class="draft-methodology">
-      <summary>How the order and odds work</summary>
-      <p>The seven non-playoff teams pick first, starting with the lowest Max PF. Before the playoffs, the top seven are ranked by record and then higher PF, with the strongest seed projected to pick last. Actual playoff results determine their final slots, including 1.14 for the champion. When teams exit in the same round without a placement game, the stronger regular-season seed picks later.</p>
-      <p>Pick slots follow the original franchise. Sleeper’s trade ledger determines who holds each pick. For exact Max PF ties, the projection puts the weaker regular-season seed first.</p>
-      <p>Estimates come from 5,000 simulations of the remaining schedule and playoff bracket. The model resamples each team’s weekly scores and estimates future Max PF from its season-to-date gap between PF and Max PF.</p>
-    </details>
+    <footer class="draft-methodology">
+      <p>Non-playoff teams pick from lowest to highest Max PF. Playoff teams show PF and pick in reverse seed order until playoff results set their slots. The champion’s pick is 1.14.</p>
+      <details>
+        <summary>Tiebreakers, ownership, and odds</summary>
+        <p>Higher PF breaks record ties in the standings. For exact Max PF ties, the weaker regular-season seed picks first. When teams exit the playoffs in the same round without a placement game, the stronger regular-season seed picks later.</p>
+        <p>Each slot follows the original franchise. Sleeper’s trade ledger determines who holds the pick.</p>
+        <p>The percentage beside each pick is its estimated chance of landing at the displayed slot. The model runs 5,000 simulations of the remaining schedule and playoff bracket, resampling weekly scores and using the season-to-date gap between PF and Max PF to estimate future Max PF.</p>
+      </details>
+    </footer>
   </div>
 </section>
 
