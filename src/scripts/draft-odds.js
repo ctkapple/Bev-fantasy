@@ -7,6 +7,7 @@ const entities = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "
 const escapeHtml = value => String(value).replace(/[&<>"']/g, character => entities[character]);
 const byId = id => document.getElementById(`draft-odds-${id}`);
 const pickLabel = slot => `1.${String(slot).padStart(2, "0")}`;
+const currentHolderRole = '<span class="draft-subline draft-role">Current holder</span>';
 
 function managerFor(roster, managers) {
   const manager = managers[roster?.ownerId];
@@ -30,6 +31,12 @@ function identity(manager, context = "") {
   </div>`;
 }
 
+function originalFranchise(manager, context = "") {
+  return `<div class="draft-original" style="--franchise:${manager.color}">${portrait(manager)}
+    <div><span class="draft-role">Original franchise</span> ${managerName(manager)}${context}</div>
+  </div>`;
+}
+
 function formatOdds(odds, locked) {
   if (odds == null) return "—";
   if (locked) return "100%";
@@ -46,10 +53,12 @@ function record({ wins, losses, ties }) {
   return `${wins}–${losses}${ties ? `–${ties}` : ""}`;
 }
 
-function holderNote(row, managers) {
-  if (!row.holder) return '<span class="draft-subline">Ownership unavailable</span>';
-  if (row.holder.rosterId === row.origin.rosterId) return "";
-  return `<span class="draft-subline">Held by ${managerName(managerFor(row.holder, managers))}</span>`;
+function spotlightPick({ origin, holder }, managers) {
+  const originalManager = managerFor(origin, managers);
+  const stats = `<span class="draft-subline">${record(origin)} · ${points.format(origin.ppts)} Max PF</span>`;
+  if (!holder) return identity(originalManager, `${stats}<span class="draft-subline">Ownership unavailable</span>`);
+  if (holder.rosterId === origin.rosterId) return identity(originalManager, stats);
+  return `<div>${identity(managerFor(holder, managers), currentHolderRole)}${originalFranchise(originalManager, stats)}</div>`;
 }
 
 function renderSpotlight(rows, managers) {
@@ -57,14 +66,13 @@ function renderSpotlight(rows, managers) {
     .sort((a, b) => b.firstOdds - a.firstOdds || a.slot - b.slot);
   if (!favorite) return;
 
-  const origin = managerFor(favorite.origin, managers);
   byId("favorite").innerHTML = `
     <strong class="draft-favorite-value">${escapeHtml(formatOdds(favorite.firstOdds, favorite.isLocked))}</strong>
-    ${identity(origin, `<span class="draft-subline">Original franchise · ${record(favorite.origin)}</span>${holderNote(favorite, managers)}`)}`;
+    ${spotlightPick(favorite, managers)}`;
   byId("challengers").innerHTML = others.slice(0, 3).map(row => {
-    const challenger = managerFor(row.origin, managers);
+    const challenger = managerFor(row.holder || row.origin, managers);
     return `<li style="--franchise:${challenger.color}">
-      ${identity(challenger, holderNote(row, managers))}${meter(row.firstOdds)}<strong>${escapeHtml(formatOdds(row.firstOdds, false))}</strong>
+      ${spotlightPick(row, managers)}${meter(row.firstOdds)}<strong>${escapeHtml(formatOdds(row.firstOdds, false))}</strong>
     </li>`;
   }).join("");
   byId("challengers").hidden = others.length === 0;
@@ -77,10 +85,7 @@ function renderRow(row, managers, pickCount) {
   const originalManager = managerFor(origin, managers);
   const currentManager = managerFor(holder, managers);
   const traded = holder && holder.rosterId !== origin.rosterId;
-  const originMarkup = !holder || traded
-    ? `<div class="draft-original" style="--franchise:${originalManager.color}">${portrait(originalManager)}
-        <span><span class="draft-role">Original franchise</span> ${managerName(originalManager)}</span>
-      </div>` : "";
+  const originMarkup = !holder || traded ? originalFranchise(originalManager) : "";
   const value = isPlayoff ? origin.pf : origin.ppts;
   const metric = isPlayoff ? "PF" : "Max PF";
   const oddsLabel = formatOdds(slotOdds, isLocked);
@@ -88,7 +93,7 @@ function renderRow(row, managers, pickCount) {
   return `<li class="draft-row${traded ? " is-traded" : ""}" style="--franchise:${holder ? currentManager.color : originalManager.color}">
     <strong class="draft-slot" style="--draft-slot-fade:${slotFade}%">${pickLabel(slot)}</strong>
     <div class="draft-owner">
-      ${identity(currentManager, traded ? '<span class="draft-subline draft-role">Current holder</span>' : "")}${originMarkup}
+      ${identity(currentManager, traded ? currentHolderRole : "")}${originMarkup}
       ${isChampionPick ? '<span class="draft-subline draft-champion">Champion’s pick</span>' : ""}
     </div>
     <div class="draft-pick-stats">
