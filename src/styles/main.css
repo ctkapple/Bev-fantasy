@@ -694,9 +694,11 @@
   .trade-card-top time { @apply font-semibold text-text-primary; }
   .trade-card-top span::before { @apply mr-2; content: "·"; }
   .trade-sides { @apply grid; }
+  .trade-side, .trade-transfer-manager {
+    --trade-team-text: color-mix(in srgb, var(--trade-team) 56%, rgb(var(--color-text-primary)));
+  }
   .trade-side {
     @apply min-w-0 border-t-2 px-3 pb-3 pt-2.5 sm:px-4;
-    --trade-team-text: color-mix(in srgb, var(--trade-team) 56%, rgb(var(--color-text-primary)));
     border-top-color: var(--trade-team);
     background: linear-gradient(145deg, color-mix(in srgb, var(--trade-team) 11%, rgb(var(--color-surface))), rgb(var(--color-surface)) 80%);
     overflow-wrap: anywhere;
@@ -719,6 +721,9 @@
   .trade-origin, .trade-drafted-by { @apply ml-1 text-xs text-text-secondary; }
   .trade-outcome { @apply text-sm text-text-primary; }
   .trade-result-arrow { @apply mr-1 text-accent-400; }
+  .trade-transfer { @apply italic; }
+  .trade-transfer .trade-result-arrow { @apply not-italic; }
+  .trade-transfer-manager { color: var(--trade-team-text); }
   .trade-keeper { @apply ml-1 rounded bg-amber-400/10 px-1.5 py-0.5 text-xs font-semibold text-amber-300; }
   .trade-next { @apply font-semibold text-accent-400 underline underline-offset-2 hover:text-text-primary; }
   .trade-empty { @apply py-8 text-center text-sm text-text-secondary; }

@@ -81,9 +81,11 @@ function pieceMarkup(piece, trade, season, managerId, context) {
   const next = nextTrades.get(piece);
   if (next) {
     const rosterId = next.piece.ownerId;
-    const manager = escapeHtml(rosterName(next.season, rosterId) || `Roster ${rosterId}`);
+    const name = rosterName(next.season, rosterId) || `Roster ${rosterId}`;
+    const manager = escapeHtml(name);
+    const color = managerStyle(next.season.rosters[rosterId] || `roster:${rosterId}`, name);
     const href = escapeHtml(tradeAnchor(next.trade.tradeId));
-    return `<li>${label}<div class="trade-outcome">${resultArrow} <a class="trade-next" href="#${href}" aria-label="Traded to ${manager}, view trade">Traded to</a> <strong>${manager}</strong></div></li>`;
+    return `<li>${label}<div class="trade-outcome trade-transfer"><span class="trade-result-arrow" aria-hidden="true">⇆</span> <a class="trade-next" href="#${href}" aria-label="Traded to ${manager}, view trade">Traded to</a> <strong class="trade-transfer-manager" style="--trade-team:${color}">${manager}</strong></div></li>`;
   }
 
   const draft = drafts[piece.season];
