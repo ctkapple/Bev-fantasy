@@ -8,6 +8,7 @@ const tradeAnchor = tradeId => `trade-${tradeId}`;
 const compareTrades = (a, b) => (a.date || 0) - (b.date || 0) || String(a.tradeId).localeCompare(String(b.tradeId));
 const piecesIn = trade => Object.values(trade.pieces || {}).flat();
 const rosterName = (season, rosterId) => season?.managers[season.rosters[rosterId]]?.displayName;
+const resultArrow = '<span class="trade-result-arrow" aria-hidden="true">→</span>';
 
 export function mergeTradeSeason(seasons, live) {
   const saved = seasons.find(season => season.leagueId === live.leagueId);
@@ -20,13 +21,14 @@ export function mergeTradeSeason(seasons, live) {
 
 function indexPickMoves(seasons) {
   const movesByPick = new Map();
-  const trades = seasons.flatMap(season => season.trades).sort(compareTrades);
-  for (const trade of trades) {
+  const trades = seasons.flatMap(season => season.trades.map(trade => ({ season, trade })));
+  trades.sort((a, b) => compareTrades(a.trade, b.trade));
+  for (const { season, trade } of trades) {
     for (const piece of piecesIn(trade)) {
       if (piece.type !== "pick" || !piece.originalRosterId) continue;
       const key = pickKey(piece.season, piece.round, piece.originalRosterId);
       const moves = movesByPick.get(key) || [];
-      moves.push({ trade, piece });
+      moves.push({ season, trade, piece });
       movesByPick.set(key, moves);
     }
   }
@@ -38,7 +40,7 @@ function indexPickMoves(seasons) {
       const next = moves[i];
       // A matching origin alone does not prove who traded it next. Sleeper
       // may have an unrecorded commissioner move between two transactions.
-      if (previous.trade.tradeId !== next.trade.tradeId && previous.piece.ownerId != null &&
+      if (previous.trade.tradeId !== next.trade.tradeId && previous.piece.ownerId != null && next.piece.ownerId != null &&
           String(previous.piece.ownerId) === String(next.piece.previousOwnerId)) {
         nextTrades.set(previous.piece, next);
       }
@@ -73,19 +75,27 @@ function pieceMarkup(piece, trade, season, managerId, context) {
   if (piece.type !== "pick") return "";
 
   const { drafts, seasonsByYear, nextTrades } = context;
-  const draft = drafts[piece.season];
   const draftSeason = seasonsByYear.get(String(piece.season));
-  const key = pickKey(piece.season, piece.round, piece.originalRosterId);
   const origin = rosterName(season, piece.originalRosterId) || rosterName(draftSeason, piece.originalRosterId);
-  const used = draft?.picks?.[key];
-  const outcome = used && !(draft.lastPicked && trade.date > draft.lastPicked) ? used : null;
-  const draftingManager = draftSeason?.rosters[outcome?.rosterId];
-  const draftedBy = draftSeason?.managers[draftingManager]?.displayName;
+  const label = `<span class="trade-pick">${escapeHtml(piece.season)} Round ${escapeHtml(piece.round)} Pick</span>${origin ? ` <span class="trade-origin">via ${escapeHtml(origin)}</span>` : ""}`;
   const next = nextTrades.get(piece);
-  const draftingNote = draftedBy && draftingManager !== managerId ? ` <span class="trade-drafted-by">${outcome.keeper ? "kept" : "drafted"} by ${escapeHtml(draftedBy)}</span>` : "";
-  const result = outcome ? `<div class="trade-outcome"><span class="trade-result-arrow" aria-hidden="true">→</span> <strong>${escapeHtml(outcome.slot)} · ${escapeHtml(outcome.name)}</strong>${outcome.keeper ? ' <span class="trade-keeper">Keeper</span>' : ""}${draftingNote}</div>` : "";
-  const nextLink = next ? `<a class="trade-next" href="#${escapeHtml(tradeAnchor(next.trade.tradeId))}" aria-label="Next trade for ${escapeHtml(piece.season)} Round ${escapeHtml(piece.round)} Pick${origin ? ` via ${escapeHtml(origin)}` : ""}">Next trade <span aria-hidden="true">↗</span></a>` : "";
-  return `<li><span class="trade-pick">${escapeHtml(piece.season)} Round ${escapeHtml(piece.round)} Pick</span>${origin ? ` <span class="trade-origin">via ${escapeHtml(origin)}</span>` : ""}${result}${nextLink}</li>`;
+  if (next) {
+    const rosterId = next.piece.ownerId;
+    const manager = escapeHtml(rosterName(next.season, rosterId) || `Roster ${rosterId}`);
+    const href = escapeHtml(tradeAnchor(next.trade.tradeId));
+    return `<li>${label}<div class="trade-outcome">${resultArrow} <a class="trade-next" href="#${href}" aria-label="Traded to ${manager}, view trade">Traded to</a> <strong>${manager}</strong></div></li>`;
+  }
+
+  const draft = drafts[piece.season];
+  const key = pickKey(piece.season, piece.round, piece.originalRosterId);
+  const used = draft?.picks?.[key];
+  if (!used || (draft.lastPicked && trade.date > draft.lastPicked)) return `<li>${label}</li>`;
+
+  const draftingManager = draftSeason?.rosters[used.rosterId];
+  const draftedBy = draftSeason?.managers[draftingManager]?.displayName;
+  const draftingNote = draftedBy && draftingManager !== managerId ? ` <span class="trade-drafted-by">${used.keeper ? "kept" : "drafted"} by ${escapeHtml(draftedBy)}</span>` : "";
+  const keeper = used.keeper ? ' <span class="trade-keeper">Keeper</span>' : "";
+  return `<li>${label}<div class="trade-outcome">${resultArrow} <strong>${escapeHtml(used.slot)} · ${escapeHtml(used.name)}</strong>${keeper}${draftingNote}</div></li>`;
 }
 
 function tradeMarkup(trade, season, context) {

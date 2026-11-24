@@ -2,7 +2,6 @@ import { getNflPlayers } from "./sleeper-client.js";
 import { fetchTradeDraft, fetchTradeLeague, fetchTradeTransactions, processTradeSeason } from "./trade-feed.mjs";
 import { mergeTradeSeason, renderTradeCards } from "./trade-view.mjs";
 
-const REFRESH_MS = 2 * 60 * 1000;
 const checkedTime = new Intl.DateTimeFormat("en-US", {
   month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/New_York", timeZoneName: "short",
 });
@@ -120,9 +119,6 @@ function setupTradeLog() {
   const status = document.getElementById("trade-live-status");
   const filters = setupFilters(form, list);
   let markup = renderTradeCards(feed);
-  let refreshPending = false;
-  let lastAttempt = 0;
-  let playerRequest;
 
   function linkedTrade() {
     const id = location.hash.slice(1);
@@ -155,18 +151,13 @@ function setupTradeLog() {
     }
     const addedPlayers = Object.values(transactions).flatMap(rows => rows.flatMap(row => Object.keys(row.adds || {})));
     if (addedPlayers.every(id => known[id])) return known;
-    playerRequest ||= getNflPlayers().catch(error => {
+    return getNflPlayers().catch(error => {
       console.warn("[trades] Could not resolve new players from Sleeper:", error);
-      playerRequest = null;
-      return null;
+      return known;
     });
-    return await playerRequest || known;
   }
 
-  async function refresh() {
-    if (refreshPending) return;
-    refreshPending = true;
-    lastAttempt = Date.now();
+  async function loadCurrentTrades() {
     try {
       const [{ league, users, rosters }, transactions] = await Promise.all([
         fetchTradeLeague(config.currentLeagueId), fetchTradeTransactions(config.currentLeagueId),
@@ -205,8 +196,6 @@ function setupTradeLog() {
       console.warn("[trades] Could not refresh current trades:", error);
       status.textContent = feed.checkedAt ? `Sleeper unavailable · last checked ${checkedTime.format(feed.checkedAt)}` : "Sleeper unavailable · showing saved trades";
       status.dataset.live = "false";
-    } finally {
-      refreshPending = false;
     }
   }
 
@@ -221,11 +210,7 @@ function setupTradeLog() {
   if (linkedTrade()) openLinkedTrade();
   status.hidden = false;
   status.textContent = "Checking Sleeper…";
-  refresh();
-  setInterval(() => { if (!document.hidden) refresh(); }, REFRESH_MS);
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden && Date.now() - lastAttempt >= REFRESH_MS) refresh();
-  });
+  loadCurrentTrades();
 }
 
 document.addEventListener("DOMContentLoaded", setupTradeLog);

@@ -720,7 +720,7 @@
   .trade-outcome { @apply text-sm text-text-primary; }
   .trade-result-arrow { @apply mr-1 text-accent-400; }
   .trade-keeper { @apply ml-1 rounded bg-amber-400/10 px-1.5 py-0.5 text-xs font-semibold text-amber-300; }
-  .trade-next { @apply mt-0.5 inline-block text-xs font-bold text-accent-400 underline underline-offset-2 hover:text-text-primary; }
+  .trade-next { @apply font-semibold text-accent-400 underline underline-offset-2 hover:text-text-primary; }
   .trade-empty { @apply py-8 text-center text-sm text-text-secondary; }
 
   @media (min-width: 420px) {
@@ -740,7 +740,7 @@
   @media (pointer: coarse) {
     .trade-filters :is(input[type="search"], select, button) { min-height: 44px; }
     .trade-filters input[type="search"] { @apply text-base; }
-    .trade-next { @apply inline-flex min-h-11 items-center gap-1; }
+    .trade-next { @apply inline-flex min-h-11 items-center; }
   }
 
   /* Advisory warning, e.g. a keeper whose round the manager doesn't own a pick in. */

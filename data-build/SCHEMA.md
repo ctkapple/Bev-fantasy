@@ -18,7 +18,7 @@ This is just an index: which UI tab reads which top-level field.
   tab. Ships archived and current completed trades, a current snapshot time,
   and draft results indexed by draft year, round, and original roster. The
   Trades page merges Sleeper's current transaction feed by transaction ID
-  on load and while the page is open.
+  on each page load.
 - `src/leagues/<slug>/data/drafts.json` — keeper-league-only (gated on config
   `rulesContent.keeperRules`), `{ seasons: SeasonDraftData[], upcomingAdp:
   UpcomingAdp|null, upcomingPicks: {season, rounds, byOwner}|null }`.
