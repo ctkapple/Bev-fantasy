@@ -9,6 +9,7 @@ const compareTrades = (a, b) => (a.date || 0) - (b.date || 0) || String(a.tradeI
 const piecesIn = trade => Object.values(trade.pieces || {}).flat();
 const rosterName = (season, rosterId) => season?.managers[season.rosters[rosterId]]?.displayName;
 const resultArrow = '<span class="trade-result-arrow" aria-hidden="true">→</span>';
+export const tradeSeparator = '<span class="trade-separator" aria-hidden="true">·</span>';
 
 export function mergeTradeSeason(seasons, live) {
   const saved = seasons.find(season => season.leagueId === live.leagueId);
@@ -66,10 +67,16 @@ function managerPortrait(manager, name) {
     : escapeHtml(initials.toLocaleUpperCase())}</span>`;
 }
 
+function positionMarkup(position) {
+  if (!position) return "";
+  const label = escapeHtml(position);
+  const positionClass = position === "N/A" ? "NA" : label;
+  return ` ${tradeSeparator} <span class="trade-position pos-${positionClass}">${label}</span>`;
+}
+
 function pieceMarkup(piece, trade, season, managerId, context) {
   if (piece.type === "player") {
-    const position = escapeHtml(piece.position || "N/A");
-    return `<li><span class="trade-player">${escapeHtml(piece.name)}</span> <span class="trade-position pos-${position}">${position}</span></li>`;
+    return `<li><span class="trade-player">${escapeHtml(piece.name)}</span>${positionMarkup(piece.position || "N/A")}</li>`;
   }
   if (piece.type === "faab") return `<li><span class="trade-faab">$${escapeHtml(piece.amount)} FAAB</span></li>`;
   if (piece.type !== "pick") return "";
@@ -97,7 +104,7 @@ function pieceMarkup(piece, trade, season, managerId, context) {
   const draftedBy = draftSeason?.managers[draftingManager]?.displayName;
   const draftingNote = draftedBy && draftingManager !== managerId ? ` <span class="trade-drafted-by">${used.keeper ? "kept" : "drafted"} by ${escapeHtml(draftedBy)}</span>` : "";
   const keeper = used.keeper ? ' <span class="trade-keeper">Keeper</span>' : "";
-  return `<li>${label}<div class="trade-outcome">${resultArrow} <strong>${escapeHtml(used.slot)} · ${escapeHtml(used.name)}</strong>${keeper}${draftingNote}</div></li>`;
+  return `<li>${label}<div class="trade-outcome">${resultArrow} <strong>${escapeHtml(used.slot)} ${tradeSeparator} ${escapeHtml(used.name)}</strong>${positionMarkup(used.position)}${keeper}${draftingNote}</div></li>`;
 }
 
 function tradeMarkup(trade, season, context) {
@@ -120,7 +127,7 @@ function tradeMarkup(trade, season, context) {
   }).join("");
 
   return `<article class="trade-card" id="${id}" tabindex="-1" data-trade data-positions="${escapeHtml(positions.join(" "))}" data-picks="${escapeHtml(picks.join(" "))}" data-faab="${faab}">
-    <header class="trade-card-top">${dateMarkup}${managerIds.length > 2 ? ` <span>${managerIds.length}-team trade</span>` : ""}</header>
+    <header class="trade-card-top">${dateMarkup}${managerIds.length > 2 ? ` ${tradeSeparator} <span>${managerIds.length}-team trade</span>` : ""}</header>
     <div class="trade-sides${managerIds.length > 2 ? " trade-sides-multi" : ""}">${cards}</div>
   </article>`;
 }

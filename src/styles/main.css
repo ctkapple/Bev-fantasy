@@ -692,7 +692,6 @@
   .trade-card.is-target, .trade-card:target { @apply border-accent-400 ring-2 ring-accent-400/25; }
   .trade-card-top { @apply flex flex-wrap items-center gap-2 px-3 py-2 text-xs text-text-secondary sm:px-4; }
   .trade-card-top time { @apply font-semibold text-text-primary; }
-  .trade-card-top span::before { @apply mr-2; content: "·"; }
   .trade-sides { @apply grid; }
   .trade-side, .trade-transfer-manager {
     --trade-team-text: color-mix(in srgb, var(--trade-team) 56%, rgb(var(--color-text-primary)));
@@ -715,7 +714,8 @@
   .trade-assets { @apply m-0 list-none p-0; }
   .trade-assets li { @apply border-t border-white/10 py-1.5 text-sm; }
   .trade-player { @apply font-bold text-text-primary; }
-  .trade-position { @apply ml-1 text-xs font-bold; }
+  .trade-position { @apply text-xs font-bold; }
+  .trade-separator { @apply text-accent-400; }
   .trade-pick { @apply font-bold text-sky-200; }
   .trade-faab { @apply font-bold text-green-200; }
   .trade-origin, .trade-drafted-by { @apply ml-1 text-xs text-text-secondary; }

@@ -1,6 +1,6 @@
 import { getNflPlayers } from "./sleeper-client.js";
 import { fetchTradeDraft, fetchTradeLeague, fetchTradeTransactions, processTradeSeason } from "./trade-feed.mjs";
-import { mergeTradeSeason, renderTradeCards } from "./trade-view.mjs";
+import { mergeTradeSeason, renderTradeCards, tradeSeparator } from "./trade-view.mjs";
 
 const checkedTime = new Intl.DateTimeFormat("en-US", {
   month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/New_York", timeZoneName: "short",
@@ -194,7 +194,8 @@ function setupTradeLog() {
       status.dataset.live = "true";
     } catch (error) {
       console.warn("[trades] Could not refresh current trades:", error);
-      status.textContent = feed.checkedAt ? `Sleeper unavailable · last checked ${checkedTime.format(feed.checkedAt)}` : "Sleeper unavailable · showing saved trades";
+      const detail = feed.checkedAt ? `last checked ${checkedTime.format(feed.checkedAt)}` : "showing saved trades";
+      status.innerHTML = `Sleeper unavailable ${tradeSeparator} ${detail}`;
       status.dataset.live = "false";
     }
   }

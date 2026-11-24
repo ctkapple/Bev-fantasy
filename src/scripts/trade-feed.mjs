@@ -37,6 +37,7 @@ export async function fetchTradeDraft(league) {
     if (!Number.isInteger(round) || round < 1 || !(pickInRound > 0 && pickInRound <= teamCount)) continue;
     picks[pickKey(league.season, round, originalRoster)] = {
       name, rosterId: selection.roster_id, keeper: Boolean(selection.is_keeper),
+      position: selection.metadata?.position,
       slot: `${round}.${String(pickInRound).padStart(2, "0")}`,
     };
   }
