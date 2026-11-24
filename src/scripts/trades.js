@@ -1,218 +1,231 @@
-// Trades tab filter bar: a free-text search plus filter chips (manager,
-// season, position, draft pick, FAAB). Everything the filters need is
-// already sitting in data-* attributes on the server-rendered trade cards
-// (see the `tradeIndex` filter in .eleventy.js and trades.njk) - this module
-// just reads those, shows/hides cards, and keeps the chip labels/result
-// count in sync. No re-fetch, no re-render of trade markup.
+import { getNflPlayers } from "./sleeper-client.js";
+import { fetchTradeDraft, fetchTradeLeague, fetchTradeTransactions, processTradeSeason } from "./trade-feed.mjs";
+import { mergeTradeSeason, renderTradeCards } from "./trade-view.mjs";
 
-function setupChipPopovers() {
-  const triggers = [...document.querySelectorAll("[data-chip-trigger]")];
-  const panels = [...document.querySelectorAll("[data-chip-panel]")];
-
-  function closeAll() {
-    panels.forEach((p) => p.classList.add("hidden"));
-    triggers.forEach((t) => t.setAttribute("aria-expanded", "false"));
-  }
-
-  triggers.forEach((trigger) => {
-    const panel = document.getElementById(trigger.dataset.chipTrigger);
-    if (!panel) return;
-    trigger.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const isOpen = !panel.classList.contains("hidden");
-      closeAll();
-      if (!isOpen) {
-        panel.classList.remove("hidden");
-        trigger.setAttribute("aria-expanded", "true");
-      }
-    });
-    panel.addEventListener("click", (e) => e.stopPropagation());
-  });
-
-  document.addEventListener("click", closeAll);
-  return closeAll;
-}
-
-// A group of `[data-value]` buttons that behaves like a single-select radio
-// group: click a button to select it (deselecting any other in the group),
-// click the selected one again to clear it. Powers every dropdown-turned-
-// clickable-list in the filter bar (Season/Position pills, Manager and
-// Draft Pick option lists) with one shared implementation instead of one
-// per filter. Current value lives on the container's `data-selected`
-// attribute so callers can read it the same way they'd read `select.value`.
-function createOptionGroup(container, onChange) {
-  container.dataset.selected = "";
-
-  function setActive(value) {
-    container.dataset.selected = value;
-    for (const btn of container.querySelectorAll("[data-value]")) {
-      btn.dataset.active = String(btn.dataset.value === value);
-    }
-  }
-
-  container.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-value]");
-    if (!btn || !container.contains(btn)) return;
-    setActive(container.dataset.selected === btn.dataset.value ? "" : btn.dataset.value);
-    onChange();
-  });
-
-  return {
-    get value() {
-      return container.dataset.selected;
-    },
-    get label() {
-      return container.querySelector('[data-active="true"]')?.textContent ?? "";
-    },
-    clear() {
-      setActive("");
-    },
-  };
-}
-
-// Fills the pick-season/pick-round option lists from whatever "season:round"
-// tokens actually appear in data-picks across the page, so the options
-// always match real data instead of a hardcoded guess.
-function populatePickOptions(tradeCards) {
-  const seasons = new Set();
-  const rounds = new Set();
-  for (const card of tradeCards) {
-    const picks = (card.dataset.picks || "").trim();
-    if (!picks) continue;
-    for (const token of picks.split(" ")) {
-      const [season, round] = token.split(":");
-      if (season) seasons.add(season);
-      if (round) rounds.add(Number(round));
-    }
-  }
-
-  const seasonList = document.getElementById("pick-season-list");
-  for (const season of [...seasons].sort((a, b) => b - a)) {
-    seasonList.insertAdjacentHTML("beforeend", `<button type="button" class="filter-list-item" data-value="${season}" data-active="false">${season}</button>`);
-  }
-  const roundList = document.getElementById("pick-round-list");
-  for (const round of [...rounds].sort((a, b) => a - b)) {
-    roundList.insertAdjacentHTML("beforeend", `<button type="button" class="filter-list-item" data-value="${round}" data-active="false">Round ${round}</button>`);
-  }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const filterBar = document.getElementById("trades-filter-bar");
-  const tradeCards = [...document.querySelectorAll("[data-trade]")];
-  if (!filterBar || tradeCards.length === 0) return;
-
-  const seasonBlocks = [...document.querySelectorAll("[data-season-block]")];
-  const search = document.getElementById("trades-search");
-  const faabBtn = document.getElementById("chip-faab-btn");
-  const clearBtn = document.getElementById("clear-filters-btn");
-  const resultCount = document.getElementById("trades-result-count");
-  const emptyState = document.getElementById("trades-empty-state");
-  const tradesList = document.getElementById("trades-list");
-
-  const managerChipBtn = document.getElementById("chip-manager-btn");
-  const managerChipLabel = document.getElementById("chip-manager-label");
-  const pickChipBtn = document.getElementById("chip-pick-btn");
-  const pickChipLabel = document.getElementById("chip-pick-label");
-
-  const closeAllPopovers = setupChipPopovers();
-  populatePickOptions(tradeCards);
-
-  let faabOnly = false;
-  const applyFiltersRef = () => applyFilters();
-
-  const seasonGroup = createOptionGroup(document.getElementById("season-group"), applyFiltersRef);
-  const positionGroup = createOptionGroup(document.getElementById("position-group"), applyFiltersRef);
-  const manager1Group = createOptionGroup(document.getElementById("manager1-list"), applyFiltersRef);
-  const manager2Group = createOptionGroup(document.getElementById("manager2-list"), applyFiltersRef);
-  const pickSeasonGroup = createOptionGroup(document.getElementById("pick-season-list"), applyFiltersRef);
-  const pickRoundGroup = createOptionGroup(document.getElementById("pick-round-list"), applyFiltersRef);
-
-  function pickMatches(card, pickSeason, pickRound) {
-    if (!pickSeason && !pickRound) return true;
-    const tokens = (card.dataset.picks || "").trim();
-    if (!tokens) return false;
-    return tokens.split(" ").some((token) => {
-      const [season, round] = token.split(":");
-      return (!pickSeason || season === pickSeason) && (!pickRound || round === pickRound);
-    });
-  }
-
-  function applyFilters() {
-    const query = search.value.trim().toLowerCase();
-    const manager1 = manager1Group.value;
-    const manager2 = manager2Group.value;
-    const season = seasonGroup.value;
-    const position = positionGroup.value;
-    const pickSeason = pickSeasonGroup.value;
-    const pickRound = pickRoundGroup.value;
-
-    let visibleCount = 0;
-    for (const card of tradeCards) {
-      const managers = (card.dataset.managers || "").split(",").filter(Boolean);
-      const positions = (card.dataset.positions || "").split(",").filter(Boolean);
-
-      const matches =
-        (!manager1 || managers.includes(manager1)) &&
-        (!manager2 || managers.includes(manager2)) &&
-        (!season || card.dataset.season === season) &&
-        (!position || positions.includes(position)) &&
-        pickMatches(card, pickSeason, pickRound) &&
-        (!faabOnly || card.dataset.faab === "true") &&
-        (!query || card.textContent.toLowerCase().includes(query));
-
-      card.classList.toggle("hidden", !matches);
-      if (matches) visibleCount++;
-    }
-
-    for (const block of seasonBlocks) {
-      const hasVisible = block.querySelector("[data-trade]:not(.hidden)");
-      block.classList.toggle("hidden", !hasVisible);
-    }
-
-    const anyFilterActive =
-      manager1 || manager2 || season || position || pickSeason || pickRound || faabOnly || query;
-
-    tradesList.classList.toggle("hidden", visibleCount === 0);
-    emptyState.classList.toggle("hidden", visibleCount !== 0);
-    resultCount.textContent = anyFilterActive
-      ? `Showing ${visibleCount} of ${tradeCards.length} trades`
-      : "";
-    clearBtn.classList.toggle("hidden", !anyFilterActive);
-
-    const managerLabel = manager1 && manager2
-      ? `${manager1Group.label} ↔ ${manager2Group.label}`
-      : manager1Group.label || manager2Group.label;
-    managerChipLabel.textContent = managerLabel || "Manager";
-    managerChipBtn.dataset.active = String(Boolean(manager1 || manager2));
-
-    const pickLabel = [pickSeason, pickRound && `R${pickRound}`].filter(Boolean).join(" · ");
-    pickChipLabel.textContent = pickLabel || "Draft Pick";
-    pickChipBtn.dataset.active = String(Boolean(pickSeason || pickRound));
-  }
-
-  search.addEventListener("input", applyFilters);
-
-  faabBtn.addEventListener("click", () => {
-    faabOnly = !faabOnly;
-    faabBtn.setAttribute("aria-pressed", String(faabOnly));
-    faabBtn.dataset.active = String(faabOnly);
-    applyFilters();
-  });
-
-  clearBtn.addEventListener("click", () => {
-    search.value = "";
-    seasonGroup.clear();
-    positionGroup.clear();
-    manager1Group.clear();
-    manager2Group.clear();
-    pickSeasonGroup.clear();
-    pickRoundGroup.clear();
-    faabOnly = false;
-    faabBtn.setAttribute("aria-pressed", "false");
-    faabBtn.dataset.active = "false";
-    closeAllPopovers();
-    applyFilters();
-  });
-
-  applyFilters();
+const REFRESH_MS = 2 * 60 * 1000;
+const checkedTime = new Intl.DateTimeFormat("en-US", {
+  month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/New_York", timeZoneName: "short",
 });
+const normalize = value => value.toLowerCase().replace(/[’‘]/g, "'");
+const tokens = value => (value || "").split(/\s+/).filter(Boolean);
+const distinct = values => [...new Set(values)];
+const data = id => JSON.parse(document.getElementById(id).textContent);
+
+function setOptions(select, placeholder, values) {
+  const selected = select.value;
+  select.replaceChildren(new Option(placeholder, ""), ...values.map(([value, label]) => new Option(label, value)));
+  select.value = values.some(([value]) => String(value) === selected) ? selected : "";
+}
+
+function setupFilters(form, list) {
+  const count = document.getElementById("trade-count");
+  const empty = document.getElementById("trade-empty");
+  const clear = document.getElementById("trade-clear");
+  const more = document.getElementById("trade-more");
+  const extra = document.getElementById("trade-extra");
+  let groups = [];
+
+  function apply() {
+    const { query, season, manager, secondManager, position, pickYear, pickRound, faab } = Object.fromEntries(new FormData(form));
+    const words = tokens(normalize(query));
+    const active = words.length || season || manager || secondManager || position || pickYear || pickRound || faab;
+    let shown = 0;
+    let total = 0;
+
+    for (const group of groups) {
+      let visible = 0;
+      for (const card of group.cards) {
+        const matchesPick = !pickYear && !pickRound || card.picks.some(([year, round]) =>
+          (!pickYear || year === pickYear) && (!pickRound || round === pickRound));
+        const matches = (!season || season === group.season) && (!manager || card.managers.has(manager)) &&
+          (!secondManager || card.managers.has(secondManager)) && (!position || card.positions.includes(position)) &&
+          matchesPick && (!faab || card.faab) && words.every(word => card.search.includes(word));
+        card.element.hidden = !matches;
+        visible += Number(matches);
+      }
+      group.element.hidden = visible === 0;
+      shown += visible;
+      total += group.cards.length;
+    }
+
+    clear.hidden = !active;
+    count.textContent = active ? `Showing ${shown} of ${total} trades` : `${total} ${total === 1 ? "trade" : "trades"}`;
+    empty.hidden = shown > 0;
+    empty.textContent = active ? "No trades match your filters." : "No completed trades yet.";
+  }
+
+  function readCards() {
+    const managers = new Map();
+    groups = [...list.querySelectorAll("[data-trade-season]")].map(element => ({
+      element,
+      season: element.dataset.tradeSeason,
+      cards: [...element.querySelectorAll("[data-trade]")].map(element => {
+        const managerIds = [...element.querySelectorAll("[data-manager-id]")].map(side => {
+          const { managerId, managerName } = side.dataset;
+          if (!managers.has(managerId)) managers.set(managerId, managerName);
+          return managerId;
+        });
+        return {
+          element, managers: new Set(managerIds), search: normalize(element.textContent),
+          positions: tokens(element.dataset.positions), picks: tokens(element.dataset.picks).map(pick => pick.split(":")),
+          faab: element.dataset.faab === "true",
+        };
+      }),
+    }));
+
+    const cards = groups.flatMap(group => group.cards);
+    const picks = cards.flatMap(card => card.picks);
+    const managerOptions = [...managers].sort(([, a], [, b]) => a.localeCompare(b));
+    const labeled = values => values.map(value => [value, value]);
+    const fields = form.elements;
+    setOptions(fields.season, "All seasons", labeled(groups.map(group => group.season)));
+    setOptions(fields.manager, "Any manager", managerOptions);
+    setOptions(fields.secondManager, "Any manager", managerOptions);
+    setOptions(fields.position, "Any position", labeled(distinct(cards.flatMap(card => card.positions)).sort()));
+    setOptions(fields.pickYear, "Any year", labeled(distinct(picks.map(([year]) => year)).sort((a, b) => b - a)));
+    setOptions(fields.pickRound, "Any round", distinct(picks.map(([, round]) => round)).sort((a, b) => a - b).map(round => [round, `Round ${round}`]));
+    apply();
+  }
+
+  function reset(season = "") {
+    for (const field of form.elements) {
+      if (field.type === "checkbox") field.checked = false;
+      else if (field.name) field.value = "";
+    }
+    form.elements.season.value = season;
+    apply();
+  }
+
+  form.addEventListener("input", apply);
+  form.addEventListener("submit", event => event.preventDefault());
+  form.addEventListener("reset", event => {
+    event.preventDefault();
+    reset();
+  });
+  more.addEventListener("click", () => {
+    extra.hidden = !extra.hidden;
+    more.setAttribute("aria-expanded", String(!extra.hidden));
+  });
+  form.hidden = false;
+  readCards();
+
+  return { readCards, reset };
+}
+
+function setupTradeLog() {
+  const config = data("trade-league-config");
+  let feed = data("trade-snapshot");
+  const form = document.getElementById("trade-filters");
+  const list = document.getElementById("trade-list");
+  const status = document.getElementById("trade-live-status");
+  const filters = setupFilters(form, list);
+  let markup = renderTradeCards(feed);
+  let refreshPending = false;
+  let lastAttempt = 0;
+  let playerRequest;
+
+  function linkedTrade() {
+    const id = location.hash.slice(1);
+    const card = id.startsWith("trade-") && document.getElementById(id);
+    return card && list.contains(card) ? card : null;
+  }
+
+  function openLinkedTrade() {
+    const target = linkedTrade();
+    list.querySelector(".trade-card.is-target")?.classList.remove("is-target");
+    if (!target) return;
+    if (target.hidden) {
+      filters.reset(target.closest("[data-trade-season]").dataset.tradeSeason);
+    }
+    target.classList.add("is-target");
+    target.focus({ preventScroll: true });
+    target.scrollIntoView({ block: "start" });
+  }
+
+  async function playerData(transactions) {
+    const known = {};
+    for (const season of feed.seasons) {
+      for (const trade of season.trades) {
+        for (const piece of Object.values(trade.pieces).flat()) {
+          if (piece.type === "player" && piece.name !== "Unknown Player") {
+            known[piece.playerId] = { first_name: piece.name, position: piece.position };
+          }
+        }
+      }
+    }
+    const addedPlayers = Object.values(transactions).flatMap(rows => rows.flatMap(row => Object.keys(row.adds || {})));
+    if (addedPlayers.every(id => known[id])) return known;
+    playerRequest ||= getNflPlayers().catch(error => {
+      console.warn("[trades] Could not resolve new players from Sleeper:", error);
+      playerRequest = null;
+      return null;
+    });
+    return await playerRequest || known;
+  }
+
+  async function refresh() {
+    if (refreshPending) return;
+    refreshPending = true;
+    lastAttempt = Date.now();
+    try {
+      const [{ league, users, rosters }, transactions] = await Promise.all([
+        fetchTradeLeague(config.currentLeagueId), fetchTradeTransactions(config.currentLeagueId),
+      ]);
+      const savedDraft = feed.drafts[league.season];
+      const draft = savedDraft?.complete && savedDraft.draftId === league.draft_id ? savedDraft :
+        await fetchTradeDraft(league).catch(error => {
+          console.warn("[trades] Could not refresh draft results:", error);
+          return savedDraft;
+        });
+      const live = processTradeSeason(config, league, users, rosters, transactions, await playerData(transactions));
+      feed = {
+        checkedAt: Date.now(),
+        seasons: mergeTradeSeason(feed.seasons, live),
+        drafts: { ...feed.drafts, [league.season]: draft },
+      };
+      const nextMarkup = renderTradeCards(feed);
+      if (nextMarkup !== markup) {
+        const hadTarget = linkedTrade();
+        const focused = document.activeElement?.closest("[data-trade]");
+        const focusedHref = document.activeElement?.getAttribute("href");
+        list.innerHTML = nextMarkup;
+        markup = nextMarkup;
+        filters.readCards();
+        if (!hadTarget && linkedTrade()) openLinkedTrade();
+        else if (hadTarget?.classList.contains("is-target")) linkedTrade()?.classList.add("is-target");
+        if (focused) {
+          const card = document.getElementById(focused.id);
+          const link = [...(card?.querySelectorAll("a") || [])].find(anchor => anchor.getAttribute("href") === focusedHref);
+          (link || card)?.focus({ preventScroll: true });
+        }
+      }
+      status.textContent = `Sleeper checked ${checkedTime.format(feed.checkedAt)}`;
+      status.dataset.live = "true";
+    } catch (error) {
+      console.warn("[trades] Could not refresh current trades:", error);
+      status.textContent = feed.checkedAt ? `Sleeper unavailable · last checked ${checkedTime.format(feed.checkedAt)}` : "Sleeper unavailable · showing saved trades";
+      status.dataset.live = "false";
+    } finally {
+      refreshPending = false;
+    }
+  }
+
+  list.addEventListener("click", event => {
+    const link = event.target.closest(".trade-next");
+    if (link?.hash === location.hash && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
+      event.preventDefault();
+      openLinkedTrade();
+    }
+  });
+  window.addEventListener("hashchange", openLinkedTrade);
+  if (linkedTrade()) openLinkedTrade();
+  status.hidden = false;
+  status.textContent = "Checking Sleeper…";
+  refresh();
+  setInterval(() => { if (!document.hidden) refresh(); }, REFRESH_MS);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && Date.now() - lastAttempt >= REFRESH_MS) refresh();
+  });
+}
+
+document.addEventListener("DOMContentLoaded", setupTradeLog);

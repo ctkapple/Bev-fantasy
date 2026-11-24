@@ -1,5 +1,5 @@
 node_modules/
 _site/
-src/leagues/*/data/
+src/leagues/**/data/
 .DS_Store
 .claude/settings.local.json

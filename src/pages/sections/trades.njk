@@ -9,118 +9,46 @@ currentTab: trades
 eleventyComputed:
   title: "{{ league.name }} — Trade Log"
 ---
-{% set historical = leagueStats[league.slug].historical %}
-{% set aggregate = leagueStats[league.slug].aggregates %}
+{% set feed = leagueStats[league.slug] | tradeFeed %}
+{% set cards = feed | tradeCards %}
 
-<div class="card">
-  {% if not historical or historical.length == 0 %}
-  <p class="text-text-secondary text-sm">No completed seasons yet.</p>
-  {% else %}
+<section class="trade-log" aria-labelledby="trade-log-heading">
+  <header class="trade-log-heading">
+    <h2 id="trade-log-heading">Trade Log</h2>
+    <p id="trade-live-status" class="trade-live-status" role="status" hidden></p>
+  </header>
 
-  <div id="trades-filter-bar" class="mb-6 space-y-3">
-    <div class="relative">
-      {% icon "search", "icon absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none" %}
-      <input id="trades-search" type="search" placeholder="Search players, managers, picks…" autocomplete="off"
-        class="w-full bg-bg border border-border rounded-lg py-2.5 pl-10 pr-3 text-sm text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-accent-500 focus:outline-none" />
-    </div>
-
-    <div class="flex flex-wrap items-center gap-2" id="season-group">
-      <span class="text-xs font-semibold uppercase tracking-wide text-text-muted mr-1">Season</span>
-      {% for season in historical | reverse %}
-      <button type="button" class="filter-chip" data-value="{{ season.season }}" data-active="false">{{ season.season }}</button>
-      {% endfor %}
-    </div>
-
-    <div class="flex flex-wrap items-center gap-2" id="position-group">
-      <span class="text-xs font-semibold uppercase tracking-wide text-text-muted mr-1">Position</span>
-      {% for pos in ["QB", "RB", "WR", "TE", "K", "DEF"] %}
-      <button type="button" class="filter-chip" data-value="{{ pos }}" data-active="false">{{ pos }}</button>
-      {% endfor %}
-    </div>
-
-    <div class="flex flex-wrap items-center gap-2">
-      <div class="relative">
-        <button type="button" id="chip-manager-btn" class="filter-chip" data-chip-trigger="chip-manager-panel" aria-haspopup="true" aria-expanded="false">
-          {% icon "users", "icon" %} <span id="chip-manager-label">Manager</span> {% icon "chevron-down", "icon" %}
-        </button>
-        <div id="chip-manager-panel" class="hidden filter-chip-panel" data-chip-panel>
-          <p class="filter-chip-panel-label">Involving</p>
-          <div id="manager1-list" class="filter-option-list">
-            {% for id, m in aggregate.managers %}<button type="button" class="filter-list-item" data-value="{{ id }}" data-active="false">{{ m.displayName }}</button>{% endfor %}
-          </div>
-          <p class="filter-chip-panel-label">And (optional) — trades between two managers</p>
-          <div id="manager2-list" class="filter-option-list">
-            {% for id, m in aggregate.managers %}<button type="button" class="filter-list-item" data-value="{{ id }}" data-active="false">{{ m.displayName }}</button>{% endfor %}
-          </div>
-        </div>
-      </div>
-
-      <div class="relative">
-        <button type="button" id="chip-pick-btn" class="filter-chip" data-chip-trigger="chip-pick-panel" aria-haspopup="true" aria-expanded="false">
-          {% icon "ticket", "icon" %} <span id="chip-pick-label">Draft Pick</span> {% icon "chevron-down", "icon" %}
-        </button>
-        <div id="chip-pick-panel" class="hidden filter-chip-panel" data-chip-panel>
-          <p class="filter-chip-panel-label">Pick's draft season</p>
-          <div id="pick-season-list" class="filter-option-list"></div>
-          <p class="filter-chip-panel-label">Round</p>
-          <div id="pick-round-list" class="filter-option-list"></div>
-        </div>
-      </div>
-
-      <button type="button" id="chip-faab-btn" class="filter-chip" data-chip-toggle aria-pressed="false" data-active="false">
-        {% icon "dollar-sign", "icon" %} FAAB
-      </button>
-
-      <button type="button" id="clear-filters-btn" class="hidden text-xs text-text-secondary hover:text-text-primary underline underline-offset-2 ml-1">
-        Clear all
+  <form id="trade-filters" class="trade-filters" role="search" aria-label="Filter trades" hidden>
+    <div class="trade-filter-row">
+      <label class="trade-search">Search
+        <span class="trade-search-field">
+          {% icon "search", "icon" %}
+          <input type="search" name="query" placeholder="Players, managers, picks…" autocomplete="off">
+        </span>
+      </label>
+      <label>Trade season<select name="season"></select></label>
+      <label>Manager<select name="manager"></select></label>
+      <button class="trade-more" id="trade-more" type="button" aria-expanded="false" aria-controls="trade-extra">
+        {% icon "sliders-horizontal", "icon" %} More filters
       </button>
     </div>
+    <div class="trade-extra" id="trade-extra" hidden>
+      <label>Second manager<select name="secondManager"></select></label>
+      <label>Position<select name="position"></select></label>
+      <label>Pick year<select name="pickYear"></select></label>
+      <label>Pick round<select name="pickRound"></select></label>
+      <label class="trade-faab-filter"><input type="checkbox" name="faab"> Includes FAAB</label>
+    </div>
+    <div class="trade-filter-status">
+      <span id="trade-count" aria-live="polite"></span>
+      <button class="trade-clear" id="trade-clear" type="reset" hidden>Clear filters</button>
+    </div>
+  </form>
 
-    <p id="trades-result-count" class="text-xs text-text-secondary"></p>
-  </div>
+  <p id="trade-empty" class="trade-empty"{% if cards %} hidden{% endif %}>No completed trades yet.</p>
+  <div id="trade-list" class="trade-list">{{ cards | safe }}</div>
+</section>
 
-  <div id="trades-empty-state" class="hidden text-text-secondary text-sm py-8 text-center">
-    No trades match your filters.
-  </div>
-
-  <div class="space-y-6" id="trades-list">
-    {% for season in historical | reverse %}
-      {% if season.trades.length > 0 %}
-      <div data-season-block="{{ season.season }}">
-        <h3 class="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">{{ season.season }} Season</h3>
-        <div class="space-y-4">
-          {% for trade in season.trades %}
-          {% set idx = trade | tradeIndex %}
-          <div class="bg-bg/50 border border-border rounded-lg p-4 grid grid-cols-1 md:grid-cols-2 gap-4"
-            data-trade
-            data-season="{{ season.season }}"
-            data-managers="{{ idx.managers }}"
-            data-positions="{{ idx.positions }}"
-            data-picks="{{ idx.picks }}"
-            data-faab="{{ idx.hasFaab }}">
-            {% for managerId, pieces in trade.pieces %}
-            <div>
-              <p class="font-semibold text-accent-500 mb-1">{{ season.managers[managerId].displayName if season.managers[managerId] else "Unknown" }} received:</p>
-              <ul class="text-sm space-y-0.5">
-                {% for piece in pieces %}
-                <li>
-                  {% if piece.type == "player" %}<span class="font-semibold pos-{{ piece.position or 'NA' }}">{{ piece.name }}</span> <span class="text-xs text-text-secondary">({{ piece.position }})</span>
-                  {% elif piece.type == "pick" %}<span class="chip-pick">{{ piece.season }} Round {{ piece.round }} Pick</span>
-                  {% elif piece.type == "faab" %}<span class="chip-faab">${{ piece.amount }} FAAB</span>
-                  {% endif %}
-                </li>
-                {% endfor %}
-              </ul>
-            </div>
-            {% endfor %}
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-      {% endif %}
-    {% endfor %}
-  </div>
-  {% endif %}
-</div>
-
+<script id="trade-league-config" type="application/json">{{ league | dump | safe }}</script>
+<script id="trade-snapshot" type="application/json">{{ feed | dump | safe }}</script>
 <script type="module" src="/assets/js/trades.js"></script>

@@ -30,9 +30,11 @@ export default function () {
     const dataDir = path.join(leaguesDir, slug, "data");
     const histPath = path.join(dataDir, "historical.json");
     const aggPath = path.join(dataDir, "aggregates.json");
+    const tradePath = path.join(dataDir, "trade-log.json");
     result[slug] = {
       historical: existsSync(histPath) ? JSON.parse(readFileSync(histPath, "utf-8")) : [],
       aggregates: existsSync(aggPath) ? JSON.parse(readFileSync(aggPath, "utf-8")) : null,
+      tradeLog: existsSync(tradePath) ? JSON.parse(readFileSync(tradePath, "utf-8")) : null,
     };
   }
   return result;

@@ -111,7 +111,7 @@ async function fetchLiveSeason(leagueConfig) {
 const PLAYERS_CACHE_KEY = `bf:nflplayers:${CACHE_VERSION}`;
 const PLAYERS_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours - the player DB barely changes day to day
 
-async function getNflPlayers() {
+export async function getNflPlayers() {
   try {
     const raw = localStorage.getItem(PLAYERS_CACHE_KEY);
     if (raw) {

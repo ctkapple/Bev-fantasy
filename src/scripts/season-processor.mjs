@@ -171,6 +171,27 @@ function buildRosterIdToManagerId(rosters, primaryUserIdMap) {
   return map;
 }
 
+function resolveTrade(transaction, managerByRoster, nflPlayers) {
+  const pieces = {};
+  const recipient = rosterId => pieces[managerByRoster[rosterId] || `roster:${rosterId}`] ??= [];
+  for (const rosterId of transaction.roster_ids || []) recipient(rosterId);
+  for (const [playerId, rosterId] of Object.entries(transaction.adds || {})) {
+    const player = nflPlayers[playerId];
+    recipient(rosterId).push({ type: "player", playerId, name: playerFullName(player), position: player?.position || "N/A" });
+  }
+  // The receiver on each asset is authoritative, including in a three-team deal.
+  for (const pick of transaction.draft_picks || []) {
+    recipient(pick.owner_id).push({
+      type: "pick", season: String(pick.season), round: pick.round,
+      originalRosterId: pick.roster_id, previousOwnerId: pick.previous_owner_id, ownerId: pick.owner_id,
+    });
+  }
+  for (const budget of transaction.waiver_budget || []) {
+    recipient(budget.receiver).push({ type: "faab", amount: budget.amount });
+  }
+  return { tradeId: transaction.transaction_id, date: transaction.status_updated ?? transaction.created, pieces };
+}
+
 /** Expand a starters array + players_points map into display-ready roster rows. */
 function getRosterDetails(starters, playersPoints, nflPlayers) {
   if (!starters) return [];
@@ -580,61 +601,28 @@ export function processSeason({
   // -- 6. Transactions: totals, trades (resolved), FAAB bids. -----------------
   const trades = [];
   const faabBids = [];
+  const seenTrades = new Set();
 
   for (const week of Object.keys(transactionsByWeek)
     .map(Number)
     .sort((a, b) => a - b)) {
     const weekTransactions = transactionsByWeek[week] || [];
     for (const t of weekTransactions) {
+      const completedTrade = t.type === "trade" && t.status === "complete";
+      if (completedTrade && seenTrades.has(t.transaction_id)) continue;
       const primaryRosterId = t.roster_ids?.[0];
       const primaryOwnerId = rosterIdToManagerId[primaryRosterId];
       if (primaryOwnerId && managers[primaryOwnerId]) {
         managers[primaryOwnerId].transactions++;
       }
 
-      if (t.type === "trade" && t.status === "complete") {
-        const pieces = {};
+      if (completedTrade) {
+        seenTrades.add(t.transaction_id);
         for (const rosterId of t.roster_ids || []) {
           const canonicalId = rosterIdToManagerId[rosterId];
           if (canonicalId && managers[canonicalId]) managers[canonicalId].trades++;
         }
-        for (const rosterId of t.roster_ids || []) {
-          const canonicalId = rosterIdToManagerId[rosterId];
-          if (!canonicalId) continue;
-          const giverRosterId = (t.roster_ids || []).find((id) => id !== rosterId);
-          const receivedPieces = [];
-          if (t.adds) {
-            for (const [pId, rId] of Object.entries(t.adds)) {
-              if (rId !== rosterId) continue;
-              const player = nflPlayers[pId];
-              receivedPieces.push(
-                player
-                  ? { type: "player", playerId: pId, name: playerFullName(player), position: player.position || "N/A" }
-                  : { type: "player", playerId: pId, name: "Unknown Player", position: "N/A" }
-              );
-            }
-          }
-          if (t.draft_picks) {
-            for (const pick of t.draft_picks) {
-              if (pick.owner_id === rosterId && pick.previous_owner_id === giverRosterId) {
-                receivedPieces.push({ type: "pick", season: pick.season, round: pick.round });
-              }
-            }
-          }
-          if (t.waiver_budget) {
-            for (const budget of t.waiver_budget) {
-              if (budget.receiver === rosterId && budget.sender === giverRosterId) {
-                receivedPieces.push({ type: "faab", amount: budget.amount });
-              }
-            }
-          }
-          pieces[canonicalId] = receivedPieces;
-        }
-        trades.push({
-          tradeId: t.transaction_id,
-          date: t.status_updated,
-          pieces,
-        });
+        trades.push(resolveTrade(t, rosterIdToManagerId, nflPlayers));
       }
 
       if (t.type === "waiver" && t.status === "complete" && t.settings?.waiver_bid) {

@@ -14,6 +14,11 @@ This is just an index: which UI tab reads which top-level field.
 - Live current season — fetched client-side by `src/scripts/sleeper-client.js`
   (`SeasonData` shape, single season) and layered onto `aggregates.json` via
   `src/scripts/merge.js`'s `mergeAggregates()`.
+- `src/leagues/<slug>/data/trade-log.json` — only for leagues with a Trades
+  tab. Ships archived and current completed trades, a current snapshot time,
+  and draft results indexed by draft year, round, and original roster. The
+  Trades page merges Sleeper's current transaction feed by transaction ID
+  on load and while the page is open.
 - `src/leagues/<slug>/data/drafts.json` — keeper-league-only (gated on config
   `rulesContent.keeperRules`), `{ seasons: SeasonDraftData[], upcomingAdp:
   UpcomingAdp|null, upcomingPicks: {season, rounds, byOwner}|null }`.
@@ -53,7 +58,7 @@ This is just an index: which UI tab reads which top-level field.
 | H2H | `h2h.njk` | `AggregateData.matchupsByManagerPair[pairKey]` |
 | Championships | `championships.njk` | `SeasonData[].championship` across `historical.json` |
 | Legends (Legacies) | `legends.njk` | `AggregateData.legacies.ringChasers` / `.loyaltyClub` |
-| Trades | `trades.njk` | `SeasonData[].trades` across `historical.json` |
+| Trades | `trades.njk` | Build-time `trade-log.json` and current Sleeper transactions and draft results |
 | FAAB | `faab.njk` | `SeasonData[].faabBids` across `historical.json` |
 | Toilet Bowl (jrwll only) | `toilet-bowl.njk` | `SeasonData[].toiletBowl` + league config `toiletBowlLedger`/`punishmentGalleries` (hand-curated, not from Sleeper) |
 | Draft Odds (sb3 only) | `draft-odds.njk` | `SeasonData[].rosterSnapshots` (most recent season) |

@@ -25,6 +25,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { fetchWithRetry } from "./fetch-with-retry.js";
 import { processSeason, aggregateSeasons, buildPrimaryUserIdMap } from "../src/scripts/season-processor.mjs";
+import { fetchTradeDraft, fetchTradeTransactions, processTradeSeason, tradeSeasonSnapshot } from "../src/scripts/trade-feed.mjs";
 import {
   scoringFormatFromLeagueObj,
   adpProjectionsUrl,
@@ -60,9 +61,9 @@ async function walkSeasonChain(currentLeagueId) {
   return seasons;
 }
 
-async function fetchWeeklyMap(leagueId, endpoint, maxWeek) {
+async function fetchWeeklyMap(leagueId, endpoint, maxWeek, firstWeek = 1) {
   const result = {};
-  for (let week = 1; week <= maxWeek; week++) {
+  for (let week = firstWeek; week <= maxWeek; week++) {
     try {
       const data = await fetchWithRetry(`${SLEEPER_BASE}/league/${leagueId}/${endpoint}/${week}`);
       if (data && data.length > 0) result[week] = data;
@@ -75,7 +76,7 @@ async function fetchWeeklyMap(leagueId, endpoint, maxWeek) {
   return result;
 }
 
-async function fetchHistoricalSeasonRaw(leagueObj) {
+async function fetchHistoricalSeasonRaw(leagueObj, includeOffseasonTrades) {
   const leagueId = String(leagueObj.league_id);
   const [users, rosters, winnersBracket, losersBracket] = await Promise.all([
     fetchWithRetry(`${SLEEPER_BASE}/league/${leagueId}/users`),
@@ -85,9 +86,43 @@ async function fetchHistoricalSeasonRaw(leagueObj) {
   ]);
   const [matchupsByWeek, transactionsByWeek] = await Promise.all([
     fetchWeeklyMap(leagueId, "matchups", MAX_REGULAR_SEASON_WEEK),
-    fetchWeeklyMap(leagueId, "transactions", MAX_REGULAR_SEASON_WEEK),
+    fetchWeeklyMap(leagueId, "transactions", MAX_REGULAR_SEASON_WEEK, includeOffseasonTrades ? 0 : 1),
   ]);
   return { users, rosters, matchupsByWeek, transactionsByWeek, winnersBracket, losersBracket };
+}
+
+async function buildTradeLog(config, chain, historical, currentUsers, nflPlayers) {
+  const current = chain.at(-1);
+  const seasons = historical.map(tradeSeasonSnapshot);
+  const results = Promise.all(chain.map(async league => {
+    try {
+      return [league.season, await fetchTradeDraft(league)];
+    } catch (error) {
+      console.warn(`  [trades] Draft results unavailable for ${league.season}: ${error.message}`);
+      return [league.season, null];
+    }
+  }));
+
+  let checkedAt = null;
+  if (!seasons.some(season => season.leagueId === current.league_id)) {
+    try {
+      const [rosters, transactions] = await Promise.all([
+        fetchWithRetry(`${SLEEPER_BASE}/league/${current.league_id}/rosters`),
+        fetchTradeTransactions(current.league_id),
+      ]);
+      seasons.push(processTradeSeason(config, current, currentUsers, rosters, transactions, nflPlayers));
+      checkedAt = Date.now();
+    } catch (error) {
+      console.warn(`  [trades] Live snapshot unavailable: ${error.message}`);
+    }
+  } else {
+    checkedAt = Date.now();
+  }
+
+  const drafts = Object.fromEntries(await results);
+  const outDir = path.join(leaguesDir, config.slug, "data");
+  await writeFile(path.join(outDir, "trade-log.json"), JSON.stringify({ checkedAt, seasons, drafts }));
+  console.log(`  [trades] ${seasons.reduce((total, season) => total + season.trades.length, 0)} completed trades on file.`);
 }
 
 /**
@@ -381,6 +416,7 @@ async function buildPollSnapshot(config, currentSeason) {
 
 async function buildLeague(config) {
   console.log(`\n=== ${config.slug} (${config.name}) ===`);
+  const hasTradeLog = config.tabs.some(tab => tab.template === "trades");
   const chain = await walkSeasonChain(config.currentLeagueId);
   if (chain.length === 0) {
     throw new Error(`[${config.slug}] No seasons found walking previous_league_id from ${config.currentLeagueId}`);
@@ -413,7 +449,7 @@ async function buildLeague(config) {
     await buildKeeperDraftHistory(config.slug, chain, primaryUserIdMap);
   }
 
-  if (historicalSeasons.length === 0) {
+  if (historicalSeasons.length === 0 && !hasTradeLog) {
     console.log(`  No historical seasons yet - writing empty historical.json/aggregates.json.`);
     await writeLeagueData(config.slug, [], aggregateSeasons([]));
     return;
@@ -426,7 +462,7 @@ async function buildLeague(config) {
   let previousSeasonRosters = null;
   for (const leagueObj of historicalSeasons) {
     console.log(`  Fetching season ${leagueObj.season} (league ${leagueObj.league_id})...`);
-    const raw = await fetchHistoricalSeasonRaw(leagueObj);
+    const raw = await fetchHistoricalSeasonRaw(leagueObj, hasTradeLog);
     const seasonData = processSeason({
       leagueObj,
       ...raw,
@@ -441,6 +477,7 @@ async function buildLeague(config) {
 
   const aggregate = aggregateSeasons(seasonDataArray);
   await writeLeagueData(config.slug, seasonDataArray, aggregate);
+  if (hasTradeLog) await buildTradeLog(config, chain, seasonDataArray, currentUsers, nflPlayers);
   console.log(`  Done: ${seasonDataArray.length} season(s) frozen through ${aggregate.throughSeason}.`);
 }
 

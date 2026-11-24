@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { buildEarningsView } from "./lib/earnings-model.js";
 import { buildRankingsView } from "./lib/rankings-model.js";
+import { tradeSeasonSnapshot } from "./src/scripts/trade-feed.mjs";
+import { renderTradeCards } from "./src/scripts/trade-view.mjs";
 import {
   climbLegendMarkup,
   climbMarkup,
@@ -127,20 +129,10 @@ export default function (eleventyConfig) {
   eleventyConfig.addFilter("climbLegendMarkup", climbLegendMarkup);
   eleventyConfig.addFilter("standingsMarkup", standingsMarkup);
 
-  // Trades tab filter bar: precompute the searchable/filterable facets for one
-  // trade (participant ids, positions moved, "season:round" pick tokens, and
-  // whether FAAB changed hands) so the template can drop them straight into
-  // data-* attributes and the client-side filter (trades.js) never has to
-  // re-derive them from trade.pieces itself.
-  eleventyConfig.addFilter("tradeIndex", (trade) => {
-    const allPieces = Object.values(trade.pieces || {}).flat();
-    return {
-      managers: Object.keys(trade.pieces || {}).join(","),
-      positions: [...new Set(allPieces.filter((p) => p.type === "player").map((p) => p.position || "NA"))].join(","),
-      picks: allPieces.filter((p) => p.type === "pick").map((p) => `${p.season}:${p.round}`).join(" "),
-      hasFaab: allPieces.some((p) => p.type === "faab"),
-    };
+  eleventyConfig.addFilter("tradeFeed", stats => stats?.tradeLog || {
+    seasons: (stats?.historical || []).map(tradeSeasonSnapshot), drafts: {},
   });
+  eleventyConfig.addFilter("tradeCards", renderTradeCards);
 
   eleventyConfig.addFilter("faabTotalsByManager", (historical, managers) => {
     const totals = {};

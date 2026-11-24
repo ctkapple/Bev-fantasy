@@ -653,50 +653,99 @@
   .pos-pill-K { @apply bg-fuchsia-500/10 text-fuchsia-300 border-fuchsia-500/30; }
   .pos-pill-DEF { @apply bg-orange-500/10 text-orange-300 border-orange-500/30; }
 
-  /* Draft-pick and FAAB chips in the trade log. */
-  .chip-pick {
-    @apply inline-block bg-sky-500/10 text-sky-300 border border-sky-500/30 px-2 py-0.5 rounded text-xs font-semibold;
+  /* Trade log */
+  .trade-log { @apply mx-auto max-w-6xl py-4 sm:py-6; }
+  .trade-log [hidden] { display: none; }
+  .trade-log-heading { @apply mb-4 flex flex-wrap items-baseline justify-between gap-2; }
+  .trade-log-heading h2 { @apply text-4xl font-bold leading-none sm:text-5xl; }
+  .trade-live-status { @apply flex items-center gap-2 text-xs text-text-secondary; }
+  .trade-live-status::before { @apply h-2 w-2 rounded-full bg-text-secondary; content: ""; }
+  .trade-live-status[data-live="true"]::before { @apply bg-green-400; }
+  .trade-live-status[data-live="false"]::before { @apply bg-amber-400; }
+
+  .trade-filters { @apply mb-5 grid gap-3 rounded-xl border border-border bg-surface p-3; }
+  .trade-filter-row, .trade-extra { @apply grid items-end gap-2; }
+  .trade-filters label:not(.trade-faab-filter) { @apply grid min-w-0 gap-1 text-xs font-semibold text-text-secondary; }
+  .trade-search-field { @apply relative block min-w-0; }
+  .trade-search-field .icon { @apply pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary; }
+  .trade-filters :is(input[type="search"], select, .trade-more) {
+    @apply min-h-10 min-w-0 rounded-lg border border-border bg-bg px-3 py-2 text-sm font-medium text-text-primary;
   }
-  .chip-faab {
-    @apply inline-block bg-green-500/10 text-green-300 border border-green-500/30 px-2 py-0.5 rounded text-xs font-semibold;
+  .trade-filters :is(input[type="search"], select) { @apply w-full; }
+  .trade-filters input[type="search"] { @apply pl-9 placeholder:text-text-secondary; }
+  .trade-filters :is(input, select, button):focus-visible, .trade-next:focus-visible {
+    @apply outline outline-2 outline-offset-2 outline-accent-400;
   }
+  .trade-filters :is(select, .trade-more):hover { @apply border-border-hover; }
+  .trade-more { @apply inline-flex items-center justify-center gap-1.5 justify-self-start; }
+  .trade-more[aria-expanded="true"] { @apply border-accent-500/50 text-accent-400; }
+  .trade-extra { @apply border-t border-border pt-3; }
+  .trade-faab-filter { @apply flex items-center gap-2 text-sm text-text-primary; }
+  .trade-faab-filter input { @apply accent-accent-500; }
+  .trade-filter-status { @apply flex flex-wrap items-center justify-between gap-2 text-xs text-text-secondary; }
+  .trade-clear { @apply font-semibold text-accent-400 underline underline-offset-2; }
+
+  .trade-list { @apply space-y-5; }
+  .trade-season h3 { @apply mb-2 text-sm font-semibold uppercase tracking-widest text-text-secondary; }
+  .trade-cards { @apply grid gap-3; }
+  .trade-card { @apply min-w-0 scroll-mt-4 overflow-hidden rounded-xl border border-border bg-surface; }
+  .trade-card.is-target, .trade-card:target { @apply border-accent-400 ring-2 ring-accent-400/25; }
+  .trade-card-top { @apply flex flex-wrap items-center gap-2 px-3 py-2 text-xs text-text-secondary sm:px-4; }
+  .trade-card-top time { @apply font-semibold text-text-primary; }
+  .trade-card-top span::before { @apply mr-2; content: "·"; }
+  .trade-sides { @apply grid; }
+  .trade-side {
+    @apply min-w-0 border-t-2 px-3 pb-3 pt-2.5 sm:px-4;
+    --trade-team-text: color-mix(in srgb, var(--trade-team) 56%, rgb(var(--color-text-primary)));
+    border-top-color: var(--trade-team);
+    background: linear-gradient(145deg, color-mix(in srgb, var(--trade-team) 11%, rgb(var(--color-surface))), rgb(var(--color-surface)) 80%);
+    overflow-wrap: anywhere;
+  }
+  .trade-manager { @apply mb-2 flex items-center gap-2.5; }
+  .trade-manager h4 { @apply font-sans text-sm font-extrabold leading-tight; color: var(--trade-team-text); }
+  .trade-manager div > span { @apply block text-xs text-text-secondary; }
+  .trade-portrait {
+    @apply grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full border-2 bg-surface text-xs font-bold;
+    border-color: var(--trade-team);
+    color: var(--trade-team-text);
+  }
+  .trade-portrait img { @apply h-full w-full object-cover; }
+  .trade-assets { @apply m-0 list-none p-0; }
+  .trade-assets li { @apply border-t border-white/10 py-1.5 text-sm; }
+  .trade-player { @apply font-bold text-text-primary; }
+  .trade-position { @apply ml-1 text-xs font-bold; }
+  .trade-pick { @apply font-bold text-sky-200; }
+  .trade-faab { @apply font-bold text-green-200; }
+  .trade-origin, .trade-drafted-by { @apply ml-1 text-xs text-text-secondary; }
+  .trade-outcome { @apply text-sm text-text-primary; }
+  .trade-result-arrow { @apply mr-1 text-accent-400; }
+  .trade-keeper { @apply ml-1 rounded bg-amber-400/10 px-1.5 py-0.5 text-xs font-semibold text-amber-300; }
+  .trade-next { @apply mt-0.5 inline-block text-xs font-bold text-accent-400 underline underline-offset-2 hover:text-text-primary; }
+  .trade-empty { @apply py-8 text-center text-sm text-text-secondary; }
+
+  @media (min-width: 420px) {
+    .trade-filter-row, .trade-extra { @apply grid-cols-2; }
+    .trade-search { @apply col-span-2; }
+  }
+  @media (min-width: 640px) {
+    .trade-sides { @apply grid-cols-2; }
+    .trade-side + .trade-side { @apply border-l border-l-border; }
+  }
+  @media (min-width: 768px) {
+    .trade-filter-row { grid-template-columns: minmax(0,2fr) repeat(2,minmax(0,1fr)) auto; }
+    .trade-search { @apply col-span-1; }
+    .trade-extra { @apply grid-cols-4; }
+    .trade-sides-multi { @apply grid-cols-3; }
+  }
+  @media (pointer: coarse) {
+    .trade-filters :is(input[type="search"], select, button) { min-height: 44px; }
+    .trade-filters input[type="search"] { @apply text-base; }
+    .trade-next { @apply inline-flex min-h-11 items-center gap-1; }
+  }
+
   /* Advisory warning, e.g. a keeper whose round the manager doesn't own a pick in. */
   .chip-warn {
     @apply inline-block bg-amber-500/10 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded text-xs font-semibold;
-  }
-
-  /* Trades tab filter bar: pill buttons that either open a small dropdown
-     panel (data-chip-trigger) or self-toggle (data-chip-toggle), plus the
-     panel and its <select>s. Active state is data-active="true" so trades.js
-     can flip one attribute rather than juggling several classes. */
-  .filter-chip {
-    @apply inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-full
-      border border-border text-text-secondary transition-colors duration-150
-      hover:text-text-primary hover:border-border-hover;
-  }
-  .filter-chip[data-active="true"] {
-    @apply bg-accent-500 text-black border-accent-500 hover:text-black;
-  }
-  .filter-chip-panel {
-    @apply absolute left-0 z-30 mt-2 w-64 bg-surface ring-1 ring-white/10 border border-border
-      rounded-lg shadow-2xl p-3 space-y-1;
-  }
-  .filter-chip-panel-label {
-    @apply block text-xs text-text-secondary mt-2 first:mt-0;
-  }
-
-  /* Clickable option list inside a filter-chip-panel (Manager, Draft Pick) -
-     replaces a native <select> so picking a value is a single click instead
-     of "open the select, then pick". */
-  .filter-option-list {
-    @apply max-h-40 overflow-y-auto rounded-md border border-border/60 divide-y divide-border/40;
-  }
-  .filter-list-item {
-    @apply block w-full text-left px-2.5 py-1.5 text-sm text-text-secondary transition-colors
-      hover:bg-surface-hover hover:text-text-primary;
-  }
-  .filter-list-item[data-active="true"] {
-    @apply bg-accent-500/15 text-accent-400 font-semibold hover:bg-accent-500/15 hover:text-accent-400;
   }
 
   /* Records list rows. */
